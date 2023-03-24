@@ -1,37 +1,61 @@
-# SAP Repository Template
+# The GitOps commandline interface
 
-Default templates for SAP open source repositories, including LICENSE, .reuse/dep5, Code of Conduct, etc... All repositories on github.com/SAP will be created based on this template.
+The GitOps CLI `coco` shall ultimately provide the central interface to interact
+with the [gitops repository](https://github.tools.sap/MLF/mlf-gitops). It is
+designed to provide extendable automations for the most common and/or cumbersome
+tasks when dealing with the
+[gitops repository](https://github.tools.sap/MLF/mlf-gitops).
 
-## To-Do
+## Code of conduct
 
-In case you are the maintainer of a new SAP open source project, these are the steps to do with the template files:
+- Above all, take code reviews seriously for this CLI.
+  - Only accept what you understand (there is no shame in handing off reviews or
+    asking for clarifications)
+  - Only accept what is maintainable (sensible tests added, sensible package
+    structure used, reasonable import of external packages)
+- Eventually we want to open-source this CLI and the code quality should not
+  stand in the way of internal or external contributers.
+- Be direct but kind in discussions.
 
-- Check if the default license (Apache 2.0) also applies to your project. A license change should only be required in exceptional cases. If this is the case, please change the [license file](LICENSE).
-- Enter the correct metadata for the REUSE tool. See our [wiki page](https://wiki.wdf.sap.corp/wiki/display/ospodocs/Using+the+Reuse+Tool+of+FSFE+for+Copyright+and+License+Information) for details how to do it. You can find an initial .reuse/dep5 file to build on. Please replace the parts inside the single angle quotation marks < > by the specific information for your repository and be sure to run the REUSE tool to validate that the metadata is correct.
-- Adjust the contribution guidelines (e.g. add coding style guidelines, pull request checklists, different license if needed etc.)
-- Add information about your project to this README (name, description, requirements etc). Especially take care for the <your-project> placeholders - those ones need to be replaced with your project name. See the sections below the horizontal line and [our guidelines on our wiki page](https://wiki.wdf.sap.corp/wiki/display/ospodocs/Guidelines+for+README.md+file) what is required and recommended.
-- Remove all content in this README above and including the horizontal line ;)
+## Central CLI design descisions
 
-***
+`coco` prominently relies on the following open-source projects to provide
+general functionalities:
 
-# Our new open source project
+- [cobra](https://github.com/spf13/cobra) for the CLI framework
+- [viper](https://github.com/spf13/viper) for parameter, environment-variable
+  and config-file consolidation
+- [zap](https://github.com/uber-go/zap) for logging
 
-## About this project
+## Package requirements
 
-*Insert a short description of your project here...*
+In order to have a well maintainable CLI the business logic for each command
+must be implemented in its own package that is only loosly coupled to other
+packages. In addition, tests for the business logic must be provided from day 1
+and we aim for high test-coverage (80 % and upwords).
 
-## Requirements and Setup
+### Loose coupling
 
-*Insert a short description what is required to get your project running...*
+Strong coupling between packages can be broken up many times by consuming
+interfaces instead of objects (`structs`) in all exported functions.
 
-## Support, Feedback, Contributing
+TODO add proper example
 
-This project is open to feature requests/suggestions, bug reports etc. via [GitHub issues](https://github.com/SAP/<your-project>/issues). Contribution and feedback are encouraged and always welcome. For more information about how to contribute, the project structure, as well as additional contribution information, see our [Contribution Guidelines](CONTRIBUTING.md).
+```go
 
-## Code of Conduct
+```
 
-We as members, contributors, and leaders pledge to make participation in our community a harassment-free experience for everyone. By participating in this project, you agree to abide by its [Code of Conduct](CODE_OF_CONDUCT.md) at all times.
+### Idiomatic golang further reading
 
-## Licensing
+Here is an unstructured list of references aroung good code in golang and
+idiomatic go:
 
-Copyright (20xx-)20xx SAP SE or an SAP affiliate company and <your-project> contributors. Please see our [LICENSE](LICENSE) for copyright and license information. Detailed information including third-party components and their licensing/copyright information is available [via the REUSE tool](https://api.reuse.software/info/github.com/SAP/<your-project>).
+- <https://talks.golang.org/2013/bestpractices.slide#17>
+- <https://go.dev/doc/effective_go>
+- <https://golangbyexample.com/interface-in-golang/>
+- <https://dev.to/lcaparelli/should-my-methods-return-structs-or-interfaces-in-go-3b7>
+-
+
+## Entry points
+
+- [getting-started](./docs/getting-started.md)
