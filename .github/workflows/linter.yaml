@@ -27,10 +27,3 @@ jobs:
           version: ${{ steps.golangci_version.outputs.result }}
           args: --timeout 10m
 
-
-      - name: Lint Code Base
-        uses: github/super-linter@v4
-        env:
-          VALIDATE_ALL_CODEBASE: false
-          DEFAULT_BRANCH: "main"
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
