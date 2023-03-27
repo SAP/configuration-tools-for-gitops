@@ -5,10 +5,8 @@ CURRENT_DIR=$(shell pwd)
 DIST_DIR=${CURRENT_DIR}/dist
 
 VERSION_PACKAGE=github.com/configuration-tools-for-gitops/pkg/version
-HOST_OS=$(shell go env GOOS)
-HOST_ARCH=$(shell go env GOARCH)
 
-GO_LINTER_VERSION=v1.51.2
+GO_LINTER_VERSION=$(shell cat ${CURRENT_DIR}/build/vars.yml | yq '.golangci_version')
 
 # env variables
 
@@ -80,13 +78,9 @@ test-all:
 	test_dir="$(shell go list ./... | grep -v /tmp)"; INTEGRATION_TESTS=true go test -run .\* -v -timeout 300s -race $$test_dir -coverprofile cover.out
 	go tool cover -func ./cover.out 
 
-# Run go fmt against code
-fmt:
-	go fmt -s ./...
-
-# Run go vet against code
-vet:
-	go vet ./...
+# Run go tooling commands against code
+go-%:
+	go $* ./...
 
 # Cleans VSCode debug.test files from sub-dirs to prevent them from being included in packr boxes
 .PHONY: clean-debug
