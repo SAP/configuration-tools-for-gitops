@@ -49,7 +49,5 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: ${{ needs.variables.outputs.golangci_version }}
-          args: |
-            --timeout 10m
-            --config ${{ github.workspace }}/build/.golangci.yml
+          args: --config ${{ github.workspace }}/build/.golangci.yml
 
