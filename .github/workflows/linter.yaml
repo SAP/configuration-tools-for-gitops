@@ -1,4 +1,4 @@
-name: Lint Codebase
+name: Linting
 
 on:
   push:
@@ -28,6 +28,9 @@ jobs:
           cmd: yq '.go_version' build/vars.yml
       - name: Debug-vars
         run: echo "goVersion ${{ steps.go_version.outputs.result }}, golangciVersion ${{ steps.golangci_version.outputs.result }}"
+    outputs:
+      go_version: ${{ steps.go_version.outputs.result }}
+      golangci_version: ${{ steps.golangci_version.outputs.result }}
   run-lint:
     runs-on: ubuntu-latest
     needs: [variables]
@@ -37,16 +40,16 @@ jobs:
         with:
           fetch-depth: 0
       - name: Debug-vars
-        run: echo "goVersion ${{ needs.variables.go_version.outputs.result }}, golangciVersion ${{ needs.variables.golangci_version.outputs.result }}"
+        run: echo "goVersion ${{ needs.variables.outputs.go_version }}, golangciVersion ${{ needs.variables.outputs.golangci_version }}"
       - uses: actions/setup-go@v4
         with:
-          go-version: ${{ needs.variables.go_version.outputs.result }}
+          go-version: ${{ needs.variables.outputs.go_version }}
           cache: false
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
           # github-token: ${{ secrets.GITHUB_TOKEN }}
           # skip-go-installation: true
-          version: ${{ needs.variables.golangci_version.outputs.result }}
+          version: ${{ needs.variables.outputs.golangci_version }}
           args: --timeout 10m
 
