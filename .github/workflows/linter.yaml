@@ -5,25 +5,44 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
+permissions:
+  contents: read
 
 jobs:
-  run-lint:
+  read-variables:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Find golangci version
+      - name: golangci version
         uses: mikefarah/yq@v4.33.1
         id: golangci_version
         with:
           cmd: yq '.golangci_version' build/vars.yml
+      - name: golang version
+        uses: mikefarah/yq@v4.33.1
+        id: go_version
+        with:
+          cmd: yq '.go_version' build/vars.yml
+  run-lint:
+    runs-on: ubuntu-latest
+    needs: [read-variables]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ needs.read-variables.go_version.outputs.result }}
+          cache: false
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
           # github-token: ${{ secrets.GITHUB_TOKEN }}
           # skip-go-installation: true
-          version: ${{ steps.golangci_version.outputs.result }}
+          version: ${{ needs.read-variables.golangci_version.outputs.result }}
           args: --timeout 10m
 
