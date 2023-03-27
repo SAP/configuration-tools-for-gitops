@@ -49,5 +49,5 @@ jobs:
           version: ${{ needs.variables.outputs.golangci_version }}
           args: |
             --timeout 10m
-            --config build/.golangci.yml
+            --config ${{ GITHUB_WORKSPACE }}/build/.golangci.yml
 
