@@ -1,2 +1,2 @@
-go_version: "1.20"
+go_version: "1.19"
 golangci_version: v1.51.2
