@@ -27,7 +27,7 @@ jobs:
         with:
           cmd: yq '.go_version' build/vars.yml
       - name: Debug-vars
-        run: echo "goVersion ${{ step.go_version.outputs.result }}, golangciVersion ${{ needs.golangci_version.outputs.result }}"
+        run: echo "goVersion ${{ steps.go_version.outputs.result }}, golangciVersion ${{ steps.golangci_version.outputs.result }}"
   run-lint:
     runs-on: ubuntu-latest
     needs: [variables]
