@@ -26,8 +26,6 @@ jobs:
         id: go_version
         with:
           cmd: yq '.go_version' build/vars.yml
-      - name: Debug-vars
-        run: echo "goVersion ${{ steps.go_version.outputs.result }}, golangciVersion ${{ steps.golangci_version.outputs.result }}"
     outputs:
       go_version: ${{ steps.go_version.outputs.result }}
       golangci_version: ${{ steps.golangci_version.outputs.result }}
@@ -39,17 +37,17 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Debug-vars
-        run: echo "goVersion ${{ needs.variables.outputs.go_version }}, golangciVersion ${{ needs.variables.outputs.golangci_version }}"
       - uses: actions/setup-go@v4
+        # https://github.com/marketplace/actions/setup-go-environment
         with:
           go-version: ${{ needs.variables.outputs.go_version }}
           cache: false
       - name: Run golangci-lint
+        # https://github.com/marketplace/actions/run-golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
-          # github-token: ${{ secrets.GITHUB_TOKEN }}
-          # skip-go-installation: true
           version: ${{ needs.variables.outputs.golangci_version }}
-          args: --timeout 10m
+          args: |
+            --timeout 10m
+            --config build/.golangci.yml
 
