@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  read-variables:
+  variables:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -26,23 +26,27 @@ jobs:
         id: go_version
         with:
           cmd: yq '.go_version' build/vars.yml
+      - name: Debug-vars
+        run: echo "goVersion ${{ step.go_version.outputs.result }}, golangciVersion ${{ needs.golangci_version.outputs.result }}"
   run-lint:
     runs-on: ubuntu-latest
-    needs: [read-variables]
+    needs: [variables]
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - name: Debug-vars
+        run: echo "goVersion ${{ needs.variables.go_version.outputs.result }}, golangciVersion ${{ needs.variables.golangci_version.outputs.result }}"
       - uses: actions/setup-go@v4
         with:
-          go-version: ${{ needs.read-variables.go_version.outputs.result }}
+          go-version: ${{ needs.variables.go_version.outputs.result }}
           cache: false
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
           # github-token: ${{ secrets.GITHUB_TOKEN }}
           # skip-go-installation: true
-          version: ${{ needs.read-variables.golangci_version.outputs.result }}
+          version: ${{ needs.variables.golangci_version.outputs.result }}
           args: --timeout 10m
 
