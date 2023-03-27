@@ -63,7 +63,7 @@ jobs:
   run-unit-tests:
     name: Run Unit Tests
     runs-on: ubuntu-latest
-    needs: [lint-go]
+    needs: [variables]
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
