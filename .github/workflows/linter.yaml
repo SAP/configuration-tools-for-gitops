@@ -14,6 +14,19 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - name: Set vars
+        uses: mikefarah/yq@v4.33.1
+        id: golangci_version
+        with:
+          cmd: yq '.golangci_version' build/vars.yml
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          # github-token: ${{ secrets.GITHUB_TOKEN }}
+          # skip-go-installation: true
+          version: ${{ steps.golangci_version.outputs.result }}
+          args: --timeout 10m
+
 
       - name: Lint Code Base
         uses: github/super-linter@v4
