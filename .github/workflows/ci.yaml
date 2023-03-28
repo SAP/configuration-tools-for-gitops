@@ -104,7 +104,7 @@ jobs:
       - uses: go-semantic-release/action@v1
         with:
           hooks: goreleaser
-          prerelease: true
+          prerelease: false
           changelog-file: CHANGELOG.md
           changelog-generator-opt: "emojis=true"
         env:
