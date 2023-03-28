@@ -105,5 +105,7 @@ jobs:
         with:
           hooks: goreleaser
           prerelease: true
+          changelog-file: CHANGELOG.md
+          changelog-generator-opt: "emojis=true"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
