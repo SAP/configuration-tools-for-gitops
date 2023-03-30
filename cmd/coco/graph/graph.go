@@ -11,9 +11,9 @@ import (
 	"github.com/yourbasic/graph"
 )
 
-// ComponentDependencies holds a complete representation of all dependencies from upstream
-// to downstream dependencies for all components. Dependencies are weighted by
-// their distance to the reference component (the top-level key)
+// ComponentDependencies holds a complete representation of all dependencies from
+// upstream to downstream dependencies for all components. Dependencies are weighted
+// by their distance to the reference component (the top-level key)
 //
 //	weight 0: a direct dependency
 //	weight 1: indirect dependency (1 level in between)
@@ -67,7 +67,7 @@ func (wd WeightedDeps) ToArray() [][]string {
 }
 
 // For each components Print returns the upstream dependencies weighted by the
-// number of links separating them from the component in question
+// number of links separating them from the component in question.
 // In yaml format the output will have the form
 //
 //	{componentName: {weight: [dependency-1, dependency-2, ...], ...}, ...}

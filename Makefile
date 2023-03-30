@@ -2,65 +2,19 @@
 # https://github.com/argoproj/argo-cd/blob/master/Makefile
 
 CURRENT_DIR=$(shell pwd)
-DIST_DIR=${CURRENT_DIR}/dist
+BIN_LOCATION=${HOME}/go/bin
+PATH:=$(PATH):$(PWD)/hack
+
+GO_LINTER_VERSION=$(shell cat ${CURRENT_DIR}/.buildvars.yml | yq '.golangci_version')
+GO_RELEASER_VERSION=$(shell cat ${CURRENT_DIR}/.buildvars.yml | yq '.goreleaser_version')
+
 
 VERSION_PACKAGE=github.com/configuration-tools-for-gitops/pkg/version
 
-GO_LINTER_VERSION=$(shell cat ${CURRENT_DIR}/build/vars.yml | yq '.golangci_version')
-
 # env variables
-
-VERSION					=$(shell cat ${CURRENT_DIR}/VERSION)
-
-BUILD_DATE      =$(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
-GIT_COMMIT      ?=$(shell git rev-parse HEAD)
-GIT_TAG         ?=$(shell if [ -z "`git status --porcelain`" ]; then echo v/$(VERSION); fi)
-GIT_TREE_STATE  ?=$(shell if [ -z "`git status --porcelain`" ]; then echo "clean" ; else echo "dirty"; fi)
-VOLUME_MOUNT    =$(shell if test "$(go env GOOS)" = "darwin"; then echo ":delegated"; elif test selinuxenabled; then echo ":delegated"; else echo ""; fi)
-
-
 GOPATH          ?=$(shell if test -x `which go`; then go env GOPATH; else echo "$(HOME)/go"; fi)
 GOCACHE         ?=$(HOME)/.cache/go-build
 
-dist/coco-darwin-amd64: GOARGS = GOOS=darwin GOARCH=amd64
-dist/coco-linux-amd64: GOARGS = GOOS=linux GOARCH=amd64
-dist/coco-darwin-arm64: GOARGS = GOOS=darwin GOARCH=arm64
-dist/coco-linux-arm64: GOARGS = GOOS=linux GOARCH=arm64
-
-GIT_USER        ?=$(shell git config user.name)
-GIT_USER_LOWER  =$(shell echo $(GIT_USER) | tr '[A-Z]' '[a-z]')
-
-DOCKER_SRCDIR   ?=$(GOPATH)/src
-DOCKER_WORKDIR  ?=$(CURRENT_DIR)
-
-PATH:=$(PATH):$(PWD)/hack
-
-# docker image publishing options
-DOCKER_PUSH ?= false
-# perform static compilation
-STATIC_BUILD ?= true
-# build development images
-DEV_IMAGE ?= false
-
-override LDFLAGS += \
-  -X ${VERSION_PACKAGE}.version=${VERSION} \
-  -X ${VERSION_PACKAGE}.buildDate=${BUILD_DATE} \
-  -X ${VERSION_PACKAGE}.gitCommit=${GIT_COMMIT} \
-  -X ${VERSION_PACKAGE}.gitTreeState=${GIT_TREE_STATE}
-
-ifeq (${STATIC_BUILD}, true)
-override LDFLAGS += -extldflags "-static"
-endif
-
-ifneq (${GIT_TAG},)
-IMAGE_TAG=${VERSION}
-LDFLAGS += -X ${VERSION_PACKAGE}.gitTag=${GIT_TAG}
-else
-IMAGE_TAG?=latest
-endif
-
-USER_ID =$(id -u ${USER})
-GROUP_ID =$(id -g ${USER})
 
 # Run tests
 .PHONY: test
@@ -82,6 +36,23 @@ test-all:
 go-%:
 	go $* ./...
 
+.PHONY: lint
+lint:
+	./hack/install_golint.sh ${BIN_LOCATION} ${GO_LINTER_VERSION}
+	${BIN_LOCATION}/golangci-lint run ./... --fix
+
+.PHONY: binaries
+binaries:
+	./hack/install_goreleaser.sh ${BIN_LOCATION} ${GO_RELEASER_VERSION}
+	${BIN_LOCATION}/goreleaser build --snapshot --clean
+
+
+.PHONY: coco
+coco:
+	./hack/install_goreleaser.sh ${BIN_LOCATION} ${GO_RELEASER_VERSION}
+	${BIN_LOCATION}/goreleaser build --single-target --snapshot --clean
+
+
 # Cleans VSCode debug.test files from sub-dirs to prevent them from being included in packr boxes
 .PHONY: clean-debug
 clean-debug:
@@ -93,19 +64,3 @@ clean: clean-debug
 	-rm -rf coco
 	-rm -rf cover.out
 	-rm -rf vet.log
-
-
-.PHONY: lint
-lint:
-	@ $(eval install_to := ${HOME}/go/bin)
-	./hack/validate_golint_version.sh ${install_to} ${GO_LINTER_VERSION}
-	${install_to}/golangci-lint run ./... --fix
-
-dist/coco-%.tar.gz: dist/coco-%
-	tar -czvf dist/coco-$*.tar.gz dist/coco-$*
-dist/coco-%:
-	CGO_ENABLED=0 $(GOARGS) go build -v -gcflags '${GCFLAGS}' -ldflags '${LDFLAGS} -extldflags -static' -o $@ ./cmd/coco
-
-.PHONY: coco
-coco:
-	CGO_ENABLED=0 go build -v -gcflags '${GCFLAGS}' -ldflags '${LDFLAGS} -extldflags -static' -o ${DIST_DIR}/coco ./cmd/coco

@@ -34,12 +34,12 @@ jobs:
       uses: mikefarah/yq@v4.33.1
       id: golangci_version
       with:
-        cmd: yq '.golangci_version' build/vars.yml
+        cmd: yq '.golangci_version' .buildvars.yml
     - name: golang version
       uses: mikefarah/yq@v4.33.1
       id: go_version
       with:
-        cmd: yq '.go_version' build/vars.yml
+        cmd: yq '.go_version' .buildvars.yml
     outputs:
       go_version: ${{ steps.go_version.outputs.result }}
       golangci_version: ${{ steps.golangci_version.outputs.result }}
@@ -63,7 +63,7 @@ jobs:
       uses: golangci/golangci-lint-action@v3
       with:
         version: ${{ needs.variables.outputs.golangci_version }}
-        args: --config ${{ github.workspace }}/build/.golangci.yml --timeout 10m
+        args: --timeout 10m
     - name: Go fmt
       run: make go-fmt
     - name: Go vet
