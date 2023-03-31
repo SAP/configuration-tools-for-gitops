@@ -1,5 +1,5 @@
 
-
+project_name: coco
 builds:
   - env:
       - CGO_ENABLED=0
@@ -20,7 +20,7 @@ builds:
 
 archives:
   - format: binary
-    name_template: 'coco_v{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    name_template: '{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}'
 
 checksum:
   name_template: '{{ .ProjectName }}_v{{ .Version }}_checksums.txt'

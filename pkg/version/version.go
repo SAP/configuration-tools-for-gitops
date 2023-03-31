@@ -17,11 +17,11 @@ const (
 // Version information set by link flags during build. We fall back to these sane
 // default values when we build outside the Makefile context (e.g. go run, go build, or go test).
 var (
-	version      = "99.99.99"             // value from VERSION file
-	buildDate    = "1970-01-01T00:00:00Z" // output from `date -u +'%Y-%m-%dT%H:%M:%SZ'`
-	gitCommit    = ""                     // output from `git rev-parse HEAD`
-	gitTag       = ""                     // output from `git describe --exact-match --tags HEAD` (if clean tree state)
-	gitTreeState = ""                     // determined from `git status --porcelain`. either 'clean' or 'dirty'
+	version      = "99.99.99"             // inserted from goreleaser
+	buildDate    = "1970-01-01T00:00:00Z" // inserted from goreleaser
+	gitCommit    = ""                     // inserted from goreleaser
+	gitTag       = ""                     // inserted from goreleaser
+	gitTreeState = ""                     // inserted from goreleaser
 
 	re            = regexp.MustCompile(`(\d*)\.(\d*)\.(\d*)`)
 	semver SemVer = SemVer{}
