@@ -12,7 +12,7 @@ export TMPDIR="$(mktemp -d)"
 trap cleanup EXIT
 
 if [[ "${install_to}" == "" ]]; then
-  echo "no installation folder provided"
+  echo "[ERROR] no installation folder provided"
   exit 1
 fi
 
@@ -24,7 +24,7 @@ LATEST="$(curl -sf https://goreleaser.com/static/latest)"
 test -z "$expected_version" && expected_version="$LATEST"
 
 test -z "$expected_version" && {
-	echo "Unable to get goreleaser version." >&2
+	echo "[ERROR] Unable to get goreleaser version." >&2
 	exit 1
 }
 
