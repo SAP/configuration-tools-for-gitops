@@ -40,9 +40,15 @@ jobs:
       id: go_version
       with:
         cmd: yq '.go_version' .buildvars.yml
+    - name: coverage minimum
+      uses: mikefarah/yq@v4.33.1
+      id: coverage_min
+      with:
+        cmd: yq '.coverage_min' .buildvars.yml
     outputs:
       go_version: ${{ steps.go_version.outputs.result }}
       golangci_version: ${{ steps.golangci_version.outputs.result }}
+      coverage_min: ${{ steps.coverage_min.outputs.result }}
 
   lint:
     name: Linting
@@ -87,7 +93,21 @@ jobs:
         go-version: ${{ needs.variables.outputs.go_version }}
         cache: false
     - name: Test
-      run: make test
+      env:
+        COVERAGE_MIN: ${{ needs.variables.outputs.coverage_min }}
+      run: |
+        echo "Execute unit tests..."
+        make test
+        echo "Coverage gate: checking test coverage is above..."
+        echo "Threshold                : $COVERAGE_MIN %"
+        totalCoverage=`go tool cover -func=cover.out | grep total | grep -Eo '[0-9]+.[0-9]+'`
+        echo "Current test coverage at : $totalCoverage %"
+        if (( $(echo "$totalCoverage $COVERAGE_MIN" | awk '{print ($1 > $2)}') )); then
+          echo "OK"
+        else
+          echo "Current test coverage is below the threshold (see above)."
+          echo "FAILED"
+          exit 1
     - name: Test build
       run: make coco
 
