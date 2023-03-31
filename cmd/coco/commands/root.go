@@ -152,7 +152,7 @@ func initConfig() {
 		if err != nil {
 			zap.S().Fatal(err)
 		}
-		log.Sugar.Warn("git.path not set - using default ", zap.String("git.path", path))
+		log.Sugar.Debug("git.path not set - using default ", zap.String("git.path", path))
 		viper.Set(gitPath, path)
 	}
 

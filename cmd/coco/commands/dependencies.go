@@ -83,7 +83,7 @@ func init() {
 	dependenciesCmd.PersistentFlags().StringVarP(
 		&dependencyFile,
 		"dep-file", "d",
-		"dependencies.yaml",
+		"coco.yaml",
 		`the dependency information file name`,
 	)
 
