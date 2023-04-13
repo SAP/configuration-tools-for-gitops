@@ -38,7 +38,7 @@ test-all: ## Run all tests in the code base outside of the tmp/ folder
 	test_dir="$(shell go list ./... | grep -v /tmp)"; INTEGRATION_TESTS=true go test -run .\* -v -timeout 300s -race $$test_dir -coverprofile cover.out
 	go tool cover -func ./cover.out 
 
-go-%: ## Run a go toolchain command against the code base (e.g. go fmt ./...)
+go-%: ## Run a go toolchain command against the code base (e.g. make go-fmt results in go fmt ./...)
 	go $* ./...
 
 .PHONY: lint
