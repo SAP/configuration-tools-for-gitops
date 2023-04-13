@@ -219,4 +219,4 @@ After file-generation, this gives the following folders
 |   +-- cluster_2.yaml
 ```
 
-where we droped the remaining files for brevity.
+where we dropped the remaining files for brevity.
