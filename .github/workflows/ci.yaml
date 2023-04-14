@@ -1,0 +1,133 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: CI pipeline
+
+on:
+  push:
+    branches:
+    - '**'
+  pull_request:
+    branches:
+    - '**'
+# on: 
+#   push:
+#     tags:
+#     - 'v*'
+#     branches:
+#     - 'main'
+#     - 'release-*'
+#   pull_request:
+#     branches:
+#     - 'main'
+
+jobs:
+  variables:
+    name: Variables
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: golangci version
+      uses: mikefarah/yq@v4.33.1
+      id: golangci_version
+      with:
+        cmd: yq '.golangci_version' .buildvars.yml
+    - name: golang version
+      uses: mikefarah/yq@v4.33.1
+      id: go_version
+      with:
+        cmd: yq '.go_version' .buildvars.yml
+    - name: coverage minimum
+      uses: mikefarah/yq@v4.33.1
+      id: coverage_min
+      with:
+        cmd: yq '.coverage_min' .buildvars.yml
+    outputs:
+      go_version: ${{ steps.go_version.outputs.result }}
+      golangci_version: ${{ steps.golangci_version.outputs.result }}
+      coverage_min: ${{ steps.coverage_min.outputs.result }}
+
+  lint:
+    name: Linting
+    runs-on: ubuntu-latest
+    needs: [variables]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-go@v4
+      # https://github.com/marketplace/actions/setup-go-environment
+      with:
+        go-version: ${{ needs.variables.outputs.go_version }}
+        cache: false
+    - name: Run golangci-lint
+      # https://github.com/marketplace/actions/run-golangci-lint
+      uses: golangci/golangci-lint-action@v3
+      with:
+        version: ${{ needs.variables.outputs.golangci_version }}
+        args: --timeout 10m
+    - name: Go fmt
+      run: make go-fmt
+    - name: Go vet
+      run: make go-vet
+    - name: Go fix
+      run: make go-fix
+
+
+  unit-tests:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    needs: [variables]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-go@v4
+      # https://github.com/marketplace/actions/setup-go-environment
+      with:
+        go-version: ${{ needs.variables.outputs.go_version }}
+        cache: false
+    - name: Test
+      env:
+        COVERAGE_MIN: ${{ needs.variables.outputs.coverage_min }}
+      run: |
+        echo "Execute unit tests..."
+        make test
+        echo ""
+        echo "Coverage gate: checking test coverage is above..."
+        echo "Threshold                : $COVERAGE_MIN %"
+        totalCoverage=`cat coverage.out | grep total | grep -Eo '[0-9]+.[0-9]+'`
+        echo "Current test coverage at : $totalCoverage %"
+        if (( $(echo "$totalCoverage $COVERAGE_MIN" | awk '{print ($1 > $2)}') )); then
+          echo "OK"
+        else
+          echo "Current test coverage is below the threshold (see above)."
+          echo "FAILED"
+          exit 1
+        fi
+    - name: Test build
+      run: make coco
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [variables, unit-tests, lint]
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ needs.variables.outputs.go_version }}
+      - uses: go-semantic-release/action@v1
+        with:
+          hooks: goreleaser
+          prerelease: false
+          changelog-file: CHANGELOG.md
+          changelog-generator-opt: "emojis=true"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
