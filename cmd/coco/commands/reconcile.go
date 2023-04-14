@@ -44,6 +44,4 @@ func init() {
 	reconcileCmd.Flags().StringVar(&repoName, "repoName", "", "The name of the repository.")
 	reconcileCmd.Flags().StringVar(&ownerName, "ownerName", "", "The name of the owner of the repository.")
 	reconcileCmd.Flags().BoolVar(&dryRun, "dry-run", false, "Perform a dry-run to check for merge conflicts without making any changes.")
-	reconcileCmd.Flags().BoolVar(&localOnly, "local-only", false, "Make the changes to the local branch, without pushing to the remote repository.")
-	reconcileCmd.Flags().BoolVar(&botMode, "bot", false, "Enable bot mode to automatically raise a draft pull request for merge conflicts.")
 }
