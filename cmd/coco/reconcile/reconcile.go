@@ -23,7 +23,7 @@ func StartReconcilition(sourceBranch string, targetBranch string, ownerName stri
 
 	ctx := context.Background()
 
-	//Authenticate with Github
+	// Authenticate with Github
 	token := os.Getenv("GITHUB_TOKEN")
 	if token == "" {
 		return fmt.Errorf("GITHUB_TOKEN environment variable is not set")
@@ -49,7 +49,7 @@ func StartReconcilition(sourceBranch string, targetBranch string, ownerName stri
 			// get a list of branches
 			branches, _, err := client.Repositories.ListBranches(ctx, ownerName, repoName, nil)
 			if err != nil {
-				return fmt.Errorf("Failed to list branches: %v", err)
+				return fmt.Errorf("failed to list branches: %v", err)
 			}
 
 			// check if reconcile/target branch is already created
@@ -67,20 +67,25 @@ func StartReconcilition(sourceBranch string, targetBranch string, ownerName stri
 				// Compare the latest target branch and reconcile/target branch
 				target, _, err := client.Repositories.GetBranch(ctx, ownerName, repoName, targetBranch, false)
 				if err != nil {
-					return fmt.Errorf("Failed to get target branch: %v", err)
+					return fmt.Errorf("failed to get target branch: %v", err)
 				}
 				if target.GetCommit().GetSHA() != reconcileBranch.GetCommit().GetSHA() {
 					// Check if there are new commits in target branch
 					options := &github.ListOptions{}
-					commits, _, err := client.Repositories.CompareCommits(ctx, ownerName, repoName, reconcileBranch.GetCommit().GetSHA(), target.GetCommit().GetSHA(), options)
+					commits, _, err := client.Repositories.CompareCommits(
+						ctx,
+						ownerName,
+						repoName,
+						reconcileBranch.GetCommit().GetSHA(),
+						target.GetCommit().GetSHA(), options)
 					if err != nil {
-						return fmt.Errorf("Failed to compare commits: %v", err)
+						return fmt.Errorf("failed to compare commits: %v", err)
 					}
 					if len(commits.Commits) > 0 {
 						// Delete the reconcile/target branch
-						_, err := client.Git.DeleteRef(ctx, ownerName, repoName, "refs/heads/"+reconcileBranchName)
-						if err != nil {
-							return fmt.Errorf("Failed to delete branch: %v", err)
+						if _, err := client.Git.DeleteRef(ctx, ownerName, repoName,
+							"refs/heads/"+reconcileBranchName); err != nil {
+							return fmt.Errorf("failed to delete branch: %v", err)
 						}
 						fmt.Printf("Deleted existing reconcile branch: %s\n", reconcileBranchName)
 					} else {
@@ -100,11 +105,10 @@ func StartReconcilition(sourceBranch string, targetBranch string, ownerName stri
 			if err != nil {
 				return fmt.Errorf("Failed to get target branch reference: %v", err)
 			}
-			_, _, err = client.Git.CreateRef(ctx, ownerName, repoName, &github.Reference{
+			if _, _, err = client.Git.CreateRef(ctx, ownerName, repoName, &github.Reference{
 				Ref:    github.String("refs/heads/" + reconcileBranchName),
 				Object: target.Object,
-			})
-			if err != nil {
+			}); err != nil {
 				return fmt.Errorf("Failed to create reconcile branch: %v", err)
 			}
 			fmt.Println("Created new reconcile branch from target branch")
@@ -113,7 +117,11 @@ func StartReconcilition(sourceBranch string, targetBranch string, ownerName stri
 				Title: github.String("Draft PR: Merge " + sourceBranch + " into " + reconcileBranchName),
 				Head:  github.String(sourceBranch),
 				Base:  github.String(reconcileBranchName),
-				Body:  github.String("This is an auto-generated draft pull request for merging " + sourceBranch + " into " + reconcileBranchName),
+				Body: github.String(
+					"This is an auto-generated draft pull request for merging " +
+						sourceBranch +
+						" into " +
+						reconcileBranchName),
 				Draft: github.Bool(true),
 			})
 			if err != nil {
@@ -121,9 +129,8 @@ func StartReconcilition(sourceBranch string, targetBranch string, ownerName stri
 			}
 			fmt.Printf("Draft pull request #%d created: %s\n", pr.GetNumber(), pr.GetHTMLURL())
 			return nil
-
 		} else {
-			return fmt.Errorf("Failed to merge branches: %v", err)
+			return fmt.Errorf("failed to merge branches: %v", err)
 		}
 	} else {
 		if dryRun {
