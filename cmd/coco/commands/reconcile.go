@@ -12,15 +12,17 @@ var (
 	ownerName string
 	repoName  string
 	dryRun    bool
-	localOnly bool
-	botMode   bool
 )
 
 var reconcileCmd = &cobra.Command{
 	Use:     "reconcile",
 	Aliases: []string{"r"},
 	Short:   "Reconciles a target branch with source branch",
-	Long:    `This command ...`,
+	Long: `The command is intended to reconcile a target branch with a source branch
+	 by merging them. The reconciling process involves creating a new branch with the 
+	 name "reconcile/{target_branch}," where {target_branch} is the name of the 
+	 target branch, merging the source branch into the target branch, and 
+	 pushing the result to the remote repository`,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := reconcile.StartReconcilition(
 			sourceBranch,
