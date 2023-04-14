@@ -4,7 +4,7 @@ The package in this folder helps to reconcile a target branch with a source bran
 
 ##Usage
 ```shell
-coco reconcile --source <source_branch> --target <target_branch> --ownerName <owner_name> --repoName <repo_name> [--dry-run] [--local-only] [--bot]
+coco reconcile --source <source_branch> --target <target_branch> --ownerName <owner_name> --repoName <repo_name> [--dry-run]
 ```
 
 ##Required Flags
