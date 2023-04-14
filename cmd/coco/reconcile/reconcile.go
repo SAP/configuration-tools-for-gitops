@@ -89,7 +89,9 @@ func handleMergeConflict(ctx context.Context, client *github.Client, ownerName, 
 	}
 
 	if reconcileBranchExists {
-		return handleExistingReconcileBranch(ctx, client, ownerName, repoName, reconcileBranchName, targetBranch, reconcileBranch, sourceBranch)
+		if err = handleExistingReconcileBranch(ctx, client, ownerName, repoName, reconcileBranchName, targetBranch, reconcileBranch, sourceBranch); err != nil {
+			return err
+		}
 	}
 
 	return handleNewReconcileBranch(ctx, client, ownerName, repoName, reconcileBranchName, targetBranch, sourceBranch)
@@ -120,18 +122,13 @@ func handleExistingReconcileBranch(ctx context.Context, client *github.Client, o
 				return fmt.Errorf("failed to delete branch: %v", err)
 			}
 			fmt.Printf("Deleted existing reconcile branch: %s\n", reconcileBranchName)
-		} else {
-			// Merge PR/merge directly
-			// TODO: Implement PR/merge logic
 			return nil
+		} else {
+			return fmt.Errorf("%s already exists for the latest target branch", reconcileBranchName)
 		}
 	} else {
-		fmt.Println("Reconcile branch is up to date with target branch")
-		// Merge PR/merge directly
-		// TODO: Implement PR/merge logic
-		return nil
+		return fmt.Errorf("%s already exists for the latest target branch", reconcileBranchName)
 	}
-	return nil
 }
 
 func handleNewReconcileBranch(ctx context.Context, client *github.Client, ownerName, repoName, reconcileBranchName, targetBranch string, sourceBranch string) error {
