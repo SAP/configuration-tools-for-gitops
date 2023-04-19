@@ -1,67 +1,30 @@
-## todo
+# Reconcile Package
 
-- define parameters for `reconcie`
-- behaviour in merge-conflicts
-  - defaults
-  - configurable
-- behaviour without merge-conflicts
-  - defaults
-  - configurable
-- do we want to create Draft PRs in the remote?
-  - not
-  - only in conflicts
-  - indicated by parameter
+The package in this folder helps to reconcile a target branch with a source branch.
 
-## command interface
+## Usage
+```shell
+coco reconcile --source <source_branch> --target <target_branch> --ownerName <owner_name> --repoName <repo_name> [--dry-run]
+```
 
-option 1:
+## Required Flags
 
-- `coco reconcile source->target`
+- `--source` - The source branch to reconcile from.
+- `--target` - The target branch to reconcile to.
+- `--ownerName` - The name of the owner of the repository.
+- `--repoName` - The name of the repository.
 
-  - translates to (in spirit)
+## Optional Flags
+- `--dry-run` - Perform a dry-run to check for merge conflicts without making any changes.
 
-    ```bash
-      git checkout target; git merge source
-    ```
+## Command Details
+This command reconciles a target branch with a source branch. If merge conflicts occur, it will attempt to reconcile the targetBranch by creating a new branch, `reconcile/targetBranch`, that will be used to merge the `sourceBranch` into the `targetBranch`. If the `reconcile/targetBranch` already exists, it will try to merge the latest changes from the `targetBranch` into the `reconcile/targetBranch`. If no changes exist, it will create a draft pull request that will merge the `sourceBranch` into the `reconcile/targetBranch`. If there are merge conflicts, it will create a new branch named `reconcile/targetBranch>` from the target branch, and then attempt to merge the source branch into it. If there are no merge conflicts, it will merge the source branch into the target branch directly.
 
-- (NOT IN VERSION 1) `coco reconcile source->target_1->target_2->...->target_N`
+## Authentication
+This command requires access to a GitHub personal access token. The token must be stored in the GITHUB_TOKEN environment variable.
 
-  - translates to (in spirit)
-
-    ```bash
-      git checkout target_1; git merge source
-      git checkout target_2; git merge target_1
-    ```
-
-option 2:
-
-- `coco reconcile --source source_branch --target target_branch`
-
-additional parameters? :
-
-- `--dry-run`: validate if the merge is conflict free
-- `--debug`: present the diff between source and target
-- `--local-only` (if default pushes to remote): no remote update
-- `--push` (if default does not push to remote): remote update
-- (NOT IN VERSION 1) `--resolve-pattern`: defines a pattern that is used to
-  resolve conflicts (if they match the pattern)
-- `--draft-pr`: creates a draft pull-request
-
-## tasks:
-
-- describe the happy path:
-  - starting situation (source- and target-branch not connected in git graph (2
-    HEAD leaf nodes))
-  - desired target situation (source-branch is connected to the target-branch
-    (flows into the target branch) in a new commit)
-- describe what the command does (happy path)
-  - what is the entire flow from start situation to target situation?
-- describe failure paths
-  - what does the command do in merge conflicts?
-- in general: where does the command manipulate files (local or remote or both)
-  in what situation?
-
-  - for failure mode
-  - for happy path
-
-(-) describe parameters that can be given to command
+## Example
+```shell
+coco reconcile --source main --target dev --ownerName myorg --repoName myrepo
+```
+This will reconcile the `dev` branch with the `main` branch in the `myorg/myrepo` repository. If there are merge conflicts, it will create a new branch named `reconcile/dev` from the `dev` branch, and then attempt to merge the `main` branch into it. If there are no merge conflicts, it will merge the `main` branch into the `dev` branch directly.
