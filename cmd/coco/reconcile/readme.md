@@ -1,67 +1,59 @@
-## todo
+# Reconcile Package
 
-- define parameters for `reconcie`
-- behaviour in merge-conflicts
-  - defaults
-  - configurable
-- behaviour without merge-conflicts
-  - defaults
-  - configurable
-- do we want to create Draft PRs in the remote?
-  - not
-  - only in conflicts
-  - indicated by parameter
+The package in this folder helps to reconcile a target branch with a source branch.
 
-## command interface
+## Usage
+```shell
+coco reconcile --source <source_branch> --target <target_branch> --ownerName <owner_name> --repoName <repo_name> [--dry-run]
+```
 
-option 1:
+For the reconcile command usage please run
+```shell
+coco reconcile --help
+```
 
-- `coco reconcile source->target`
+## Command Details
+```flow
+st=>start: Start
+e=>end: End
+op1=>operation: Set sourceBranch, targetBranch, owner and repo
+op2=>operation: Authenticate with Github
+op3=>operation: Attempt to merge branches
+cond3=>condition: Merge conflict detected?
+op5=>operation: Check if reconcileBranch exists
+cond5=>condition: Yes or No?
+op6=>operation: Check if targetBranch has new commits
+cond6=>condition: Yes or No?
+cond6_1=>condition: Delete the reconcileBranch?
+io6_1=>inputoutput: Reconcile branch deleted
+io6_2=>inputoutput: Manually rebase reconcileBranch with targetBranch and re-try
+op7=>operation: Check mergability of the draft pull request
+cond7=>condition: Mergeable?
+io7_1=>inputoutput: Fast-forward merge of reconcileBranch into targetBranch
+io7_2=>inputoutput: Resolve merge conflicts and re-try
+op8=>operation: Create a new reconcileBranch
+op9=>operation: Create a new draft pull request
+io9=>inputoutput: Resolve merge conflicts in the pull request and re-try
 
-  - translates to (in spirit)
+st->op1->op2->op3->cond3->e
+op8->op9->io9->e
+cond3(yes)->op5->cond5
+cond3(no)->e
+cond5(yes)->op6->cond6
+cond5(no)->op8
+cond6(yes)->cond6_1
+cond6(no)->op7->cond7
+cond6_1(yes)->io6_1->op8
+cond6_1(no)->io6_2-e
+cond7(yes)->io7_1->e
+cond7(no)->io7_2->e
+```
 
-    ```bash
-      git checkout target; git merge source
-    ```
+## Authentication
+This command requires access to a GitHub personal access token. The token must be stored in the GITHUB_TOKEN environment variable.
 
-- (NOT IN VERSION 1) `coco reconcile source->target_1->target_2->...->target_N`
-
-  - translates to (in spirit)
-
-    ```bash
-      git checkout target_1; git merge source
-      git checkout target_2; git merge target_1
-    ```
-
-option 2:
-
-- `coco reconcile --source source_branch --target target_branch`
-
-additional parameters? :
-
-- `--dry-run`: validate if the merge is conflict free
-- `--debug`: present the diff between source and target
-- `--local-only` (if default pushes to remote): no remote update
-- `--push` (if default does not push to remote): remote update
-- (NOT IN VERSION 1) `--resolve-pattern`: defines a pattern that is used to
-  resolve conflicts (if they match the pattern)
-- `--draft-pr`: creates a draft pull-request
-
-## tasks:
-
-- describe the happy path:
-  - starting situation (source- and target-branch not connected in git graph (2
-    HEAD leaf nodes))
-  - desired target situation (source-branch is connected to the target-branch
-    (flows into the target branch) in a new commit)
-- describe what the command does (happy path)
-  - what is the entire flow from start situation to target situation?
-- describe failure paths
-  - what does the command do in merge conflicts?
-- in general: where does the command manipulate files (local or remote or both)
-  in what situation?
-
-  - for failure mode
-  - for happy path
-
-(-) describe parameters that can be given to command
+## Example
+```shell
+coco reconcile --source main --target dev --ownerName myorg --repoName myrepo
+```
+This will reconcile the `dev` branch with the `main` branch in the `myorg/myrepo` repository. If there are merge conflicts, it will create a new branch named `reconcile/dev` from the `dev` branch, and then attempt to merge the `main` branch into it. If there are no merge conflicts, it will merge the `main` branch into the `dev` branch directly.
