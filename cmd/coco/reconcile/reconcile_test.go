@@ -128,7 +128,7 @@ var scenarios = []scenario{
 	},
 }
 
-func TestStartReconcilition(t *testing.T) {
+func TestReconcilition(t *testing.T) {
 	t.Setenv("GITHUB_TOKEN", "dummy_token_1234567890")
 	getBranchRef = func(client *github.Client, ctx context.Context, ownerName, repoName, branchName string) (*github.Reference, error) {
 		return &github.Reference{}, nil
@@ -139,7 +139,7 @@ func TestStartReconcilition(t *testing.T) {
 	handleTargetAhead = func(reconcileBranchName, ownerName, repoName string, client *github.Client, ctx context.Context) (bool, error) {
 		return true, nil
 	}
-	checkMergability = func(ctx context.Context, reconcileBranchName, source, target, ownerName, repoName string, client *github.Client) (bool, error) {
+	checkMergeability = func(ctx context.Context, reconcileBranchName, source, target, ownerName, repoName string, client *github.Client) (bool, error) {
 		return true, nil
 	}
 	for _, tt := range scenarios {
@@ -197,7 +197,7 @@ func TestStartReconcilition(t *testing.T) {
 					return fmt.Errorf("Merge conflict")
 				}
 			}
-			err := StartReconcilition(tt.sourceBranch, tt.targetBranch, tt.ownerName, tt.repoName, tt.dryRun)
+			err := Reconcile(tt.sourceBranch, tt.targetBranch, tt.ownerName, tt.repoName, tt.dryRun)
 			if err != nil && err.Error() != tt.expectedErr.Error() {
 				t.Errorf("unexpected error: got %v, want %v", err, tt.expectedErr)
 			}

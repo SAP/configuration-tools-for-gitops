@@ -9,9 +9,9 @@ import (
 )
 
 var (
-	ownerName string
-	repoName  string
-	dryRun    bool
+	owner  string
+	repo   string
+	dryRun bool
 )
 
 var reconcileCmd = &cobra.Command{
@@ -24,11 +24,20 @@ var reconcileCmd = &cobra.Command{
 	 target branch, merging the source branch into the target branch, and 
 	 pushing the result to the remote repository`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := reconcile.StartReconcilition(
+		if sourceBranch == "" || targetBranch == "" {
+			log.Sugar.Errorf("source and target branches must be specified")
+			os.Exit(1)
+		}
+
+		if owner == "" || repo == "" {
+			log.Sugar.Errorf("owner name and repository name must be specified")
+			os.Exit(1)
+		}
+		err := reconcile.Reconcile(
 			sourceBranch,
 			targetBranch,
-			ownerName,
-			repoName,
+			owner,
+			repo,
 			dryRun,
 		)
 		if err != nil {
@@ -41,9 +50,27 @@ var reconcileCmd = &cobra.Command{
 
 //nolint:gochecknoinits // required by the cobra framework
 func init() {
-	reconcileCmd.Flags().StringVar(&sourceBranch, "source", "", "The souce branch to reconcile from.")
-	reconcileCmd.Flags().StringVar(&targetBranch, "target", "", "The target branch to reconcile to.")
-	reconcileCmd.Flags().StringVar(&repoName, "repoName", "", "The name of the repository.")
-	reconcileCmd.Flags().StringVar(&ownerName, "ownerName", "", "The name of the owner of the repository.")
-	reconcileCmd.Flags().BoolVar(&dryRun, "dry-run", false, "Perform a dry-run to check for merge conflicts without making any changes.")
+	reconcileCmd.PersistentFlags().StringVarP(&sourceBranch, "source-branch", "s", "", "The souce branch to reconcile from.")
+	if err := reconcileCmd.MarkFlagRequired("source-branch"); err != nil {
+		log.Sugar.Error(err)
+		os.Exit(1)
+	}
+	reconcileCmd.PersistentFlags().StringVarP(&targetBranch, "target-branch", "t", "", "The target branch to reconcile to.")
+	if err := reconcileCmd.MarkFlagRequired("target-branch"); err != nil {
+		log.Sugar.Error(err)
+		os.Exit(1)
+	}
+	reconcileCmd.PersistentFlags().StringVarP(&repo, "repo", "r", "", "The name of the gihtub repository.")
+	registerFlag(repo, "repo", "GITHUB_REPOSITORY")
+	if err := reconcileCmd.MarkFlagRequired("repo"); err != nil {
+		log.Sugar.Error(err)
+		os.Exit(1)
+	}
+	reconcileCmd.PersistentFlags().StringVarP(&owner, "owner", "o", "", "The account owner of the github repository.")
+	registerFlag(repo, "owner", "REPOSITORY_OWNER")
+	if err := reconcileCmd.MarkFlagRequired("owner"); err != nil {
+		log.Sugar.Error(err)
+		os.Exit(1)
+	}
+	reconcileCmd.PersistentFlags().BoolVarP(&dryRun, "dry-run", "d", false, "Perform a dry-run to check for merge conflicts without making any changes.")
 }

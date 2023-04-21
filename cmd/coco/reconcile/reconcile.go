@@ -10,14 +10,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func StartReconcilition(sourceBranch string, targetBranch string, ownerName string, repoName string, dryRun bool) error {
-	if sourceBranch == "" || targetBranch == "" {
-		return fmt.Errorf("source and target branches must be specified")
-	}
-
-	if ownerName == "" || repoName == "" {
-		return fmt.Errorf("owner name and repository name must be specified")
-	}
+func Reconcile(sourceBranch string, targetBranch string, ownerName string, repoName string, dryRun bool) error {
 
 	reconcileBranchName := fmt.Sprintf("reconcile/%s-%s", sourceBranch, targetBranch)
 
@@ -110,7 +103,7 @@ func handleExistingReconcileBranch(ctx context.Context, client *github.Client, o
 		return handleTargetAhead(reconcileBranchName, ownerName, repoName, client, ctx)
 	} else {
 		//check mergability
-		return checkMergability(ctx, reconcileBranchName, sourceBranch, targetBranch, ownerName, repoName, client)
+		return checkMergeability(ctx, reconcileBranchName, sourceBranch, targetBranch, ownerName, repoName, client)
 		// return true, fmt.Errorf("%s already exists for the latest target branch", reconcileBranchName)
 	}
 }
@@ -134,7 +127,7 @@ func handleNewReconcileBranch(ctx context.Context, client *github.Client, ownerN
 	return nil
 }
 
-var checkMergability = func(ctx context.Context, reconcileBranchName, source, target, ownerName, repoName string, client *github.Client) (bool, error) {
+var checkMergeability = func(ctx context.Context, reconcileBranchName, source, target, ownerName, repoName string, client *github.Client) (bool, error) {
 	prs, _, err := client.PullRequests.List(ctx, ownerName, repoName, nil)
 	if err != nil {
 		return false, err
