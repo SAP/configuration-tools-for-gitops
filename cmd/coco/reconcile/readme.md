@@ -13,40 +13,38 @@ coco reconcile --help
 ```
 
 ## Command Details
-```flow
-st=>start: Start
-e=>end: End
-op1=>operation: Set sourceBranch, targetBranch, owner and repo
-op2=>operation: Authenticate with Github
-op3=>operation: Attempt to merge branches
-cond3=>condition: Merge conflict detected?
-op5=>operation: Check if reconcileBranch exists
-cond5=>condition: Yes or No?
-op6=>operation: Check if targetBranch has new commits
-cond6=>condition: Yes or No?
-cond6_1=>condition: Delete the reconcileBranch?
-io6_1=>inputoutput: Reconcile branch deleted
-io6_2=>inputoutput: Manually rebase reconcileBranch with targetBranch and re-try
-op7=>operation: Check mergability of the draft pull request
-cond7=>condition: Mergeable?
-io7_1=>inputoutput: Fast-forward merge of reconcileBranch into targetBranch
-io7_2=>inputoutput: Resolve merge conflicts and re-try
-op8=>operation: Create a new reconcileBranch
-op9=>operation: Create a new draft pull request
-io9=>inputoutput: Resolve merge conflicts in the pull request and re-try
 
-st->op1->op2->op3->cond3->e
-op8->op9->io9->e
-cond3(yes)->op5->cond5
-cond3(no)->e
-cond5(yes)->op6->cond6
-cond5(no)->op8
-cond6(yes)->cond6_1
-cond6(no)->op7->cond7
-cond6_1(yes)->io6_1->op8
-cond6_1(no)->io6_2-e
-cond7(yes)->io7_1->e
-cond7(no)->io7_2->e
+```mermaid
+flowchart TB
+    st[Start]
+    e[End]
+    op1[[Set sourceBranch, targetBranch, owner and repo]]
+    op2[[Authenticate with Github]]
+    op3[[Attempt to merge branches]]
+    cond3{Merge conflict detected?}
+    cond5{reconcileBranch exists?}
+    cond6{targetBranch has new commits?}
+    cond6_1{Delete the reconcileBranch or manually rebase with targetBranch?}
+    io6_1[/reconcileBranch deleted/]
+    cond7{Is the draft pull request mergeable?}
+    io7_1[/Fast-forward merge of reconcileBranch into targetBranch/]
+    io7_2[/Resolve merge conflicts and re-try/]
+    op8[[Create a new reconcileBranch]]
+    op9[[Create a new draft pull request]]
+    io9[/Resolve merge conflicts in the pull request and re-try/]
+
+    st-->op1-->op2-->op3-->cond3
+    op8-->op9-->io9-->e
+    cond3-->|YES|cond5
+    cond3-->|NO|e
+    cond5-->|YES|cond6
+    cond5-->|NO|op8
+    cond6-->|YES|cond6_1
+    cond6-->|NO|cond7
+    cond6_1-->|DELETE|io6_1-->op8
+    cond6_1-->|REBASE MANUALLY|e
+    cond7-->|YES|io7_1-->e
+    cond7-->|NO|io7_2-->e
 ```
 
 ## Authentication
