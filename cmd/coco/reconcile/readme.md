@@ -54,4 +54,4 @@ This command requires access to a GitHub personal access token. The token must b
 ```shell
 coco reconcile --source main --target dev --ownerName myorg --repoName myrepo
 ```
-This will reconcile the `dev` branch with the `main` branch in the `myorg/myrepo` repository. If there are merge conflicts, it will create a new branch named `reconcile/dev` from the `dev` branch, and then attempt to merge the `main` branch into it. If there are no merge conflicts, it will merge the `main` branch into the `dev` branch directly.
+This will reconcile the `dev` branch with the `main` branch in the `myorg/myrepo` repository. If there are merge conflicts, it will create a new branch named `reconcile/main-dev` from the `dev` branch, and then attempt to merge the `main` branch into it. If there are no merge conflicts, it will merge the `main` branch into the `dev` branch directly.

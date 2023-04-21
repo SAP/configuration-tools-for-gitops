@@ -6,6 +6,7 @@ import (
 	"github.com/configuration-tools-for-gitops/cmd/coco/reconcile"
 	"github.com/configuration-tools-for-gitops/pkg/log"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -23,6 +24,13 @@ var reconcileCmd = &cobra.Command{
 	 name "reconcile/{target_branch}," where {target_branch} is the name of the 
 	 target branch, merging the source branch into the target branch, and 
 	 pushing the result to the remote repository`,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		if viper.GetString("git-token") == "" {
+			cobra.CheckErr(
+				"environment variable \"GITHUB_TOKEN\" must be set for the \"dependencies\" command.",
+			)
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if sourceBranch == "" || targetBranch == "" {
 			log.Sugar.Errorf("source and target branches must be specified")
@@ -38,6 +46,7 @@ var reconcileCmd = &cobra.Command{
 			targetBranch,
 			owner,
 			repo,
+			viper.GetString("git-token"),
 			dryRun,
 		)
 		if err != nil {

@@ -5,16 +5,20 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/configuration-tools-for-gitops/pkg/log"
 	"github.com/google/go-github/v51/github"
 	"golang.org/x/oauth2"
 )
 
-func Reconcile(sourceBranch string, targetBranch string, ownerName string, repoName string, dryRun bool) error {
+func Reconcile(sourceBranch string, targetBranch string, ownerName string, repoName string, token string, dryRun bool) error {
 
 	reconcileBranchName := fmt.Sprintf("reconcile/%s-%s", sourceBranch, targetBranch)
 
-	ctx := context.Background()
+	timeout := 100 * time.Millisecond
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 
 	// Authenticate with Github
 	client, err := authenticateWithGithub(ctx)
@@ -37,13 +41,13 @@ func Reconcile(sourceBranch string, targetBranch string, ownerName string, repoN
 		}
 	} else {
 		if dryRun {
-			fmt.Println("No merge conflicts found")
+			log.Sugar.Debug("No merge conflicts found")
 			return nil
 		}
-		fmt.Println("Merged successfully")
+		log.Sugar.Info("Merged successfully")
 	}
 
-	fmt.Println("Reconcile complete")
+	log.Sugar.Info("Reconcile complete")
 	return nil
 }
 
@@ -117,13 +121,13 @@ func handleNewReconcileBranch(ctx context.Context, client *github.Client, ownerN
 	if err = createBranch(client, ctx, ownerName, repoName, reconcileBranchName, target); err != nil {
 		return fmt.Errorf("Failed to create reconcile branch: %v", err)
 	}
-	fmt.Println("Created new reconcile branch from target branch")
+	log.Sugar.Debug("Created new reconcile branch from target branch")
 
 	pr, err := createPullRequest(client, ctx, ownerName, repoName, sourceBranch, reconcileBranchName)
 	if err != nil {
 		return fmt.Errorf("failed to create a draft PR: %v", err)
 	}
-	fmt.Printf("Draft pull request #%d created: %s\n", pr.GetNumber(), pr.GetHTMLURL())
+	log.Sugar.Info("Draft pull request #%d created: %s\n", pr.GetNumber(), pr.GetHTMLURL())
 	return nil
 }
 
@@ -151,7 +155,7 @@ var checkMergeability = func(ctx context.Context, reconcileBranchName, source, t
 			}
 			_, _, err := client.Repositories.Merge(ctx, ownerName, repoName, mergeRequest)
 			if err != nil {
-				fmt.Println("Successfully merged reconcile branch to target branch")
+				log.Sugar.Info("Successfully merged reconcile branch to target branch")
 				return true, err
 			}
 			return false, err
