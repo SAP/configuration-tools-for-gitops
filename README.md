@@ -1,5 +1,5 @@
 # Configuration tools for GitOps
-![Coverage](https://img.shields.io/badge/Coverage-85.1%25-brightgreen)
+![Coverage](https://img.shields.io/badge/Coverage-85.3%25-brightgreen)
 
 ## About this project
 
