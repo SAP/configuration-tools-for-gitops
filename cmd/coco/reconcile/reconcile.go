@@ -12,7 +12,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func Reconcile(sourceBranch string, targetBranch string, ownerName string, repoName string, token string, dryRun bool) error {
+func Reconcile(sourceBranch string, targetBranch string, owner string, repo string, token string, dryRun bool) error {
 
 	reconcileBranchName := fmt.Sprintf("reconcile/%s-%s", sourceBranch, targetBranch)
 
@@ -26,10 +26,10 @@ func Reconcile(sourceBranch string, targetBranch string, ownerName string, repoN
 		return fmt.Errorf("failed to authenticate with Github: %v", err)
 	}
 
-	err = mergeBranches(ctx, client, ownerName, repoName, targetBranch, sourceBranch)
+	err = mergeBranches(ctx, client, owner, repo, targetBranch, sourceBranch)
 	if err != nil {
 		if strings.Contains(err.Error(), "Merge conflict") {
-			return handleMergeConflict(ctx, client, ownerName, repoName, reconcileBranchName, targetBranch, sourceBranch, dryRun)
+			return handleMergeConflict(ctx, client, owner, repo, reconcileBranchName, targetBranch, sourceBranch, dryRun)
 		} else {
 			return fmt.Errorf("failed to merge branches: %v", err)
 		}
@@ -45,31 +45,19 @@ func Reconcile(sourceBranch string, targetBranch string, ownerName string, repoN
 	return nil
 }
 
-func handleMergeConflict(ctx context.Context, client *github.Client, ownerName, repoName, reconcileBranchName, targetBranch, sourceBranch string, dryRun bool) error {
+func handleMergeConflict(ctx context.Context, client *github.Client, owner, repo, reconcileBranchName, targetBranch, sourceBranch string, dryRun bool) error {
 	if dryRun {
 		return fmt.Errorf("merge conflicts detected")
 	}
 
+	reconcileBranch, err := getBranch(client, ctx, owner, repo, reconcileBranchName)
+
 	// get a list of branches
-	branches, err := getBranchList(client, ctx, ownerName, repoName)
-	if err != nil {
-		return fmt.Errorf("failed to list branches: %v", err)
-	}
+	// branches, err := getBranchList(client, ctx, owner, repo)
 
-	// check if reconcile/target branch is already created
-	reconcileBranchExists := false
-	var reconcileBranch *github.Branch
-	for _, b := range branches {
-		if b.GetName() == reconcileBranchName {
-			reconcileBranchExists = true
-			reconcileBranch = b
-			break
-		}
-	}
-
-	if reconcileBranchExists {
+	if err == nil {
 		var resolved bool
-		resolved, err = handleExistingReconcileBranch(ctx, client, ownerName, repoName, reconcileBranchName, targetBranch, reconcileBranch, sourceBranch)
+		resolved, err = handleExistingReconcileBranch(ctx, client, owner, repo, reconcileBranchName, targetBranch, reconcileBranch, sourceBranch)
 		if err != nil {
 			return err
 		}
@@ -78,46 +66,46 @@ func handleMergeConflict(ctx context.Context, client *github.Client, ownerName, 
 		}
 	}
 
-	return handleNewReconcileBranch(ctx, client, ownerName, repoName, reconcileBranchName, targetBranch, sourceBranch)
+	return handleNewReconcileBranch(ctx, client, owner, repo, reconcileBranchName, targetBranch, sourceBranch)
 }
 
-func handleExistingReconcileBranch(ctx context.Context, client *github.Client, ownerName, repoName, reconcileBranchName, targetBranch string, reconcileBranch *github.Branch, sourceBranch string) (bool, error) {
+func handleExistingReconcileBranch(ctx context.Context, client *github.Client, owner, repo, reconcileBranchName, targetBranch string, reconcileBranch *github.Branch, sourceBranch string) (bool, error) {
 	// Compare the latest target branch and reconcile/target branch
-	target, err := getBranch(client, ctx, ownerName, repoName, targetBranch)
+	target, err := getBranch(client, ctx, owner, repo, targetBranch)
 	if err != nil {
 		return false, fmt.Errorf("failed to get target branch: %v", err)
 	}
 	commits, err := compareCommits(
 		client,
 		ctx,
-		ownerName,
-		repoName,
+		owner,
+		repo,
 		reconcileBranch,
 		target)
 	if err != nil {
 		return false, fmt.Errorf("failed to compare commits: %v", err)
 	}
 	if commits.GetAheadBy() > 0 {
-		return handleTargetAhead(reconcileBranchName, ownerName, repoName, client, ctx)
+		return handleTargetAhead(reconcileBranchName, owner, repo, client, ctx)
 	} else {
 		//check mergability
-		return checkMergeability(ctx, reconcileBranchName, sourceBranch, targetBranch, ownerName, repoName, client)
+		return checkMergeability(ctx, reconcileBranchName, sourceBranch, targetBranch, owner, repo, client)
 		// return true, fmt.Errorf("%s already exists for the latest target branch", reconcileBranchName)
 	}
 }
 
-func handleNewReconcileBranch(ctx context.Context, client *github.Client, ownerName, repoName, reconcileBranchName, targetBranch string, sourceBranch string) error {
+func handleNewReconcileBranch(ctx context.Context, client *github.Client, owner, repo, reconcileBranchName, targetBranch string, sourceBranch string) error {
 	// Create a new branch reconcile/target branch from target branch
-	target, err := getBranchRef(client, ctx, ownerName, repoName, targetBranch)
+	target, err := getBranchRef(client, ctx, owner, repo, targetBranch)
 	if err != nil {
 		return fmt.Errorf("Failed to get target branch reference: %v", err)
 	}
-	if err = createBranch(client, ctx, ownerName, repoName, reconcileBranchName, target); err != nil {
+	if err = createBranch(client, ctx, owner, repo, reconcileBranchName, target); err != nil {
 		return fmt.Errorf("Failed to create reconcile branch: %v", err)
 	}
 	log.Sugar.Debug("Created new reconcile branch from target branch")
 
-	pr, err := createPullRequest(client, ctx, ownerName, repoName, sourceBranch, reconcileBranchName)
+	pr, err := createPullRequest(client, ctx, owner, repo, sourceBranch, reconcileBranchName)
 	if err != nil {
 		return fmt.Errorf("failed to create a draft PR: %v", err)
 	}
@@ -125,8 +113,8 @@ func handleNewReconcileBranch(ctx context.Context, client *github.Client, ownerN
 	return nil
 }
 
-var checkMergeability = func(ctx context.Context, reconcileBranchName, source, target, ownerName, repoName string, client *github.Client) (bool, error) {
-	prs, _, err := client.PullRequests.List(ctx, ownerName, repoName, nil)
+var checkMergeability = func(ctx context.Context, reconcileBranchName, source, target, owner, repo string, client *github.Client) (bool, error) {
+	prs, _, err := client.PullRequests.List(ctx, owner, repo, nil)
 	if err != nil {
 		return false, err
 	}
@@ -147,7 +135,7 @@ var checkMergeability = func(ctx context.Context, reconcileBranchName, source, t
 				Head:          &reconcileBranchName,
 				CommitMessage: &commitMessage,
 			}
-			_, _, err := client.Repositories.Merge(ctx, ownerName, repoName, mergeRequest)
+			_, _, err := client.Repositories.Merge(ctx, owner, repo, mergeRequest)
 			if err != nil {
 				log.Sugar.Info("Successfully merged reconcile branch to target branch")
 				return true, err
@@ -162,7 +150,7 @@ var checkMergeability = func(ctx context.Context, reconcileBranchName, source, t
 	}
 }
 
-var handleTargetAhead = func(reconcileBranchName string, ownerName string, repoName string, client *github.Client, ctx context.Context) (bool, error) {
+var handleTargetAhead = func(reconcileBranchName string, owner string, repo string, client *github.Client, ctx context.Context) (bool, error) {
 	fmt.Print("The target branch has new commits, choose one of the following options:\n\n" +
 		"Option 1: Merge the target branch into the reconcile branch manually and rerun command `coco reconcile`\n\n" +
 		"Option 2: Automatically delete the reconcile branch and rerun the command `coco reconcile`\n\n" +
@@ -173,7 +161,7 @@ var handleTargetAhead = func(reconcileBranchName string, ownerName string, repoN
 	case 1:
 		fmt.Printf("\nPlease delete the branch %s and rerun the `coco reconcile` command", reconcileBranchName)
 	case 2:
-		return false, deleteBranch(client, ctx, ownerName, repoName, reconcileBranchName)
+		return false, deleteBranch(client, ctx, owner, repo, reconcileBranchName)
 	default:
 		for input != 1 && input != 2 {
 			fmt.Print("\nPlease choose either Option 1 or 2. Enter [1] for Option 1 or [2] for Option 2: ")
@@ -182,19 +170,19 @@ var handleTargetAhead = func(reconcileBranchName string, ownerName string, repoN
 		if input == 1 {
 			fmt.Printf("\nPlease delete the branch %s and rerun the `coco reconcile` command", reconcileBranchName)
 		} else if input == 2 {
-			return false, deleteBranch(client, ctx, ownerName, repoName, reconcileBranchName)
+			return false, deleteBranch(client, ctx, owner, repo, reconcileBranchName)
 		}
 	}
 	return true, nil
 }
 
-var mergeBranches = func(ctx context.Context, client *github.Client, ownerName string, repoName string, base string, head string) error {
+var mergeBranches = func(ctx context.Context, client *github.Client, owner string, repo string, base string, head string) error {
 	merge := &github.RepositoryMergeRequest{
 		CommitMessage: github.String("Merge branch " + head + " into " + base),
 		Base:          github.String(base),
 		Head:          github.String(head),
 	}
-	_, _, err := client.Repositories.Merge(ctx, ownerName, repoName, merge)
+	_, _, err := client.Repositories.Merge(ctx, owner, repo, merge)
 	return err
 }
 
@@ -215,28 +203,23 @@ var oauthClient = func(ctx context.Context, token string) (*github.Client, error
 	return github.NewClient(tc), nil
 }
 
-var getBranchList = func(client *github.Client, ctx context.Context, ownerName string, repoName string) ([]*github.Branch, error) {
-	branches, _, err := client.Repositories.ListBranches(ctx, ownerName, repoName, nil)
-	return branches, err
-}
-
-var getBranch = func(client *github.Client, ctx context.Context, ownerName string, repoName string, branchName string) (*github.Branch, error) {
-	branch, _, err := client.Repositories.GetBranch(ctx, ownerName, repoName, branchName, false)
+var getBranch = func(client *github.Client, ctx context.Context, owner string, repo string, branchName string) (*github.Branch, error) {
+	branch, _, err := client.Repositories.GetBranch(ctx, owner, repo, branchName, true)
 	return branch, err
 }
 
-var compareCommits = func(client *github.Client, ctx context.Context, ownerName string, repoName string, branch1 *github.Branch, branch2 *github.Branch) (*github.CommitsComparison, error) {
+var compareCommits = func(client *github.Client, ctx context.Context, owner string, repo string, branch1 *github.Branch, branch2 *github.Branch) (*github.CommitsComparison, error) {
 	options := &github.ListOptions{}
 	commits, _, err := client.Repositories.CompareCommits(
 		ctx,
-		ownerName,
-		repoName,
+		owner,
+		repo,
 		branch1.GetCommit().GetSHA(),
 		branch2.GetCommit().GetSHA(), options)
 	return commits, err
 }
 
-var deleteBranch = func(client *github.Client, ctx context.Context, ownerName string, repoName string, branchName string) error {
+var deleteBranch = func(client *github.Client, ctx context.Context, owner string, repo string, branchName string) error {
 	warningPrompt := fmt.Sprintf("\n\nYou will lose all the changes made in the reconcile branch. Are you sure you want to delete the branch %s?\n\n", branchName) +
 		"Enter [y] for Yes and [n] for No: "
 	fmt.Print(warningPrompt)
@@ -244,7 +227,7 @@ var deleteBranch = func(client *github.Client, ctx context.Context, ownerName st
 	fmt.Scanln(&input)
 
 	if strings.ToLower(input) == "y" {
-		_, err := client.Git.DeleteRef(ctx, ownerName, repoName,
+		_, err := client.Git.DeleteRef(ctx, owner, repo,
 			"refs/heads/"+branchName)
 		if err == nil {
 			fmt.Printf("%s branch deleted successfully", branchName)
@@ -259,14 +242,14 @@ var deleteBranch = func(client *github.Client, ctx context.Context, ownerName st
 	return nil
 }
 
-var getBranchRef = func(client *github.Client, ctx context.Context, ownerName string, repoName string, branchName string) (*github.Reference, error) {
+var getBranchRef = func(client *github.Client, ctx context.Context, owner string, repo string, branchName string) (*github.Reference, error) {
 	branchRef := "refs/heads/" + branchName
-	branch, _, err := client.Git.GetRef(ctx, ownerName, repoName, branchRef)
+	branch, _, err := client.Git.GetRef(ctx, owner, repo, branchRef)
 	return branch, err
 }
 
-var createBranch = func(client *github.Client, ctx context.Context, ownerName string, repoName string, branchName string, target *github.Reference) error {
-	_, _, err := client.Git.CreateRef(ctx, ownerName, repoName, &github.Reference{
+var createBranch = func(client *github.Client, ctx context.Context, owner string, repo string, branchName string, target *github.Reference) error {
+	_, _, err := client.Git.CreateRef(ctx, owner, repo, &github.Reference{
 		Ref:    github.String("refs/heads/" + branchName),
 		Object: target.Object,
 	})
@@ -274,8 +257,8 @@ var createBranch = func(client *github.Client, ctx context.Context, ownerName st
 	return err
 }
 
-var createPullRequest = func(client *github.Client, ctx context.Context, ownerName string, repoName string, head string, base string) (*github.PullRequest, error) {
-	pr, _, err := client.PullRequests.Create(ctx, ownerName, repoName, &github.NewPullRequest{
+var createPullRequest = func(client *github.Client, ctx context.Context, owner string, repo string, head string, base string) (*github.PullRequest, error) {
+	pr, _, err := client.PullRequests.Create(ctx, owner, repo, &github.NewPullRequest{
 		Title: github.String("Draft PR: Merge " + head + " into " + base),
 		Head:  github.String(head),
 		Base:  github.String(base),

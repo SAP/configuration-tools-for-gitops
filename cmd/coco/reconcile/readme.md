@@ -4,7 +4,7 @@ The package in this folder helps to reconcile a target branch with a source bran
 
 ## Usage
 ```shell
-coco reconcile --source <source_branch> --target <target_branch> --ownerName <owner_name> --repoName <repo_name> [--dry-run]
+coco reconcile --source <source_branch> --target <target_branch> --owner <owner_name> --repo <repo_name> [--dry-run]
 ```
 
 For the reconcile command usage please run
@@ -52,6 +52,6 @@ This command requires access to a GitHub personal access token. The token must b
 
 ## Example
 ```shell
-coco reconcile --source main --target dev --ownerName myorg --repoName myrepo
+coco reconcile --source main --target dev --owner myorg --repo myrepo
 ```
 This will reconcile the `dev` branch with the `main` branch in the `myorg/myrepo` repository. If there are merge conflicts, it will create a new branch named `reconcile/main-dev` from the `dev` branch, and then attempt to merge the `main` branch into it. If there are no merge conflicts, it will merge the `main` branch into the `dev` branch directly.
