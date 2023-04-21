@@ -26,13 +26,7 @@ func Reconcile(sourceBranch string, targetBranch string, ownerName string, repoN
 		return fmt.Errorf("failed to authenticate with Github: %v", err)
 	}
 
-	merge := &github.RepositoryMergeRequest{
-		CommitMessage: github.String("Merge branch " + sourceBranch + " into " + targetBranch),
-		Base:          github.String(targetBranch),
-		Head:          github.String(sourceBranch),
-	}
-
-	err = mergeBranches(ctx, client, ownerName, repoName, merge)
+	err = mergeBranches(ctx, client, ownerName, repoName, targetBranch, sourceBranch)
 	if err != nil {
 		if strings.Contains(err.Error(), "Merge conflict") {
 			return handleMergeConflict(ctx, client, ownerName, repoName, reconcileBranchName, targetBranch, sourceBranch, dryRun)
@@ -194,7 +188,12 @@ var handleTargetAhead = func(reconcileBranchName string, ownerName string, repoN
 	return true, nil
 }
 
-var mergeBranches = func(ctx context.Context, client *github.Client, ownerName string, repoName string, merge *github.RepositoryMergeRequest) error {
+var mergeBranches = func(ctx context.Context, client *github.Client, ownerName string, repoName string, base string, head string) error {
+	merge := &github.RepositoryMergeRequest{
+		CommitMessage: github.String("Merge branch " + head + " into " + base),
+		Base:          github.String(base),
+		Head:          github.String(head),
+	}
 	_, _, err := client.Repositories.Merge(ctx, ownerName, repoName, merge)
 	return err
 }
