@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/google/go-github/v51/github"
+	"github.com/configuration-tools-for-gitops/pkg/githubclient"
 )
 
 type scenario struct {
@@ -130,55 +130,21 @@ var scenarios = []scenario{
 
 func TestReconcilition(t *testing.T) {
 	token := "dummy_token_1234567890"
-	getBranchRef = func(client *github.Client, ctx context.Context, owner, repo, branchName string) (*github.Reference, error) {
-		return &github.Reference{}, nil
-	}
-	createBranch = func(client *github.Client, ctx context.Context, owner, repo, branchName string, target *github.Reference) error {
-		return nil
-	}
-	handleTargetAhead = func(reconcileBranchName, owner, repo string, client *github.Client, ctx context.Context) (bool, error) {
-		return true, nil
-	}
-	checkMergeability = func(ctx context.Context, reconcileBranchName, source, target, owner, repo string, client *github.Client) (bool, error) {
-		return true, nil
-	}
 	for _, tt := range scenarios {
 		t.Run(tt.title, func(t *testing.T) {
-			createPullRequest = func(client *github.Client, ctx context.Context, owner, repo, head, base string) (*github.PullRequest, error) {
-				prNumber := 1
-				url := fmt.Sprintf("www.github.com/%s/%s/pulls/%v", tt.owner, tt.repo, prNumber)
-				return &github.PullRequest{
-					Number:  &prNumber,
-					HTMLURL: &url,
-				}, nil
-			}
-			compareCommits = func(client *github.Client, ctx context.Context, owner, repo string, branch1, branch2 *github.Branch) (*github.CommitsComparison, error) {
-				var aheadBy int
-				if tt.targetAhead {
-					aheadBy = 2
-				} else {
-					aheadBy = 0
-				}
-				return &github.CommitsComparison{
-					//head is ahead of base
-					AheadBy: &aheadBy,
-				}, nil
-			}
-			getBranch = func(client *github.Client, ctx context.Context, owner string, repo string, branchName string) (*github.Branch, error) {
-				dummySHA := "dd0b557d0696d2e1b8a1cf9de6b3c6d3a3a8a8f9"
-				return &github.Branch{
-					Name: &tt.targetBranch,
-					Commit: &github.RepositoryCommit{
-						SHA: &dummySHA,
-					},
-				}, nil
-			}
-			mergeBranches = func(ctx context.Context, client *github.Client, owner string, repo string, targetBranch string, sourceBranch string) error {
-				if tt.mergeSuccessful {
-					return nil
-				} else {
-					return fmt.Errorf("Merge conflict")
-				}
+			newGithubClient = func(token, owner, repo, base, head, reconcileBranchName string, ctx context.Context) (*githubclient.Github, error) {
+				return githubclient.NewMock(
+					token,
+					owner,
+					repo,
+					base,
+					head,
+					reconcileBranchName,
+					ctx,
+					tt.reconcileBranchExists,
+					tt.targetAhead,
+					tt.mergeSuccessful,
+					tt.reconcileMergable)
 			}
 			err := Reconcile(tt.sourceBranch, tt.targetBranch, tt.owner, tt.repo, token, tt.dryRun)
 			if err != nil && err.Error() != tt.expectedErr.Error() {
