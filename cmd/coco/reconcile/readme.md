@@ -55,3 +55,13 @@ This command requires access to a GitHub personal access token. The token must b
 coco reconcile --source main --target dev --owner myorg --repo myrepo
 ```
 This will reconcile the `dev` branch with the `main` branch in the `myorg/myrepo` repository. If there are merge conflicts, it will create a new branch named `reconcile/main-dev` from the `dev` branch, and then attempt to merge the `main` branch into it. If there are no merge conflicts, it will merge the `main` branch into the `dev` branch directly.
+
+```mermaid
+sequenceDiagram
+    User->>Coco: Run reconcile command
+    Coco->>Github: Switch to origin/dev branch
+    Coco->>Github: Attempt merging origin/main
+    Github-->>Coco: Return merge result
+    Coco-->>Coco: Handle merge result
+    Coco-->>User: Coco exits gracefully
+```
