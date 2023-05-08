@@ -27,8 +27,10 @@ var generateCmd = &cobra.Command{
 	Use:     "generate",
 	Aliases: []string{"gen"},
 	Short:   "generate allows to run file-generation over the gitops repository",
-	Long: `The generate command governs all aspects of non-sensitive file-generation
-	in the gitops repository.`,
+	Long: `
+The generate command governs all aspects of non-sensitive file-generation
+in the gitops repository.
+`,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
 			log.Sugar.Info("no service specified - generate globally")
