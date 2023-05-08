@@ -20,7 +20,7 @@ builds:
 
 
 archives:
-  - name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}.tar.gz'
+  - name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}'
     builds_info:
       mode: 555
 
