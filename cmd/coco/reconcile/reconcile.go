@@ -22,7 +22,7 @@ type ReconcileClient struct {
 	reconcileBranchName string
 }
 
-func New(sourceBranch, targetBranch, owner, repo, token string, dryRun bool) (*ReconcileClient, error) {
+func New(sourceBranch, targetBranch, owner, repo, token string) (*ReconcileClient, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
@@ -30,7 +30,7 @@ func New(sourceBranch, targetBranch, owner, repo, token string, dryRun bool) (*R
 
 	// Authenticate with Github
 	// target is base and source is head
-	client, err := newGithubClient(token, owner, repo, targetBranch, sourceBranch, reconcileBranchName, ctx)
+	client, err := newGithubClient(token, owner, repo, ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authenticate with Github: %v", err)
 	}
@@ -40,10 +40,9 @@ func New(sourceBranch, targetBranch, owner, repo, token string, dryRun bool) (*R
 		source:              sourceBranch,
 		reconcileBranchName: reconcileBranchName,
 	}, nil
-
 }
 
-func (r *ReconcileClient) Reconcile(sourceBranch, targetBranch, owner, repo, token string, dryRun bool) error {
+func (r *ReconcileClient) Reconcile(dryRun bool) error {
 	return r.merge(dryRun)
 }
 
@@ -182,6 +181,6 @@ func (r *ReconcileClient) handleTargetAhead() (bool, error) {
 	return true, nil
 }
 
-var newGithubClient = func(token, owner, repo, base, head, reconcileBranchName string, ctx context.Context) (*githubclient.Github, error) {
-	return githubclient.New(token, owner, repo, base, head, reconcileBranchName, ctx)
+var newGithubClient = func(token, owner, repo string, ctx context.Context) (*githubclient.Github, error) {
+	return githubclient.New(token, owner, repo, ctx)
 }

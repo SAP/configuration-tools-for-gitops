@@ -16,7 +16,7 @@ type Github struct {
 	repo   string
 }
 
-func New(token, owner, repo, base, head, reconcileBranchName string, ctx context.Context) (*Github, error) {
+func New(token, owner, repo string, ctx context.Context) (*Github, error) {
 	//Authenticate with Github
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},

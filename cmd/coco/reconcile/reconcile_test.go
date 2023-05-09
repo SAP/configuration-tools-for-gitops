@@ -132,21 +132,22 @@ func TestReconcilition(t *testing.T) {
 	token := "dummy_token_1234567890"
 	for _, tt := range scenarios {
 		t.Run(tt.title, func(t *testing.T) {
-			newGithubClient = func(token, owner, repo, base, head, reconcileBranchName string, ctx context.Context) (*githubclient.Github, error) {
+			newGithubClient = func(token, owner, repo string, ctx context.Context) (*githubclient.Github, error) {
 				return githubclient.NewMock(
 					token,
 					owner,
 					repo,
-					base,
-					head,
-					reconcileBranchName,
 					ctx,
 					tt.reconcileBranchExists,
 					tt.targetAhead,
 					tt.mergeSuccessful,
 					tt.reconcileMergable)
 			}
-			err := Reconcile(tt.sourceBranch, tt.targetBranch, tt.owner, tt.repo, token, tt.dryRun)
+			client, err := New(tt.sourceBranch, tt.targetBranch, tt.owner, tt.repo, token)
+			if err != nil && err.Error() != tt.expectedErr.Error() {
+				t.Errorf("unexpected error: got %v, want %v", err, tt.expectedErr)
+			}
+			err = client.Reconcile(tt.dryRun)
 			if err != nil && err.Error() != tt.expectedErr.Error() {
 				t.Errorf("unexpected error: got %v, want %v", err, tt.expectedErr)
 			}

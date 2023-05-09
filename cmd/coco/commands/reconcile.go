@@ -41,19 +41,23 @@ var reconcileCmd = &cobra.Command{
 			log.Sugar.Errorf("owner name and repository name must be specified")
 			os.Exit(1)
 		}
-		err := reconcile.Reconcile(
+		client, err := reconcile.New(
 			sourceBranch,
 			targetBranch,
 			owner,
 			repo,
 			viper.GetString("git-token"),
-			dryRun,
 		)
 		if err != nil {
 			log.Sugar.Errorf("reconciliation failed with: %s", err)
 			os.Exit(1)
 		}
 
+		err = client.Reconcile(dryRun)
+		if err != nil {
+			log.Sugar.Errorf("reconciliation failed with: %s", err)
+			os.Exit(1)
+		}
 	},
 }
 
