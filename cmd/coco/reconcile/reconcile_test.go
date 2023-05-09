@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/configuration-tools-for-gitops/pkg/githubclient"
+	"github.com/configuration-tools-for-gitops/pkg/github"
 )
 
 type scenario struct {
@@ -132,8 +132,8 @@ func TestReconcilition(t *testing.T) {
 	token := "dummy_token_1234567890"
 	for _, tt := range scenarios {
 		t.Run(tt.title, func(t *testing.T) {
-			newGithubClient = func(token, owner, repo string, ctx context.Context) (*githubclient.Github, error) {
-				return githubclient.NewMock(
+			newGithubClient = func(token, owner, repo string, ctx context.Context) (*github.Github, error) {
+				return github.NewMock(
 					token,
 					owner,
 					repo,

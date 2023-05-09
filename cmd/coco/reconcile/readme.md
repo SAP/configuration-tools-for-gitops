@@ -24,7 +24,7 @@ flowchart TB
     cond3{Merge conflict detected?}
     cond5{reconcileBranch exists?}
     cond6{targetBranch has new commits?}
-    cond6_1{Delete the reconcileBranch or manually rebase with targetBranch?}
+    cond6_1{Delete the reconcileBranch or <br> manually rebase with targetBranch?}
     io6_1[/reconcileBranch deleted/]
     cond7{Is the draft pull request mergeable?}
     io7_1[/Fast-forward merge of reconcileBranch into targetBranch/]
@@ -48,13 +48,13 @@ flowchart TB
 ```
 
 ## Authentication
-This command requires access to a GitHub personal access token. The token must be stored in the GITHUB_TOKEN environment variable.
+For pushing to Github, this command requires access to a GitHub personal access token. The token must be stored in the GITHUB_TOKEN environment variable.
 
 ## Example
 ```shell
 coco reconcile --source main --target dev --owner myorg --repo myrepo
 ```
-This will reconcile the `dev` branch with the `main` branch in the `myorg/myrepo` repository. If there are merge conflicts, it will create a new branch named `reconcile/main-dev` from the `dev` branch, and then attempt to merge the `main` branch into it. If there are no merge conflicts, it will merge the `main` branch into the `dev` branch directly.
+This will reconcile the `origin/dev` branch with the `origin/main` branch in the `myorg/myrepo` repository. If there are merge conflicts, it will create a new branch named `reconcile/main-dev` from the `origin/dev` branch, and then attempt to merge the `origin/main` branch into it. If there are no merge conflicts, it will merge the `origin/main` branch into the `origin/dev` branch directly.
 
 ```mermaid
 sequenceDiagram
