@@ -49,13 +49,13 @@ var reconcileCmd = &cobra.Command{
 			viper.GetString("git-token"),
 		)
 		if err != nil {
-			log.Sugar.Errorf("reconciliation failed with: %s", err)
+			log.Sugar.Errorf("reconciliation failed with: %w", err)
 			os.Exit(1)
 		}
 
 		err = client.Reconcile(dryRun)
 		if err != nil {
-			log.Sugar.Errorf("reconciliation failed with: %s", err)
+			log.Sugar.Errorf("reconciliation failed with: %w", err)
 			os.Exit(1)
 		}
 	},

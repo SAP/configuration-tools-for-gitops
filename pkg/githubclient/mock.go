@@ -45,11 +45,11 @@ func NewMock(
 	}, nil
 }
 
-func (gh *Mock) MergeBranches() error {
+func (gh *Mock) MergeBranches(base string, head string) (bool, error) {
 	if gh.mergeSuccessful {
-		return nil
+		return true, nil
 	} else {
-		return fmt.Errorf("Merge conflict")
+		return false, nil
 	}
 }
 

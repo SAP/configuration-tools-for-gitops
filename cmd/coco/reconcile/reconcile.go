@@ -3,7 +3,6 @@ package reconcile
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/configuration-tools-for-gitops/pkg/githubclient"
@@ -32,7 +31,7 @@ func New(sourceBranch, targetBranch, owner, repo, token string) (*ReconcileClien
 	// target is base and source is head
 	client, err := newGithubClient(token, owner, repo, ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to authenticate with Github: %v", err)
+		return nil, fmt.Errorf("failed to authenticate with Github: %w", err)
 	}
 	return &ReconcileClient{
 		client:              client,
@@ -47,21 +46,20 @@ func (r *ReconcileClient) Reconcile(dryRun bool) error {
 }
 
 func (r *ReconcileClient) merge(dryRun bool) error {
-	err := r.client.MergeBranches(r.target, r.source)
-	if err != nil {
-		if strings.Contains(err.Error(), "Merge conflict") {
+	success, err := r.client.MergeBranches(r.target, r.source)
+	if err == nil {
+		if !success {
 			return r.handleMergeConflict(dryRun)
-		} else {
-			return fmt.Errorf("failed to merge branches: %v", err)
 		}
-	}
-
-	if dryRun {
-		log.Sugar.Debug("No merge conflicts found (dry-run mode)")
+		if dryRun {
+			log.Sugar.Debug("No merge conflicts found (dry-run mode)")
+			return nil
+		}
+		log.Sugar.Info("Merged successfully")
 		return nil
 	}
-	log.Sugar.Info("Merged successfully")
-	return nil
+
+	return fmt.Errorf("failed to merge branches: %w", err)
 }
 
 func (r *ReconcileClient) handleMergeConflict(dryRun bool) error {
@@ -89,13 +87,13 @@ func (r *ReconcileClient) handleExistingReconcileBranch(reconcileBranch *github.
 	// Compare the latest target branch and reconcile branch
 	target, err := r.client.GetBranch(r.target)
 	if err != nil {
-		return false, fmt.Errorf("failed to get target branch: %v", err)
+		return false, fmt.Errorf("failed to get target branch: %w", err)
 	}
 	commits, err := r.client.CompareCommits(
 		reconcileBranch,
 		target)
 	if err != nil {
-		return false, fmt.Errorf("failed to compare commits: %v", err)
+		return false, fmt.Errorf("failed to compare commits: %w", err)
 	}
 	if commits.GetAheadBy() > 0 {
 		return r.handleTargetAhead()
@@ -109,16 +107,16 @@ func (r *ReconcileClient) handleNewReconcileBranch() error {
 	// Create a new branch reconcile branch from target branch
 	target, err := r.client.GetBranchRef(r.target)
 	if err != nil {
-		return fmt.Errorf("Failed to get target branch reference: %v", err)
+		return fmt.Errorf("Failed to get target branch reference: %w", err)
 	}
 	if err = r.client.CreateBranch(r.reconcileBranchName, target); err != nil {
-		return fmt.Errorf("Failed to create reconcile branch: %v", err)
+		return fmt.Errorf("Failed to create reconcile branch: %w", err)
 	}
 	log.Sugar.Debugf("Created new reconcile branch from %s", r.target)
 
 	pr, err := r.client.CreatePullRequest(r.source, r.reconcileBranchName)
 	if err != nil {
-		return fmt.Errorf("failed to create a draft PR: %v", err)
+		return fmt.Errorf("failed to create a draft PR: %w", err)
 	}
 	log.Sugar.Info("Draft pull request #%d created: %s\n", pr.GetNumber(), pr.GetHTMLURL())
 	return nil
@@ -140,7 +138,7 @@ func (r *ReconcileClient) checkMergeability() (bool, error) {
 		// check if the pull request is mergable
 		if pr.GetMergeable() {
 			// perform the merge
-			err = r.client.MergeBranches(r.target, r.reconcileBranchName)
+			_, err = r.client.MergeBranches(r.target, r.reconcileBranchName)
 			if err != nil {
 				log.Sugar.Infof("Successfully merged %s to %s", r.reconcileBranchName, r.target)
 				return true, err

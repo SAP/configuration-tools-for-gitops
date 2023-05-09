@@ -31,14 +31,27 @@ func New(token, owner, repo string, ctx context.Context) (*Github, error) {
 	}, nil
 }
 
-func (gh *Github) MergeBranches(base string, head string) error {
+func (gh *Github) MergeBranches(base string, head string) (bool, error) {
 	merge := &github.RepositoryMergeRequest{
 		CommitMessage: github.String("Merge branch " + head + " into " + base),
 		Base:          github.String(base),
 		Head:          github.String(head),
 	}
-	_, _, err := gh.client.Repositories.Merge(gh.ctx, gh.owner, gh.repo, merge)
-	return err
+	_, response, err := gh.client.Repositories.Merge(gh.ctx, gh.owner, gh.repo, merge)
+
+	if err != nil {
+		return false, err
+	}
+	//checkout https://docs.github.com/en/rest/branches/branches?apiVersion=2022-11-28#merge-a-branch
+	//Success response
+	if response.StatusCode == 201 || response.StatusCode == 204 {
+		return true, nil
+	}
+	//Merge conflict
+	if response.StatusCode == 409 {
+		return false, nil
+	}
+	return false, fmt.Errorf("github server error(%v): %v", response.StatusCode, response.Status)
 }
 
 func (gh *Github) GetBranch(branchName string) (*github.Branch, error) {
@@ -70,7 +83,7 @@ func (gh *Github) DeleteBranch(branchName string) error {
 		if err == nil {
 			fmt.Printf("%s branch deleted successfully", branchName)
 		} else {
-			return fmt.Errorf("failed to delete branch %s: %v", branchName, err)
+			return fmt.Errorf("failed to delete branch %s: %w", branchName, err)
 		}
 		return err
 	}
