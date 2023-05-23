@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/configuration-tools-for-gitops/pkg/git"
-	"github.com/configuration-tools-for-gitops/pkg/log"
-	"github.com/configuration-tools-for-gitops/pkg/version"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/git"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/version"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 

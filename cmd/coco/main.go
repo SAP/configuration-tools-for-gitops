@@ -1,7 +1,7 @@
 package main
 
 import (
-	cmd "github.com/configuration-tools-for-gitops/cmd/coco/commands"
+	cmd "github.com/SAP/configuration-tools-for-gitops/cmd/coco/commands"
 )
 
 func main() {

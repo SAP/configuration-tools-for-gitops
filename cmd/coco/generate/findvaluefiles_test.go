@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/configuration-tools-for-gitops/pkg/testfuncs"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/testfuncs"
 	"gopkg.in/yaml.v3"
 )
 

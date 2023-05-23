@@ -15,10 +15,10 @@ import (
 	"testing"
 	gotemplate "text/template"
 
-	"github.com/configuration-tools-for-gitops/pkg/log"
-	"github.com/configuration-tools-for-gitops/pkg/testfuncs"
-	"github.com/configuration-tools-for-gitops/pkg/version"
-	"github.com/configuration-tools-for-gitops/pkg/yamlfile"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/testfuncs"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/version"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/yamlfile"
 	"gopkg.in/yaml.v3"
 )
 

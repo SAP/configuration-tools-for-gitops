@@ -3,7 +3,7 @@ package commands
 import (
 	"fmt"
 
-	"github.com/configuration-tools-for-gitops/pkg/version"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/version"
 	"github.com/spf13/cobra"
 )
 

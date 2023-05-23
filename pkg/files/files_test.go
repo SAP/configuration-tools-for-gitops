@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/configuration-tools-for-gitops/pkg/testfuncs"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/testfuncs"
 )
 
 type scenarioFiles struct {

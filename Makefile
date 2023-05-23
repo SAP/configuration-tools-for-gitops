@@ -9,7 +9,7 @@ GO_LINTER_VERSION=$(shell cat ${CURRENT_DIR}/.buildvars.yml | yq '.golangci_vers
 GO_RELEASER_VERSION=$(shell cat ${CURRENT_DIR}/.buildvars.yml | yq '.goreleaser_version')
 
 
-VERSION_PACKAGE=github.com/configuration-tools-for-gitops/pkg/version
+VERSION_PACKAGE=github.com/SAP/configuration-tools-for-gitops/pkg/version
 
 # env variables
 GOPATH          ?=$(shell if test -x `which go`; then go env GOPATH; else echo "$(HOME)/go"; fi)

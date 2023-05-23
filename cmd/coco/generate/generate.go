@@ -3,8 +3,8 @@ package generate
 import (
 	"fmt"
 
-	"github.com/configuration-tools-for-gitops/pkg/log"
-	"github.com/configuration-tools-for-gitops/pkg/version"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/version"
 )
 
 var (
