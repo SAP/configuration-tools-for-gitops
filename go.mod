@@ -1,4 +1,4 @@
-module github.com/configuration-tools-for-gitops
+module github.com/SAP/configuration-tools-for-gitops
 
 go 1.20
 

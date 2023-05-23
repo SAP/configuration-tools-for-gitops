@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/configuration-tools-for-gitops/pkg/testfuncs"
-	"github.com/configuration-tools-for-gitops/pkg/yamlfile"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/testfuncs"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/yamlfile"
 )
 
 type scenarioMergeSort struct {

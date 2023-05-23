@@ -13,10 +13,10 @@ builds:
     ldflags:
       - -extldflags '-static'
       - -s -w 
-      - -X github.com/configuration-tools-for-gitops/pkg/version.version={{.Version}}
-      - -X github.com/configuration-tools-for-gitops/pkg/version.gitCommit={{.Commit}}
-      - -X github.com/configuration-tools-for-gitops/pkg/version.buildDate={{.Date}}
-      - -X github.com/configuration-tools-for-gitops/pkg/version.gitTreeState=clean
+      - -X github.com/SAP/configuration-tools-for-gitops/pkg/version.version={{.Version}}
+      - -X github.com/SAP/configuration-tools-for-gitops/pkg/version.gitCommit={{.Commit}}
+      - -X github.com/SAP/configuration-tools-for-gitops/pkg/version.buildDate={{.Date}}
+      - -X github.com/SAP/configuration-tools-for-gitops/pkg/version.gitTreeState=clean
 
 
 archives:

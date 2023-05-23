@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/configuration-tools-for-gitops/pkg/structdoc"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/structdoc"
 )
 
 type scenarioDoc struct {

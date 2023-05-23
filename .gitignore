@@ -20,6 +20,8 @@ bin
 *~
 
 
+.vscode/**
+
 tmp/**
 
 dist/**
