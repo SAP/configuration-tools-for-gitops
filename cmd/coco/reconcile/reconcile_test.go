@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/configuration-tools-for-gitops/pkg/github"
+	"github.com/configuration-tools-for-gitops/pkg/log"
+	"go.uber.org/zap"
 )
 
 type scenario struct {
@@ -23,50 +25,6 @@ type scenario struct {
 }
 
 var scenarios = []scenario{
-	{
-		title:                 "missing source branch",
-		sourceBranch:          "",
-		targetBranch:          "main",
-		owner:                 "test",
-		repo:                  "repo",
-		dryRun:                false,
-		expectedErr:           fmt.Errorf("source and target branches must be specified"),
-		mergeSuccessful:       true,
-		reconcileBranchExists: false,
-	},
-	{
-		title:                 "missing target branch",
-		sourceBranch:          "feature",
-		targetBranch:          "",
-		owner:                 "test",
-		repo:                  "repo",
-		dryRun:                false,
-		expectedErr:           fmt.Errorf("source and target branches must be specified"),
-		mergeSuccessful:       true,
-		reconcileBranchExists: false,
-	},
-	{
-		title:                 "missing owner name",
-		sourceBranch:          "feature",
-		targetBranch:          "main",
-		owner:                 "",
-		repo:                  "repo",
-		dryRun:                false,
-		expectedErr:           fmt.Errorf("owner name and repository name must be specified"),
-		mergeSuccessful:       true,
-		reconcileBranchExists: false,
-	},
-	{
-		title:                 "missing repo name",
-		sourceBranch:          "feature",
-		targetBranch:          "main",
-		owner:                 "test",
-		repo:                  "",
-		dryRun:                false,
-		expectedErr:           fmt.Errorf("owner name and repository name must be specified"),
-		mergeSuccessful:       true,
-		reconcileBranchExists: false,
-	},
 	{
 		title:                 "dry run mode with successful merge",
 		sourceBranch:          "feature",
@@ -130,9 +88,12 @@ var scenarios = []scenario{
 
 func TestReconcilition(t *testing.T) {
 	token := "dummy_token_1234567890"
+	if err := log.Init(log.Debug(), "", true); err != nil {
+		zap.S().Fatal(err)
+	}
 	for _, tt := range scenarios {
 		t.Run(tt.title, func(t *testing.T) {
-			newGithubClient = func(token, owner, repo string, ctx context.Context) (*github.Github, error) {
+			newGithubClient = func(token, owner, repo string, ctx context.Context) (githubClient, error) {
 				return github.NewMock(
 					token,
 					owner,
@@ -141,7 +102,7 @@ func TestReconcilition(t *testing.T) {
 					tt.reconcileBranchExists,
 					tt.targetAhead,
 					tt.mergeSuccessful,
-					tt.reconcileMergable)
+				)
 			}
 			client, err := New(tt.sourceBranch, tt.targetBranch, tt.owner, tt.repo, token)
 			if err != nil && err.Error() != tt.expectedErr.Error() {

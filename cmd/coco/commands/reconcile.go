@@ -7,6 +7,7 @@ import (
 	"github.com/configuration-tools-for-gitops/pkg/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 var (
@@ -17,7 +18,7 @@ var (
 
 var reconcileCmd = &cobra.Command{
 	Use:     "reconcile",
-	Aliases: []string{"r"},
+	Aliases: []string{"reconcile"},
 	Short:   "Reconciles a target branch with source branch",
 	Long: `The command is intended to reconcile a target branch with a source branch
 	 by merging them. The reconciling process involves creating a new branch with the 
@@ -27,7 +28,7 @@ var reconcileCmd = &cobra.Command{
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if viper.GetString("git-token") == "" {
 			cobra.CheckErr(
-				"environment variable \"GITHUB_TOKEN\" must be set for the \"dependencies\" command.",
+				"environment variable \"GITHUB_TOKEN\" must be set for the \"reconcile\" command.",
 			)
 		}
 	},
@@ -63,25 +64,27 @@ var reconcileCmd = &cobra.Command{
 
 //nolint:gochecknoinits // required by the cobra framework
 func init() {
-	reconcileCmd.PersistentFlags().StringVarP(&sourceBranch, "source-branch", "s", "", "The souce branch to reconcile from.")
-	if err := reconcileCmd.MarkFlagRequired("source-branch"); err != nil {
+	if err := log.Init(logLvl, "2006-01-02T15:04:05Z07:00", true); err != nil {
+		zap.S().Fatal(err)
+	}
+	rootCmd.AddCommand(reconcileCmd)
+	reconcileCmd.PersistentFlags().StringVarP(&sourceBranch, "source", "s", "", "The souce branch to reconcile from.")
+	if err := reconcileCmd.MarkPersistentFlagRequired("source"); err != nil {
 		log.Sugar.Error(err)
 		os.Exit(1)
 	}
-	reconcileCmd.PersistentFlags().StringVarP(&targetBranch, "target-branch", "t", "", "The target branch to reconcile to.")
-	if err := reconcileCmd.MarkFlagRequired("target-branch"); err != nil {
+	reconcileCmd.PersistentFlags().StringVarP(&targetBranch, "target", "t", "", "The target branch to reconcile to.")
+	if err := reconcileCmd.MarkPersistentFlagRequired("target"); err != nil {
 		log.Sugar.Error(err)
 		os.Exit(1)
 	}
-	reconcileCmd.PersistentFlags().StringVarP(&repo, "repo", "r", "", "The name of the gihtub repository.")
-	registerFlag(repo, "repo", "GITHUB_REPOSITORY")
-	if err := reconcileCmd.MarkFlagRequired("repo"); err != nil {
+	reconcileCmd.PersistentFlags().StringVarP(&repo, "repo", "", "", "The name of the gihtub repository.")
+	if err := reconcileCmd.MarkPersistentFlagRequired("repo"); err != nil {
 		log.Sugar.Error(err)
 		os.Exit(1)
 	}
-	reconcileCmd.PersistentFlags().StringVarP(&owner, "owner", "o", "", "The account owner of the github repository.")
-	registerFlag(repo, "owner", "REPOSITORY_OWNER")
-	if err := reconcileCmd.MarkFlagRequired("owner"); err != nil {
+	reconcileCmd.PersistentFlags().StringVarP(&owner, "owner", "", "", "The account owner of the github repository.")
+	if err := reconcileCmd.MarkPersistentFlagRequired("owner"); err != nil {
 		log.Sugar.Error(err)
 		os.Exit(1)
 	}

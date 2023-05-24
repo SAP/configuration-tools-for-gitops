@@ -14,8 +14,18 @@ var (
 	timeout = 100 * time.Millisecond
 )
 
+type githubClient interface {
+	CompareCommits(branch1 *gogithub.Branch, branch2 *gogithub.Branch) (*gogithub.CommitsComparison, error)
+	CreateBranch(branchName string, target *gogithub.Reference) error
+	CreatePullRequest(head string, base string) (*gogithub.PullRequest, error)
+	DeleteBranch(branchName string) error
+	GetBranch(branchName string) (*gogithub.Branch, error)
+	GetBranchRef(branchName string) (*gogithub.Reference, error)
+	ListPullRequests() ([]*gogithub.PullRequest, error)
+	MergeBranches(base string, head string) (bool, error)
+}
 type ReconcileClient struct {
-	client              *github.Github
+	client              githubClient
 	target              string
 	source              string
 	reconcileBranchName string
@@ -167,6 +177,6 @@ func (r *ReconcileClient) handleTargetAhead() (bool, error) {
 	return true, nil
 }
 
-var newGithubClient = func(token, owner, repo string, ctx context.Context) (*github.Github, error) {
+var newGithubClient = func(token, owner, repo string, ctx context.Context) (githubClient, error) {
 	return github.New(token, owner, repo, ctx)
 }

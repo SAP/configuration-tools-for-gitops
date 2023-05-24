@@ -13,13 +13,9 @@ type Mock struct {
 	ctx                   context.Context
 	owner                 string
 	repo                  string
-	base                  string
-	head                  string
-	reconcileBranchName   string
 	reconcileBranchExists bool
 	targetAhead           bool
 	mergeSuccessful       bool
-	reconcileMergable     bool
 }
 
 func NewMock(
@@ -29,19 +25,21 @@ func NewMock(
 	ctx context.Context,
 	reconcileBranchExists,
 	targetAhead,
-	mergeSuccessful,
-	reconcileMergable bool) (*Github, error) {
+	mergeSuccessful bool) (*Mock, error) {
 	//Authenticate with Github
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	)
 	tc := oauth2.NewClient(ctx, ts)
 	client := github.NewClient(tc)
-	return &Github{
+	return &Mock{
 		client,
 		ctx,
 		owner,
 		repo,
+		reconcileBranchExists,
+		targetAhead,
+		mergeSuccessful,
 	}, nil
 }
 
@@ -56,7 +54,7 @@ func (gh *Mock) MergeBranches(base string, head string) (bool, error) {
 func (gh *Mock) GetBranch(branchName string) (*github.Branch, error) {
 	dummySHA := "dd0b557d0696d2e1b8a1cf9de6b3c6d3a3a8a8f9"
 	return &github.Branch{
-		Name: &gh.base,
+		Name: &branchName,
 		Commit: &github.RepositoryCommit{
 			SHA: &dummySHA,
 		},
