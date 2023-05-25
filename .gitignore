@@ -21,6 +21,8 @@ bin
 
 .vscode/**
 
+.vscode/**
+
 tmp/**
 
 dist/**

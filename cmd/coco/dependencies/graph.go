@@ -4,9 +4,9 @@ import (
 	"os"
 	"path/filepath"
 
-	g "github.com/configuration-tools-for-gitops/cmd/coco/graph"
-	"github.com/configuration-tools-for-gitops/pkg/files"
-	"github.com/configuration-tools-for-gitops/pkg/log"
+	g "github.com/SAP/configuration-tools-for-gitops/cmd/coco/graph"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/files"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
 	"gopkg.in/yaml.v3"
 )
 

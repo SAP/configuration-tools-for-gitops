@@ -9,9 +9,9 @@ import (
 
 	// The Generate function makes use of the general CLI logger. Hence its test
 	// needs to set it up correctly to test logging output as well.
-	"github.com/configuration-tools-for-gitops/pkg/log"
-	"github.com/configuration-tools-for-gitops/pkg/testfuncs"
-	"github.com/configuration-tools-for-gitops/pkg/version"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/testfuncs"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/version"
 	"go.uber.org/zap"
 )
 
