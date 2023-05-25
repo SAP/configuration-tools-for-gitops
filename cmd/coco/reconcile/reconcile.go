@@ -29,6 +29,8 @@ type ReconcileClient struct {
 	target              string
 	source              string
 	reconcileBranchName string
+	owner               string
+	repo                string
 }
 
 func New(sourceBranch, targetBranch, owner, repo, token string) (*ReconcileClient, error) {
@@ -48,6 +50,8 @@ func New(sourceBranch, targetBranch, owner, repo, token string) (*ReconcileClien
 		target:              targetBranch,
 		source:              sourceBranch,
 		reconcileBranchName: reconcileBranchName,
+		owner:               owner,
+		repo:                repo,
 	}, nil
 }
 
@@ -162,7 +166,9 @@ func (r *ReconcileClient) checkMergeability() (bool, error) {
 func (r *ReconcileClient) handleTargetAhead() (bool, error) {
 	fmt.Print("The target branch has new commits, choose one of the following options:\n\n" +
 		"Option 1: Merge the target branch into the reconcile branch manually and rerun command `coco reconcile`\n\n" +
-		"Option 2: Automatically delete the reconcile branch and rerun the command `coco reconcile`\n\n" +
+		"Option 2: Automatically delete the reconcile branch and rerun the command " +
+		fmt.Sprintf("`coco reconcile --source %s --target %s --owner %s --repo %s`",
+			r.source, r.target, r.owner, r.repo) + "\n\n" +
 		"Enter [1] for Option 1 or [2] for Option 2: ")
 	var input int
 	fmt.Scanln(&input)

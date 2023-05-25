@@ -17,9 +17,8 @@ var (
 )
 
 var reconcileCmd = &cobra.Command{
-	Use:     "reconcile",
-	Aliases: []string{"reconcile"},
-	Short:   "Reconciles a target branch with source branch",
+	Use:   "reconcile",
+	Short: "Reconciles a target branch with source branch",
 	Long: `The command is intended to reconcile a target branch with a source branch
 	 by merging them. The reconciling process involves creating a new branch with the 
 	 name "reconcile/{target_branch}," where {target_branch} is the name of the 
