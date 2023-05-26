@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/configuration-tools-for-gitops/pkg/github"
-	"github.com/configuration-tools-for-gitops/pkg/log"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/github"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
 	gogithub "github.com/google/go-github/v51/github"
 )
 
@@ -120,10 +120,10 @@ func (r *ReconcileClient) handleNewReconcileBranch() error {
 	// Create a new branch reconcile branch from target branch
 	target, err := r.client.GetBranchRef(r.target)
 	if err != nil {
-		return fmt.Errorf("Failed to get target branch reference: %w", err)
+		return fmt.Errorf("failed to get target branch reference: %w", err)
 	}
 	if err = r.client.CreateBranch(r.reconcileBranchName, target); err != nil {
-		return fmt.Errorf("Failed to create reconcile branch: %w", err)
+		return fmt.Errorf("failed to create reconcile branch: %w", err)
 	}
 	log.Sugar.Debugf("Created new reconcile branch from %s", r.target)
 
@@ -152,7 +152,7 @@ func (r *ReconcileClient) checkMergeability() (bool, error) {
 	}
 	// check if the pull request is mergable
 	if !pr.GetMergeable() {
-		return false, fmt.Errorf("Please re-try after resolving the merge conflicts here: %s", pr.GetURL())
+		return false, fmt.Errorf("please re-try after resolving the merge conflicts here: %s", pr.GetURL())
 	}
 	// perform the merge
 	_, err = r.client.MergeBranches(r.target, r.reconcileBranchName)

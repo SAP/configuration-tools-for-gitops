@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/configuration-tools-for-gitops/pkg/github"
-	"github.com/configuration-tools-for-gitops/pkg/log"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/github"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
 	"go.uber.org/zap"
 )
 

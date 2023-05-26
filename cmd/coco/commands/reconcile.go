@@ -3,8 +3,8 @@ package commands
 import (
 	"os"
 
-	"github.com/configuration-tools-for-gitops/cmd/coco/reconcile"
-	"github.com/configuration-tools-for-gitops/pkg/log"
+	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/reconcile"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
