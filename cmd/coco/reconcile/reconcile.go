@@ -7,6 +7,7 @@ import (
 
 	"github.com/SAP/configuration-tools-for-gitops/pkg/github"
 	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/terminal"
 	gogithub "github.com/google/go-github/v51/github"
 )
 
@@ -164,14 +165,20 @@ func (r *ReconcileClient) checkMergeability() (bool, error) {
 }
 
 func (r *ReconcileClient) handleTargetAhead() (bool, error) {
-	fmt.Print("The target branch has new commits, choose one of the following options:\n\n" +
-		"Option 1: Merge the target branch into the reconcile branch manually and rerun command `coco reconcile`\n\n" +
-		"Option 2: Automatically delete the reconcile branch and rerun the command " +
-		fmt.Sprintf("`coco reconcile --source %s --target %s --owner %s --repo %s`",
-			r.source, r.target, r.owner, r.repo) + "\n\n" +
-		"Enter [1] for Option 1 or [2] for Option 2: ")
-	var input int
-	fmt.Scanln(&input)
+	print(fmt.Sprint(
+		"The target branch has new commits, choose one of the following options:\n\n" +
+			"Option 1: Merge the target branch into the reconcile branch manually and rerun command `coco reconcile`\n\n" +
+			"Option 2: Automatically delete the reconcile branch and rerun the command " +
+			fmt.Sprintf("`coco reconcile --source %s --target %s --owner %s --repo %s`",
+				r.source, r.target, r.owner, r.repo) + "\n\n" +
+			"Enter [1] for Option 1 or [2] for Option 2: ",
+	))
+	rawInput := read()
+	input, ok := rawInput.(int)
+	if !ok {
+		return false, fmt.Errorf("illegal input %q - allowed options are: [1, 2]", input)
+	}
+
 	switch input {
 	case 1:
 		fmt.Printf("\nPlease merge the branch `%q` into the branch `%q` and rerun the `coco reconcile` command", r.target, r.reconcileBranchName)
@@ -183,6 +190,10 @@ func (r *ReconcileClient) handleTargetAhead() (bool, error) {
 	return true, nil
 }
 
-var newGithubClient = func(token, owner, repo string, ctx context.Context) (githubClient, error) {
-	return github.New(token, owner, repo, ctx)
-}
+var (
+	newGithubClient = func(token, owner, repo string, ctx context.Context) (githubClient, error) {
+		return github.New(token, owner, repo, ctx)
+	}
+	print = terminal.Output
+	read  = terminal.Read
+)
