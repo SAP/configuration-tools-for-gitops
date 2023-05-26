@@ -19,10 +19,8 @@ bin
 *.swo
 *~
 
-
 .vscode/**
 
 tmp/**
 
 dist/**
-
