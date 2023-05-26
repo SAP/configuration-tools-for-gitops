@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/SAP/configuration-tools-for-gitops/pkg/terminal"
 	gogithub "github.com/google/go-github/v51/github"
 	"golang.org/x/oauth2"
 )
@@ -17,7 +18,7 @@ type Github struct {
 }
 
 func New(token, owner, repo string, ctx context.Context) (*Github, error) {
-	//Authenticate with Github
+	// Authenticate with Github
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	)
@@ -42,12 +43,12 @@ func (gh *Github) MergeBranches(base string, head string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	//checkout https://docs.github.com/en/rest/branches/branches?apiVersion=2022-11-28#merge-a-branch
-	//Success response
+	// checkout https://docs.github.com/en/rest/branches/branches?apiVersion=2022-11-28#merge-a-branch
+	// Success response
 	if response.StatusCode == 201 || response.StatusCode == 204 {
 		return true, nil
 	}
-	//Merge conflict
+	// Merge conflict
 	if response.StatusCode == 409 {
 		return false, nil
 	}
@@ -59,7 +60,9 @@ func (gh *Github) GetBranch(branchName string) (*gogithub.Branch, error) {
 	return branch, err
 }
 
-func (gh *Github) CompareCommits(branch1 *gogithub.Branch, branch2 *gogithub.Branch) (*gogithub.CommitsComparison, error) {
+func (gh *Github) CompareCommits(
+	branch1 *gogithub.Branch, branch2 *gogithub.Branch,
+) (*gogithub.CommitsComparison, error) {
 	options := &gogithub.ListOptions{}
 	commits, _, err := gh.client.Repositories.CompareCommits(
 		gh.ctx,
@@ -71,24 +74,29 @@ func (gh *Github) CompareCommits(branch1 *gogithub.Branch, branch2 *gogithub.Bra
 }
 
 func (gh *Github) DeleteBranch(branchName string) error {
-	warningPrompt := fmt.Sprintf("\n\nYou will lose all the changes made in the reconcile branch. Are you sure you want to delete the branch %s?\n\n", branchName) +
-		"Enter [y] for Yes and [n] for No: "
-	fmt.Print(warningPrompt)
-	var input string
-	fmt.Scanln(&input)
+	print(
+		fmt.Sprintf(
+			"\n\nYou will lose all the changes made in the reconcile branch. "+
+				"Are you sure you want to delete the branch %s?\n\n"+
+				"Enter [y] for Yes and [n] for No: ",
+			branchName,
+		))
+	rawInput := read()
+	input, ok := rawInput.(string)
+	if !ok {
+		print("abort on user input")
+		return nil
+	}
 
-	if strings.ToLower(input) == "y" {
+	if strings.EqualFold(input, "y") {
 		_, err := gh.client.Git.DeleteRef(gh.ctx, gh.owner, gh.repo,
 			"refs/heads/"+branchName)
 		if err != nil {
 			return fmt.Errorf("failed to delete branch %s: %w", branchName, err)
 		}
-		fmt.Printf("%s branch deleted successfully", branchName)
+		print(fmt.Sprintf("%s branch deleted successfully", branchName))
 		return nil
 	}
-
-	fmt.Println("Exiting gracefully.")
-
 	return nil
 }
 
@@ -127,3 +135,8 @@ func (gh *Github) ListPullRequests() ([]*gogithub.PullRequest, error) {
 
 	return prs, err
 }
+
+var (
+	print = terminal.Output
+	read  = terminal.Read
+)

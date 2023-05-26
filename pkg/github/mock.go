@@ -26,7 +26,7 @@ func NewMock(
 	reconcileBranchExists,
 	targetAhead,
 	mergeSuccessful bool) (*Mock, error) {
-	//Authenticate with Github
+	// Authenticate with Github
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	)
@@ -69,7 +69,7 @@ func (gh *Mock) CompareCommits(branch1 *github.Branch, branch2 *github.Branch) (
 		aheadBy = 0
 	}
 	return &github.CommitsComparison{
-		//head is ahead of base
+		// head is ahead of base
 		AheadBy: &aheadBy,
 	}, nil
 }
