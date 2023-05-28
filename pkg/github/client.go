@@ -32,7 +32,7 @@ func New(token, owner, repo string, ctx context.Context) (*Github, error) {
 	}, nil
 }
 
-func (gh *Github) MergeBranches(base string, head string) (bool, error) {
+func (gh *Github) MergeBranches(base, head string) (bool, error) {
 	merge := &gogithub.RepositoryMergeRequest{
 		CommitMessage: gogithub.String("Merge branch " + head + " into " + base),
 		Base:          gogithub.String(base),
@@ -49,7 +49,8 @@ func (gh *Github) MergeBranches(base string, head string) (bool, error) {
 		return true, nil
 	}
 	// Merge conflict
-	if response.StatusCode == 409 {
+	mergeConflictCode := 409
+	if response.StatusCode == mergeConflictCode {
 		return false, nil
 	}
 	return false, fmt.Errorf("github server error(%v): %v", response.StatusCode, response.Status)
@@ -74,17 +75,17 @@ func (gh *Github) CompareCommits(
 }
 
 func (gh *Github) DeleteBranch(branchName string) error {
-	print(
+	printTerminal(
 		fmt.Sprintf(
 			"\n\nYou will lose all the changes made in the reconcile branch. "+
 				"Are you sure you want to delete the branch %s?\n\n"+
 				"Enter [y] for Yes and [n] for No: ",
 			branchName,
 		))
-	rawInput := read()
+	rawInput := readTerminal()
 	input, ok := rawInput.(string)
 	if !ok {
-		print("abort on user input")
+		printTerminal("abort on user input")
 		return nil
 	}
 
@@ -94,7 +95,7 @@ func (gh *Github) DeleteBranch(branchName string) error {
 		if err != nil {
 			return fmt.Errorf("failed to delete branch %s: %w", branchName, err)
 		}
-		print(fmt.Sprintf("%s branch deleted successfully", branchName))
+		printTerminal(fmt.Sprintf("%s branch deleted successfully", branchName))
 		return nil
 	}
 	return nil
@@ -137,6 +138,6 @@ func (gh *Github) ListPullRequests() ([]*gogithub.PullRequest, error) {
 }
 
 var (
-	print = terminal.Output
-	read  = terminal.Read
+	printTerminal = terminal.Output
+	readTerminal  = terminal.Read
 )

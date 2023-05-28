@@ -87,5 +87,6 @@ func init() {
 		log.Sugar.Error(err)
 		os.Exit(1)
 	}
-	reconcileCmd.PersistentFlags().BoolVarP(&dryRun, "dry-run", "d", false, "Perform a dry-run to check for merge conflicts without making any changes.")
+	reconcileCmd.PersistentFlags().BoolVarP(&dryRun, "dry-run", "d", false,
+		"Perform a dry-run to check for merge conflicts without making any changes.")
 }

@@ -134,8 +134,7 @@ func TestReconcilition(t *testing.T) {
 		zap.S().Fatal(err)
 	}
 
-	print = func(msg string) {
-
+	printTerminal = func(msg string) {
 	}
 
 	for _, tt := range scenarios {
@@ -151,7 +150,7 @@ func TestReconcilition(t *testing.T) {
 					tt.mergeSuccessful,
 				)
 			}
-			read = func() interface{} {
+			readTerminal = func() interface{} {
 				if tt.falseInput {
 					return 3
 				}

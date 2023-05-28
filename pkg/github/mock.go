@@ -43,7 +43,7 @@ func NewMock(
 	}, nil
 }
 
-func (gh *Mock) MergeBranches(base string, head string) (bool, error) {
+func (gh *Mock) MergeBranches(base, head string) (bool, error) {
 	if gh.mergeSuccessful {
 		return true, nil
 	} else {
@@ -67,7 +67,7 @@ func (gh *Mock) GetBranch(branchName string) (*github.Branch, int, error) {
 	}, status, nil
 }
 
-func (gh *Mock) CompareCommits(branch1 *github.Branch, branch2 *github.Branch) (*github.CommitsComparison, error) {
+func (gh *Mock) CompareCommits(branch1, branch2 *github.Branch) (*github.CommitsComparison, error) {
 	var aheadBy int
 	if gh.targetAhead {
 		aheadBy = 2

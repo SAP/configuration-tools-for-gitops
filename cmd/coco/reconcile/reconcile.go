@@ -18,12 +18,12 @@ var (
 type githubClient interface {
 	CompareCommits(branch1 *gogithub.Branch, branch2 *gogithub.Branch) (*gogithub.CommitsComparison, error)
 	CreateBranch(branchName string, target *gogithub.Reference) error
-	CreatePullRequest(head string, base string) (*gogithub.PullRequest, error)
+	CreatePullRequest(head, base string) (*gogithub.PullRequest, error)
 	DeleteBranch(branchName string) error
 	GetBranch(branchName string) (*gogithub.Branch, int, error)
 	GetBranchRef(branchName string) (*gogithub.Reference, error)
 	ListPullRequests() ([]*gogithub.PullRequest, error)
-	MergeBranches(base string, head string) (bool, error)
+	MergeBranches(base, head string) (bool, error)
 }
 type ReconcileClient struct {
 	client              githubClient
@@ -88,7 +88,9 @@ func (r *ReconcileClient) handleMergeConflict(dryRun bool) error {
 		return err
 	}
 
-	if status == 200 {
+	successCode := 200
+
+	if status == successCode {
 		var resolved bool
 		resolved, err = r.handleExistingReconcileBranch(reconcileBranch)
 		if err != nil {
@@ -169,7 +171,7 @@ func (r *ReconcileClient) checkMergeability() (bool, error) {
 }
 
 func (r *ReconcileClient) handleTargetAhead() (bool, error) {
-	print(fmt.Sprintf(
+	printTerminal(fmt.Sprintf(
 		"The target branch has new commits, choose one of the following options:\n\n"+
 			"Option 1: Merge the target branch into the reconcile branch manually and rerun command `coco reconcile`\n\n"+
 			"Option 2: Automatically delete the reconcile branch and rerun the command "+
@@ -177,7 +179,7 @@ func (r *ReconcileClient) handleTargetAhead() (bool, error) {
 			"Enter [1] for Option 1 or [2] for Option 2: ",
 		r.source, r.target, r.owner, r.repo,
 	))
-	rawInput := read()
+	rawInput := readTerminal()
 	input, ok := rawInput.(int)
 	if !ok {
 		return false, fmt.Errorf("illegal input %q - allowed options are: [1, 2]", input)
@@ -185,7 +187,7 @@ func (r *ReconcileClient) handleTargetAhead() (bool, error) {
 
 	switch input {
 	case 1:
-		print(fmt.Sprintf(
+		printTerminal(fmt.Sprintf(
 			"Please merge the branch `%q` into the branch `%q` and rerun the `coco reconcile` command",
 			r.target, r.reconcileBranchName,
 		))
@@ -201,6 +203,6 @@ var (
 	newGithubClient = func(token, owner, repo string, ctx context.Context) (githubClient, error) {
 		return github.New(token, owner, repo, ctx)
 	}
-	print = terminal.Output
-	read  = terminal.Read
+	printTerminal = terminal.Output
+	readTerminal  = terminal.Read
 )
