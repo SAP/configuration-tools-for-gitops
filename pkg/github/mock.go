@@ -51,14 +51,20 @@ func (gh *Mock) MergeBranches(base string, head string) (bool, error) {
 	}
 }
 
-func (gh *Mock) GetBranch(branchName string) (*github.Branch, error) {
+func (gh *Mock) GetBranch(branchName string) (*github.Branch, int, error) {
 	dummySHA := "dd0b557d0696d2e1b8a1cf9de6b3c6d3a3a8a8f9"
+	var status int
+	if gh.reconcileBranchExists {
+		status = 200
+	} else {
+		status = 404
+	}
 	return &github.Branch{
 		Name: &branchName,
 		Commit: &github.RepositoryCommit{
 			SHA: &dummySHA,
 		},
-	}, nil
+	}, status, nil
 }
 
 func (gh *Mock) CompareCommits(branch1 *github.Branch, branch2 *github.Branch) (*github.CommitsComparison, error) {
@@ -96,6 +102,17 @@ func (gh *Mock) CreatePullRequest(head, base string) (*github.PullRequest, error
 }
 
 func (gh *Mock) ListPullRequests() ([]*github.PullRequest, error) {
-	var nilSlice []*github.PullRequest
-	return nilSlice, nil
+	var prs []*github.PullRequest
+	reconcileBranchName := fmt.Sprintf("reconcile/%s-%s", "feature", "main")
+	pr := &github.PullRequest{
+		Head: &github.PullRequestBranch{
+			Ref: github.String("feature"),
+		},
+		Base: &github.PullRequestBranch{
+			Ref: github.String(reconcileBranchName),
+		},
+		Mergeable: github.Bool(true),
+	}
+	prs = append(prs, pr)
+	return prs, nil
 }

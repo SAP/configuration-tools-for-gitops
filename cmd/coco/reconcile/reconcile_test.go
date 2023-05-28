@@ -22,9 +22,22 @@ type scenario struct {
 	targetAhead           bool
 	mergeSuccessful       bool
 	reconcileMergable     bool
+	manualMerge           bool
+	falseInput            bool
 }
 
 var scenarios = []scenario{
+	{
+		title:                 "dry run mode with successful merge",
+		sourceBranch:          "feature",
+		targetBranch:          "main",
+		owner:                 "test",
+		repo:                  "repo",
+		dryRun:                false,
+		expectedErr:           nil,
+		mergeSuccessful:       true,
+		reconcileBranchExists: false,
+	},
 	{
 		title:                 "dry run mode with successful merge",
 		sourceBranch:          "feature",
@@ -73,7 +86,7 @@ var scenarios = []scenario{
 		reconcileMergable:     true,
 	},
 	{
-		title:                 "default unsuccessful merge with a reconcile branch & target is ahead",
+		title:                 "default unsuccessful merge with a reconcile branch & target is ahead & manualmerge false",
 		sourceBranch:          "feature",
 		targetBranch:          "main",
 		owner:                 "test",
@@ -83,6 +96,35 @@ var scenarios = []scenario{
 		mergeSuccessful:       false,
 		reconcileBranchExists: true,
 		targetAhead:           true,
+		manualMerge:           false,
+	},
+	{
+		title:                 "default unsuccessful merge with a reconcile branch & target is ahead & manualmerge true",
+		sourceBranch:          "feature",
+		targetBranch:          "main",
+		owner:                 "test",
+		repo:                  "repo",
+		dryRun:                false,
+		expectedErr:           nil,
+		mergeSuccessful:       false,
+		reconcileBranchExists: true,
+		targetAhead:           true,
+		manualMerge:           true,
+		falseInput:            false,
+	},
+	{
+		title:                 "default unsuccessful merge with a reconcile branch & target is ahead & false input",
+		sourceBranch:          "feature",
+		targetBranch:          "main",
+		owner:                 "test",
+		repo:                  "repo",
+		dryRun:                false,
+		expectedErr:           fmt.Errorf("illegal input 3 - allowed options are: [1, 2]"),
+		mergeSuccessful:       false,
+		reconcileBranchExists: true,
+		targetAhead:           true,
+		manualMerge:           false,
+		falseInput:            true,
 	},
 }
 
@@ -91,6 +133,11 @@ func TestReconcilition(t *testing.T) {
 	if err := log.Init(log.Debug(), "", true); err != nil {
 		zap.S().Fatal(err)
 	}
+
+	print = func(msg string) {
+
+	}
+
 	for _, tt := range scenarios {
 		t.Run(tt.title, func(t *testing.T) {
 			newGithubClient = func(token, owner, repo string, ctx context.Context) (githubClient, error) {
@@ -103,6 +150,16 @@ func TestReconcilition(t *testing.T) {
 					tt.targetAhead,
 					tt.mergeSuccessful,
 				)
+			}
+			read = func() interface{} {
+				if tt.falseInput {
+					return 3
+				}
+				if tt.manualMerge {
+					return 1
+				} else {
+					return 2
+				}
 			}
 			client, err := New(tt.sourceBranch, tt.targetBranch, tt.owner, tt.repo, token)
 			if err != nil && err.Error() != tt.expectedErr.Error() {

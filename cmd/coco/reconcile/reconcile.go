@@ -20,7 +20,7 @@ type githubClient interface {
 	CreateBranch(branchName string, target *gogithub.Reference) error
 	CreatePullRequest(head string, base string) (*gogithub.PullRequest, error)
 	DeleteBranch(branchName string) error
-	GetBranch(branchName string) (*gogithub.Branch, error)
+	GetBranch(branchName string) (*gogithub.Branch, int, error)
 	GetBranchRef(branchName string) (*gogithub.Reference, error)
 	ListPullRequests() ([]*gogithub.PullRequest, error)
 	MergeBranches(base string, head string) (bool, error)
@@ -82,9 +82,13 @@ func (r *ReconcileClient) handleMergeConflict(dryRun bool) error {
 		return fmt.Errorf("merge conflicts detected")
 	}
 
-	reconcileBranch, err := r.client.GetBranch(r.reconcileBranchName)
+	reconcileBranch, status, err := r.client.GetBranch(r.reconcileBranchName)
 
 	if err != nil {
+		return err
+	}
+
+	if status == 200 {
 		var resolved bool
 		resolved, err = r.handleExistingReconcileBranch(reconcileBranch)
 		if err != nil {
@@ -100,8 +104,8 @@ func (r *ReconcileClient) handleMergeConflict(dryRun bool) error {
 
 func (r *ReconcileClient) handleExistingReconcileBranch(reconcileBranch *gogithub.Branch) (bool, error) {
 	// Compare the latest target branch and reconcile branch
-	target, err := r.client.GetBranch(r.target)
-	if err != nil {
+	target, status, err := r.client.GetBranch(r.target)
+	if err != nil || status != 200 {
 		return false, fmt.Errorf("failed to get target branch: %w", err)
 	}
 	commits, err := r.client.CompareCommits(
@@ -188,7 +192,7 @@ func (r *ReconcileClient) handleTargetAhead() (bool, error) {
 	case 2:
 		return false, r.client.DeleteBranch(r.reconcileBranchName)
 	default:
-		return false, fmt.Errorf("illegal input %q - allowed options are: [1, 2]", input)
+		return false, fmt.Errorf("illegal input %v - allowed options are: [1, 2]", input)
 	}
 	return true, nil
 }

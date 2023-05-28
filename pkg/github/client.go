@@ -55,9 +55,9 @@ func (gh *Github) MergeBranches(base string, head string) (bool, error) {
 	return false, fmt.Errorf("github server error(%v): %v", response.StatusCode, response.Status)
 }
 
-func (gh *Github) GetBranch(branchName string) (*gogithub.Branch, error) {
-	branch, _, err := gh.client.Repositories.GetBranch(gh.ctx, gh.owner, gh.repo, branchName, true)
-	return branch, err
+func (gh *Github) GetBranch(branchName string) (*gogithub.Branch, int, error) {
+	branch, response, err := gh.client.Repositories.GetBranch(gh.ctx, gh.owner, gh.repo, branchName, true)
+	return branch, response.StatusCode, err
 }
 
 func (gh *Github) CompareCommits(
