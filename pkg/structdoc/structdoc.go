@@ -1,4 +1,4 @@
-package yamlfile
+package structdoc
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ const (
 	keyTag    = "yaml"
 )
 
-// DocOutput constructs a documentation interface from the provided struct by
+// Generate constructs a documentation interface from the provided struct by
 // using the struct field types as well as the information given in the "doc" struct
 // tag. In the doc tag the following information can be given in a comma-separated list:
 //
@@ -23,7 +23,7 @@ const (
 // e.g.: `doc:"msg=this is my message,default=0,o=0, o=1, req"`. If no "doc"
 // tag is present the field will be ignored. The output format is map[string]interface{},
 // where the interface is either a doc-string or a substructure of the same format.
-func DocOutput(s interface{}) interface{} {
+func Generate(s interface{}) interface{} {
 	return parseNode(reflect.TypeOf(s))
 }
 

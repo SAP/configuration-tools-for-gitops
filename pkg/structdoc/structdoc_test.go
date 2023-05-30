@@ -1,10 +1,10 @@
-package yamlfile_test
+package structdoc_test
 
 import (
 	"reflect"
 	"testing"
 
-	"github.com/configuration-tools-for-gitops/pkg/yamlfile"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/structdoc"
 )
 
 type scenarioDoc struct {
@@ -138,7 +138,7 @@ var scenariosDocs = []scenarioDoc{
 func TestDocOutput(t *testing.T) {
 	for _, s := range scenariosDocs {
 		t.Logf("test scenario: %s\n", s.title)
-		res := yamlfile.DocOutput(s.input)
+		res := structdoc.Generate(s.input)
 		s.Check(t, res)
 	}
 }

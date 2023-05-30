@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/configuration-tools-for-gitops/pkg/files"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/files"
 	"gopkg.in/yaml.v3"
 )
 
