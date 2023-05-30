@@ -8,9 +8,9 @@ jobs:
     steps:
     - uses: deepakputhraya/action-pr-title@master
       with:
-        # regex: '([a-z])+\/([a-z])+' # Regex the title should match.
-        allowed_prefixes: 'feat,fix,chore,docs' # title should start with the given prefix
-        # disallowed_prefixes: 'feat/,hotfix' # title should not start with the given prefix
-        prefix_case_sensitive: false # title prefix are case insensitive
+        regex: '(fix|feat|chore|docs)(\([a-z,A-Z,\-,\.,0-9]*\)|)(!|):' # Regex the title should match.
+        # allowed_prefixes: 'feat:,fix:,chore:,docs:,feat(,fix(,chore(,docs(' # title should start with the given prefix
+        # disallowed_prefixes: 'feat/,hotfix,fix/' # title should not start with the given prefix
+        prefix_case_sensitive: true # title prefix are case insensitive
         min_length: 5 # Min length of the title
         max_length: 100 # Max length of the title
