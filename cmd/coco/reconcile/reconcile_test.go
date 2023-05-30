@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/SAP/configuration-tools-for-gitops/pkg/github"
 	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
@@ -25,6 +26,10 @@ type scenario struct {
 	manualMerge           bool
 	falseInput            bool
 }
+
+var (
+	timeout = 5 * time.Minute
+)
 
 var scenarios = []scenario{
 	{
@@ -150,17 +155,19 @@ func TestReconcilition(t *testing.T) {
 					tt.mergeSuccessful,
 				)
 			}
-			readTerminal = func() interface{} {
+			readTerminal = func() (int, error) {
 				if tt.falseInput {
-					return 3
+					return 3, fmt.Errorf("illegal input")
 				}
 				if tt.manualMerge {
-					return 1
+					return 1, nil
 				} else {
-					return 2
+					return 2, nil
 				}
 			}
-			client, err := New(tt.sourceBranch, tt.targetBranch, tt.owner, tt.repo, token)
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			defer cancel()
+			client, err := New(tt.sourceBranch, tt.targetBranch, tt.owner, tt.repo, token, ctx)
 			if err != nil && err.Error() != tt.expectedErr.Error() {
 				t.Errorf("unexpected error: got %v, want %v", err, tt.expectedErr)
 			}

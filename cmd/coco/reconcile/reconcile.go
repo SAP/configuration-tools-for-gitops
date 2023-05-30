@@ -3,16 +3,11 @@ package reconcile
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/SAP/configuration-tools-for-gitops/pkg/github"
 	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
 	"github.com/SAP/configuration-tools-for-gitops/pkg/terminal"
 	gogithub "github.com/google/go-github/v51/github"
-)
-
-var (
-	timeout = 100 * time.Millisecond
 )
 
 type githubClient interface {
@@ -34,10 +29,7 @@ type ReconcileClient struct {
 	repo                string
 }
 
-func New(sourceBranch, targetBranch, owner, repo, token string) (*ReconcileClient, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
+func New(sourceBranch, targetBranch, owner, repo, token string, ctx context.Context) (*ReconcileClient, error) {
 	reconcileBranchName := fmt.Sprintf("reconcile/%s-%s", sourceBranch, targetBranch)
 
 	// Authenticate with Github
@@ -84,12 +76,12 @@ func (r *ReconcileClient) handleMergeConflict(dryRun bool) error {
 
 	reconcileBranch, status, err := r.client.GetBranch(r.reconcileBranchName)
 
-	if err != nil {
-		return err
+	errorCode := 404
+	if status == errorCode {
+		return r.handleNewReconcileBranch()
 	}
 
 	successCode := 200
-
 	if status == successCode {
 		var resolved bool
 		resolved, err = r.handleExistingReconcileBranch(reconcileBranch)
@@ -98,10 +90,12 @@ func (r *ReconcileClient) handleMergeConflict(dryRun bool) error {
 		}
 		if resolved {
 			return nil
+		} else {
+			return r.handleNewReconcileBranch()
 		}
 	}
 
-	return r.handleNewReconcileBranch()
+	return err
 }
 
 func (r *ReconcileClient) handleExistingReconcileBranch(reconcileBranch *gogithub.Branch) (bool, error) {
@@ -179,10 +173,9 @@ func (r *ReconcileClient) handleTargetAhead() (bool, error) {
 			"Enter [1] for Option 1 or [2] for Option 2: ",
 		r.source, r.target, r.owner, r.repo,
 	))
-	rawInput := readTerminal()
-	input, ok := rawInput.(int)
-	if !ok {
-		return false, fmt.Errorf("illegal input %q - allowed options are: [1, 2]", input)
+	input, err := readTerminal()
+	if err != nil {
+		return false, fmt.Errorf("illegal input %v - allowed options are: [1, 2]", input)
 	}
 
 	switch input {
@@ -204,5 +197,10 @@ var (
 		return github.New(token, owner, repo, ctx)
 	}
 	printTerminal = terminal.Output
-	readTerminal  = terminal.Read
+	readTerminal  = func() (int, error) {
+		var input int
+		_, err := fmt.Scanln(&input)
+
+		return input, err
+	}
 )
