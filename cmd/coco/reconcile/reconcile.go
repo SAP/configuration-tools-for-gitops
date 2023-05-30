@@ -175,7 +175,7 @@ func (r *ReconcileClient) handleTargetAhead() (bool, error) {
 	))
 	input, err := readTerminal()
 	if err != nil {
-		return false, fmt.Errorf("illegal input %q - allowed options are: [1, 2]", input)
+		return false, fmt.Errorf("illegal input %v - allowed options are: [1, 2]", input)
 	}
 
 	switch input {
