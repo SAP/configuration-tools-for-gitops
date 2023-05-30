@@ -128,5 +128,6 @@ jobs:
           hooks: goreleaser
           changelog-file: CHANGELOG.md
           changelog-generator-opt: "emojis=true"
+          force-bump-patch-version: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
