@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/SAP/configuration-tools-for-gitops/pkg/git"
 	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
@@ -14,109 +15,94 @@ import (
 )
 
 var (
-	cfgFile, gp, gu       string
-	remote, defaultBranch string
-	mD                    int
-	logLvl                log.Level
+	componentCfgFile, cfgFile, gp, gu string
+	remote, defaultBranch             string
+	mD                                int
+	logLvl                            log.Level
 )
 
 const (
-	gitPath   = "git.path"
-	gitURL    = "git.URL"
-	gitRemote = "git.remote"
-	gitDepth  = "git.depth"
+	gitPath      = "git.path"
+	gitURL       = "git.URL"
+	gitRemote    = "git.remote"
+	gitDepth     = "git.depth"
+	componentCfg = "component.cfg"
 	// cannot restrict checkout depth due to upstream bug
 	// (see https://github.com/go-git/go-git/issues/328 for issue tracking)
 	overWriteGitDepth = 0
 )
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "coco",
-	Short: "CLI to interact with the gitops repository",
-	Long: `coco is a CLI to interact with a gitops repository and shall provide
-various solutions, ranging from file-generation over the calculation of 
-dependency trees to various interactions with git and github.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
-}
-
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		zap.S().Fatal(err)
-	}
+	cmd := newRoot()
+	cobra.OnInitialize(initConfig)
+	cobra.CheckErr(cmd.Execute())
 }
 
-//nolint:gochecknoinits // required by the cobra framework
-func init() {
-	cobra.OnInitialize(initConfig)
+func newRoot() *cobra.Command {
+	var c = &cobra.Command{
+		Use:   "coco",
+		Short: "CLI to interact with the gitops repository",
+		Long: `coco is a CLI to interact with a gitops repository and shall provide
+	various solutions, ranging from file-generation over the calculation of 
+	dependency trees to various interactions with git and github.`,
+		// Uncomment the following line if your bare application
+		// has an action associated with it:
+		// Run: func(cmd *cobra.Command, args []string) { },
+	}
 
-	rootCmd.PersistentFlags().StringVar(
-		&cfgFile,
-		"config",
-		"",
-		"config file (default $HOME/.coco)",
+	c.AddCommand(newVersion())
+	c.AddCommand(newDependencies())
+	c.AddCommand(newGenerate())
+	c.AddCommand(newInspect())
+
+	c.PersistentFlags().StringVar(
+		&cfgFile, "config", "", "config file (default $HOME/.coco)",
 	)
+	bindFlag(c.PersistentFlags(), "cfgfile", "config", "COCO_CFG")
 
-	rootCmd.PersistentFlags().VarP(
-		&logLvl,
-		"loglvl", "l",
-		fmt.Sprintf(
-			"sets the log level of the application - key or value of %v",
-			logLvl.AllLevels(),
-		),
+	c.PersistentFlags().StringVarP(
+		&componentCfgFile, "component-cfg", "c", "coco.yaml",
+		`name of the component-specific configuration file`,
 	)
-	registerFlag("loglvl", "loglvl", "LOGLEVEL")
+	bindFlag(c.PersistentFlags(), componentCfg, "component-cfg", "COCO_COMPONENT_CFG")
 
-	rootCmd.PersistentFlags().StringVarP(
-		&gp,
-		"git-path", "p",
-		"",
-		"path where the configuration repository locally resides",
+	c.PersistentFlags().VarP(
+		&logLvl, "loglvl", "l",
+		fmt.Sprintf("sets the log level of the application - key or value of %v", logLvl.AllLevels()),
 	)
-	registerFlag(gitPath, "git-path", "GIT_PATH")
+	bindFlag(c.PersistentFlags(), "loglvl", "loglvl", "LOGLEVEL")
 
-	rootCmd.PersistentFlags().StringVarP(
-		&gu,
-		"git-url", "u",
-		"",
-		"git URL of the configuration repository",
+	c.PersistentFlags().StringVarP(
+		&gp, "git-path", "p", "", "path where the configuration repository locally resides",
 	)
-	registerFlag(gitURL, "git-url", "GIT_URL")
+	bindFlag(c.PersistentFlags(), gitPath, "git-path", "GIT_PATH")
 
-	rootCmd.PersistentFlags().StringVarP(
-		&remote,
-		"git-remote", "r",
-		"origin",
+	c.PersistentFlags().StringVarP(
+		&gu, "git-url", "u", "", "git URL of the configuration repository",
+	)
+	bindFlag(c.PersistentFlags(), gitURL, "git-url", "GIT_URL")
+
+	c.PersistentFlags().StringVarP(
+		&remote, "git-remote", "r", "origin",
 		"remote branch to compare against for changed components",
 	)
-	registerFlag(gitRemote, "git-remote", "GIT_REMOTE")
+	bindFlag(c.PersistentFlags(), gitRemote, "git-remote", "GIT_REMOTE")
 
-	rootCmd.PersistentFlags().StringVarP(
-		&defaultBranch,
-		"git-defaultbranch", "b",
-		"main",
-		"default branch",
+	c.PersistentFlags().StringVarP(
+		&defaultBranch, "git-defaultbranch", "b", "main", "default branch",
 	)
-	registerFlag("git.defaultBranch", "git-defaultbranch", "GIT_DEFAULT_BRANCH")
+	bindFlag(c.PersistentFlags(), "git.defaultBranch", "git-defaultbranch", "GIT_DEFAULT_BRANCH")
 
-	rootCmd.PersistentFlags().IntVar(
-		&mD,
-		"git-depth",
-		0,
+	c.PersistentFlags().IntVar(
+		&mD, "git-depth", 0,
 		`[NOT IN USE (upstream bug: see https://github.com/go-git/go-git/issues/328 for issue tracking)]
-		 max checkout depth of the git repository`,
+	max checkout depth of the git repository`,
 	)
-	registerFlag(gitDepth, "git-depth", "GIT_DEPTH")
-	cobra.CheckErr(viper.BindEnv("git-token", "GITHUB_TOKEN"))
-}
+	bindFlag(c.PersistentFlags(), gitDepth, "git-depth", "GIT_DEPTH")
 
-func registerFlag(key, flag, env string) {
-	cobra.CheckErr(viper.BindPFlag(key, rootCmd.PersistentFlags().Lookup(flag)))
-	cobra.CheckErr(viper.BindEnv(key, env))
+	cobra.CheckErr(viper.BindEnv("git-token", "GITHUB_TOKEN"))
+
+	return c
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -138,6 +124,7 @@ func initConfig() {
 		}
 		viper.AddConfigPath(home)
 		viper.SetConfigName(".coco")
+		viper.SetDefault("cfgfile", filepath.Join(home, ".coco"))
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
