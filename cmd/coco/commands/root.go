@@ -54,6 +54,7 @@ func newRoot() *cobra.Command {
 	c.AddCommand(newDependencies())
 	c.AddCommand(newGenerate())
 	c.AddCommand(newInspect())
+	c.AddCommand(newReconcile())
 
 	c.PersistentFlags().StringVar(
 		&cfgFile, "config", "", "config file (default $HOME/.coco)",
