@@ -5,8 +5,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-
-	"golang.org/x/sys/unix"
 )
 
 const (
@@ -70,7 +68,7 @@ func CreateOpen(path string) (*os.File, error) {
 var createOpen func(path string, flag int, permissions fs.FileMode) (*os.File, error) = co
 
 func co(path string, flag int, permissions fs.FileMode) (*os.File, error) {
-	unix.Umask(0)
+	// unix.Umask(0)
 	if err := os.MkdirAll(filepath.Dir(path), addExecutible(permissions)); err != nil {
 		return nil, err
 	}
