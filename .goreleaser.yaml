@@ -1,0 +1,29 @@
+
+project_name: coco
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    main: ./cmd/coco/
+    ldflags:
+      - -extldflags '-static'
+      - -s -w 
+      - -X github.com/SAP/configuration-tools-for-gitops/pkg/version.version={{.Version}}
+      - -X github.com/SAP/configuration-tools-for-gitops/pkg/version.gitCommit={{.Commit}}
+      - -X github.com/SAP/configuration-tools-for-gitops/pkg/version.buildDate={{.Date}}
+      - -X github.com/SAP/configuration-tools-for-gitops/pkg/version.gitTreeState=clean
+
+
+archives:
+  - name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}'
+    builds_info:
+      mode: 555
+
+checksum:
+  name_template: '{{ .ProjectName }}_v{{ .Version }}_checksums.txt'
+
