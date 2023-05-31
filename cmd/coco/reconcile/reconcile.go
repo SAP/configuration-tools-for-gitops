@@ -67,7 +67,6 @@ func (r *ReconcileClient) merge() error {
 }
 
 func (r *ReconcileClient) handleMergeConflict() error {
-
 	reconcileBranch, status, err := r.client.GetBranch(r.reconcileBranchName)
 
 	if status == http.StatusNotFound {
