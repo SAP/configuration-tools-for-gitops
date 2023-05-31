@@ -196,10 +196,5 @@ var (
 		return github.New(token, owner, repo, ctx)
 	}
 	printTerminal = terminal.Output
-	readTerminal  = func() (int, error) {
-		var input int
-		_, err := fmt.Scanln(&input)
-
-		return input, err
-	}
+	readTerminal  = terminal.ReadInt
 )
