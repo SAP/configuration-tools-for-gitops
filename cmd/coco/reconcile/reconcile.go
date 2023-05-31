@@ -49,19 +49,15 @@ func New(sourceBranch, targetBranch, owner, repo, token string, ctx context.Cont
 	}, nil
 }
 
-func (r *ReconcileClient) Reconcile(dryRun bool) error {
-	return r.merge(dryRun)
+func (r *ReconcileClient) Reconcile() error {
+	return r.merge()
 }
 
-func (r *ReconcileClient) merge(dryRun bool) error {
+func (r *ReconcileClient) merge() error {
 	success, err := r.client.MergeBranches(r.target, r.source)
 	if err == nil {
 		if !success {
-			return r.handleMergeConflict(dryRun)
-		}
-		if dryRun {
-			log.Sugar.Debug("No merge conflicts found (dry-run mode)")
-			return nil
+			return r.handleMergeConflict()
 		}
 		log.Sugar.Info("Merged successfully")
 		return nil
@@ -70,10 +66,7 @@ func (r *ReconcileClient) merge(dryRun bool) error {
 	return fmt.Errorf("failed to merge branches: %w", err)
 }
 
-func (r *ReconcileClient) handleMergeConflict(dryRun bool) error {
-	if dryRun {
-		return fmt.Errorf("merge conflicts detected")
-	}
+func (r *ReconcileClient) handleMergeConflict() error {
 
 	reconcileBranch, status, err := r.client.GetBranch(r.reconcileBranchName)
 

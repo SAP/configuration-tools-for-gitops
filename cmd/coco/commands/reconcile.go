@@ -12,9 +12,8 @@ import (
 )
 
 var (
-	owner  string
-	repo   string
-	dryRun bool
+	owner string
+	repo  string
 )
 
 var (
@@ -62,7 +61,7 @@ func newReconcile() *cobra.Command {
 				os.Exit(1)
 			}
 
-			err = client.Reconcile(dryRun)
+			err = client.Reconcile()
 			if err != nil {
 				log.Sugar.Errorf("reconciliation failed with: %w", err)
 				os.Exit(1)
@@ -90,7 +89,5 @@ func newReconcile() *cobra.Command {
 		log.Sugar.Error(err)
 		os.Exit(1)
 	}
-	c.PersistentFlags().BoolVarP(&dryRun, "dry-run", "d", false,
-		"Perform a dry-run to check for merge conflicts without making any changes.")
 	return c
 }
