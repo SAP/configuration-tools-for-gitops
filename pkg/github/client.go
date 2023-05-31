@@ -3,6 +3,7 @@ package github
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/SAP/configuration-tools-for-gitops/pkg/terminal"
@@ -40,18 +41,18 @@ func (gh *Github) MergeBranches(base, head string) (bool, error) {
 	}
 	_, response, err := gh.client.Repositories.Merge(gh.ctx, gh.owner, gh.repo, merge)
 
+	// Merge conflict
+	if response.StatusCode == http.StatusConflict {
+		return false, nil
+	}
+
 	if err != nil {
 		return false, err
 	}
 	// checkout https://docs.github.com/en/rest/branches/branches?apiVersion=2022-11-28#merge-a-branch
 	// Success response
-	if response.StatusCode == 201 || response.StatusCode == 204 {
+	if response.StatusCode == http.StatusCreated || response.StatusCode == http.StatusNoContent {
 		return true, nil
-	}
-	// Merge conflict
-	mergeConflictCode := 409
-	if response.StatusCode == mergeConflictCode {
-		return false, nil
 	}
 	return false, fmt.Errorf("github server error(%v): %v", response.StatusCode, response.Status)
 }
@@ -82,15 +83,15 @@ func (gh *Github) DeleteBranch(branchName string) error {
 				"Enter [y] for Yes and [n] for No: ",
 			branchName,
 		))
-	rawInput := readTerminal()
-	input, ok := rawInput.(string)
-	if !ok {
+
+	input, err := readTerminal()
+	if err != nil {
 		printTerminal("abort on user input")
 		return nil
 	}
 
 	if strings.EqualFold(input, "y") {
-		_, err := gh.client.Git.DeleteRef(gh.ctx, gh.owner, gh.repo,
+		_, err = gh.client.Git.DeleteRef(gh.ctx, gh.owner, gh.repo,
 			"refs/heads/"+branchName)
 		if err != nil {
 			return fmt.Errorf("failed to delete branch %s: %w", branchName, err)
@@ -98,7 +99,7 @@ func (gh *Github) DeleteBranch(branchName string) error {
 		printTerminal(fmt.Sprintf("%s branch deleted successfully", branchName))
 		return nil
 	}
-	return nil
+	return fmt.Errorf("failed to delete branch %s: %w", branchName, err)
 }
 
 func (gh *Github) GetBranchRef(branchName string) (*gogithub.Reference, error) {
@@ -139,5 +140,5 @@ func (gh *Github) ListPullRequests() ([]*gogithub.PullRequest, error) {
 
 var (
 	printTerminal = terminal.Output
-	readTerminal  = terminal.Read
+	readTerminal  = terminal.ReadStr
 )

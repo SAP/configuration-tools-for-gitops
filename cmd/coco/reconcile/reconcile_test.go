@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/SAP/configuration-tools-for-gitops/pkg/github"
 	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
@@ -16,7 +17,6 @@ type scenario struct {
 	targetBranch          string
 	owner                 string
 	repo                  string
-	dryRun                bool
 	expectedErr           error
 	reconcileBranchExists bool
 	targetAhead           bool
@@ -26,6 +26,10 @@ type scenario struct {
 	falseInput            bool
 }
 
+var (
+	timeout = 5 * time.Minute
+)
+
 var scenarios = []scenario{
 	{
 		title:                 "dry run mode with successful merge",
@@ -33,7 +37,6 @@ var scenarios = []scenario{
 		targetBranch:          "main",
 		owner:                 "test",
 		repo:                  "repo",
-		dryRun:                false,
 		expectedErr:           nil,
 		mergeSuccessful:       true,
 		reconcileBranchExists: false,
@@ -44,7 +47,6 @@ var scenarios = []scenario{
 		targetBranch:          "main",
 		owner:                 "test",
 		repo:                  "repo",
-		dryRun:                true,
 		expectedErr:           nil,
 		mergeSuccessful:       true,
 		reconcileBranchExists: false,
@@ -55,7 +57,6 @@ var scenarios = []scenario{
 		targetBranch:          "main",
 		owner:                 "test",
 		repo:                  "repo",
-		dryRun:                true,
 		expectedErr:           fmt.Errorf("merge conflicts detected"),
 		mergeSuccessful:       false,
 		reconcileBranchExists: false,
@@ -66,7 +67,6 @@ var scenarios = []scenario{
 		targetBranch:          "main",
 		owner:                 "test",
 		repo:                  "repo",
-		dryRun:                false,
 		expectedErr:           nil,
 		mergeSuccessful:       false,
 		reconcileBranchExists: false,
@@ -78,7 +78,6 @@ var scenarios = []scenario{
 		targetBranch:          "main",
 		owner:                 "test",
 		repo:                  "repo",
-		dryRun:                false,
 		expectedErr:           nil,
 		mergeSuccessful:       false,
 		reconcileBranchExists: true,
@@ -91,7 +90,6 @@ var scenarios = []scenario{
 		targetBranch:          "main",
 		owner:                 "test",
 		repo:                  "repo",
-		dryRun:                false,
 		expectedErr:           nil,
 		mergeSuccessful:       false,
 		reconcileBranchExists: true,
@@ -104,7 +102,6 @@ var scenarios = []scenario{
 		targetBranch:          "main",
 		owner:                 "test",
 		repo:                  "repo",
-		dryRun:                false,
 		expectedErr:           nil,
 		mergeSuccessful:       false,
 		reconcileBranchExists: true,
@@ -118,7 +115,6 @@ var scenarios = []scenario{
 		targetBranch:          "main",
 		owner:                 "test",
 		repo:                  "repo",
-		dryRun:                false,
 		expectedErr:           fmt.Errorf("illegal input 3 - allowed options are: [1, 2]"),
 		mergeSuccessful:       false,
 		reconcileBranchExists: true,
@@ -150,21 +146,23 @@ func TestReconcilition(t *testing.T) {
 					tt.mergeSuccessful,
 				)
 			}
-			readTerminal = func() interface{} {
+			readTerminal = func() (int, error) {
 				if tt.falseInput {
-					return 3
+					return 3, fmt.Errorf("illegal input")
 				}
 				if tt.manualMerge {
-					return 1
+					return 1, nil
 				} else {
-					return 2
+					return 2, nil
 				}
 			}
-			client, err := New(tt.sourceBranch, tt.targetBranch, tt.owner, tt.repo, token)
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			defer cancel()
+			client, err := New(tt.sourceBranch, tt.targetBranch, tt.owner, tt.repo, token, ctx)
 			if err != nil && err.Error() != tt.expectedErr.Error() {
 				t.Errorf("unexpected error: got %v, want %v", err, tt.expectedErr)
 			}
-			err = client.Reconcile(tt.dryRun)
+			err = client.Reconcile()
 			if err != nil && err.Error() != tt.expectedErr.Error() {
 				t.Errorf("unexpected error: got %v, want %v", err, tt.expectedErr)
 			}

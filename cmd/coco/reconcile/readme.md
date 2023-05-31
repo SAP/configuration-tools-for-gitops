@@ -11,7 +11,6 @@ coco reconcile \
   --target <target_branch> \
   --owner <owner_name> \
   --repo <repo_name> \
-  [--dry-run]
 ```
 
 For the reconcile command usage please run

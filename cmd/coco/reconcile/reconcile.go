@@ -3,16 +3,12 @@ package reconcile
 import (
 	"context"
 	"fmt"
-	"time"
+	"net/http"
 
 	"github.com/SAP/configuration-tools-for-gitops/pkg/github"
 	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
 	"github.com/SAP/configuration-tools-for-gitops/pkg/terminal"
 	gogithub "github.com/google/go-github/v51/github"
-)
-
-var (
-	timeout = 100 * time.Millisecond
 )
 
 type githubClient interface {
@@ -34,10 +30,7 @@ type ReconcileClient struct {
 	repo                string
 }
 
-func New(sourceBranch, targetBranch, owner, repo, token string) (*ReconcileClient, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
+func New(sourceBranch, targetBranch, owner, repo, token string, ctx context.Context) (*ReconcileClient, error) {
 	reconcileBranchName := fmt.Sprintf("reconcile/%s-%s", sourceBranch, targetBranch)
 
 	// Authenticate with Github
@@ -56,19 +49,15 @@ func New(sourceBranch, targetBranch, owner, repo, token string) (*ReconcileClien
 	}, nil
 }
 
-func (r *ReconcileClient) Reconcile(dryRun bool) error {
-	return r.merge(dryRun)
+func (r *ReconcileClient) Reconcile() error {
+	return r.merge()
 }
 
-func (r *ReconcileClient) merge(dryRun bool) error {
+func (r *ReconcileClient) merge() error {
 	success, err := r.client.MergeBranches(r.target, r.source)
 	if err == nil {
 		if !success {
-			return r.handleMergeConflict(dryRun)
-		}
-		if dryRun {
-			log.Sugar.Debug("No merge conflicts found (dry-run mode)")
-			return nil
+			return r.handleMergeConflict()
 		}
 		log.Sugar.Info("Merged successfully")
 		return nil
@@ -77,20 +66,14 @@ func (r *ReconcileClient) merge(dryRun bool) error {
 	return fmt.Errorf("failed to merge branches: %w", err)
 }
 
-func (r *ReconcileClient) handleMergeConflict(dryRun bool) error {
-	if dryRun {
-		return fmt.Errorf("merge conflicts detected")
-	}
-
+func (r *ReconcileClient) handleMergeConflict() error {
 	reconcileBranch, status, err := r.client.GetBranch(r.reconcileBranchName)
 
-	if err != nil {
-		return err
+	if status == http.StatusNotFound {
+		return r.handleNewReconcileBranch()
 	}
 
-	successCode := 200
-
-	if status == successCode {
+	if status == http.StatusOK {
 		var resolved bool
 		resolved, err = r.handleExistingReconcileBranch(reconcileBranch)
 		if err != nil {
@@ -98,16 +81,18 @@ func (r *ReconcileClient) handleMergeConflict(dryRun bool) error {
 		}
 		if resolved {
 			return nil
+		} else {
+			return r.handleNewReconcileBranch()
 		}
 	}
 
-	return r.handleNewReconcileBranch()
+	return err
 }
 
 func (r *ReconcileClient) handleExistingReconcileBranch(reconcileBranch *gogithub.Branch) (bool, error) {
 	// Compare the latest target branch and reconcile branch
 	target, status, err := r.client.GetBranch(r.target)
-	if err != nil || status != 200 {
+	if err != nil || status != http.StatusOK {
 		return false, fmt.Errorf("failed to get target branch: %w", err)
 	}
 	commits, err := r.client.CompareCommits(
@@ -179,10 +164,9 @@ func (r *ReconcileClient) handleTargetAhead() (bool, error) {
 			"Enter [1] for Option 1 or [2] for Option 2: ",
 		r.source, r.target, r.owner, r.repo,
 	))
-	rawInput := readTerminal()
-	input, ok := rawInput.(int)
-	if !ok {
-		return false, fmt.Errorf("illegal input %q - allowed options are: [1, 2]", input)
+	input, err := readTerminal()
+	if err != nil {
+		return false, fmt.Errorf("illegal input %v - allowed options are: [1, 2]", input)
 	}
 
 	switch input {
@@ -204,5 +188,5 @@ var (
 		return github.New(token, owner, repo, ctx)
 	}
 	printTerminal = terminal.Output
-	readTerminal  = terminal.Read
+	readTerminal  = terminal.ReadInt
 )

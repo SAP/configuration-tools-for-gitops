@@ -1,7 +1,9 @@
 package commands
 
 import (
+	"context"
 	"os"
+	"time"
 
 	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/reconcile"
 	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
@@ -10,9 +12,12 @@ import (
 )
 
 var (
-	owner  string
-	repo   string
-	dryRun bool
+	owner string
+	repo  string
+)
+
+var (
+	timeout = 5 * time.Minute
 )
 
 func newReconcile() *cobra.Command {
@@ -41,19 +46,22 @@ func newReconcile() *cobra.Command {
 				log.Sugar.Errorf("owner name and repository name must be specified")
 				os.Exit(1)
 			}
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			defer cancel()
 			client, err := reconcile.New(
 				sourceBranch,
 				targetBranch,
 				owner,
 				repo,
 				viper.GetString("git-token"),
+				ctx,
 			)
 			if err != nil {
 				log.Sugar.Errorf("reconciliation failed with: %w", err)
 				os.Exit(1)
 			}
 
-			err = client.Reconcile(dryRun)
+			err = client.Reconcile()
 			if err != nil {
 				log.Sugar.Errorf("reconciliation failed with: %w", err)
 				os.Exit(1)
@@ -81,7 +89,5 @@ func newReconcile() *cobra.Command {
 		log.Sugar.Error(err)
 		os.Exit(1)
 	}
-	c.PersistentFlags().BoolVarP(&dryRun, "dry-run", "d", false,
-		"Perform a dry-run to check for merge conflicts without making any changes.")
 	return c
 }
