@@ -3,6 +3,7 @@ package reconcile
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/SAP/configuration-tools-for-gitops/pkg/github"
 	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
@@ -76,13 +77,11 @@ func (r *ReconcileClient) handleMergeConflict(dryRun bool) error {
 
 	reconcileBranch, status, err := r.client.GetBranch(r.reconcileBranchName)
 
-	errorCode := 404
-	if status == errorCode {
+	if status == http.StatusNotFound {
 		return r.handleNewReconcileBranch()
 	}
 
-	successCode := 200
-	if status == successCode {
+	if status == http.StatusOK {
 		var resolved bool
 		resolved, err = r.handleExistingReconcileBranch(reconcileBranch)
 		if err != nil {
@@ -101,7 +100,7 @@ func (r *ReconcileClient) handleMergeConflict(dryRun bool) error {
 func (r *ReconcileClient) handleExistingReconcileBranch(reconcileBranch *gogithub.Branch) (bool, error) {
 	// Compare the latest target branch and reconcile branch
 	target, status, err := r.client.GetBranch(r.target)
-	if err != nil || status != 200 {
+	if err != nil || status != http.StatusOK {
 		return false, fmt.Errorf("failed to get target branch: %w", err)
 	}
 	commits, err := r.client.CompareCommits(

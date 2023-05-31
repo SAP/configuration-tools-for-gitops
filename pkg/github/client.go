@@ -3,6 +3,7 @@ package github
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/SAP/configuration-tools-for-gitops/pkg/terminal"
@@ -41,8 +42,7 @@ func (gh *Github) MergeBranches(base, head string) (bool, error) {
 	_, response, err := gh.client.Repositories.Merge(gh.ctx, gh.owner, gh.repo, merge)
 
 	// Merge conflict
-	mergeConflictCode := 409
-	if response.StatusCode == mergeConflictCode {
+	if response.StatusCode == http.StatusConflict {
 		return false, nil
 	}
 
@@ -51,7 +51,7 @@ func (gh *Github) MergeBranches(base, head string) (bool, error) {
 	}
 	// checkout https://docs.github.com/en/rest/branches/branches?apiVersion=2022-11-28#merge-a-branch
 	// Success response
-	if response.StatusCode == 201 || response.StatusCode == 204 {
+	if response.StatusCode == http.StatusCreated || response.StatusCode == http.StatusNoContent {
 		return true, nil
 	}
 	return false, fmt.Errorf("github server error(%v): %v", response.StatusCode, response.Status)
