@@ -80,17 +80,21 @@ key: !yamlFlag {{.value1}}
 parse:
 	conditional: {{.value2}} # inline comment
 {{- end }}
-testTrim: {{ trimSuffix "hello world" " world" }}
-testJoin: {{ join "-" "hello" "world" "2" }}
+testTrim: {{ trimSuffix " world" "hello world" }}
+testJoin: {{ joinElems "-" "hello" "world" "2" }}
 testQuote: {{ "hello" | quote }}
-testSplitSelect: {{ split "hello-world-2" "-" | select 1 }}
-testSplitSelectEmpty: {{ split "hello-world-2" "-" | select 10 | quote }}
+testHas: {{ if has "feature1" .features }}hasFeature1{{ end }}{{ if has "feature3" .features }}hasFeature3{{ end }}
+testSplitSelect: {{ splitList "-" "hello-world-2" | select 1 }}
+testSplitSelectEmpty: {{ splitList "-" "hello-world-2" | select 10 | quote }}
 	`)},
 			values: map[string][]byte{
 				"c1": content(`
 value1: fromValues-1
 value2: fromValues-2
 ifKey: parse
+features:
+- feature1
+- feature2
 `),
 			},
 			version: "99.99.99",
@@ -106,6 +110,7 @@ parse:
 testTrim: hello
 testJoin: hello-world-2
 testQuote: "hello"
+testHas: hasFeature1
 testSplitSelect: world
 testSplitSelectEmpty: ""
 `),
@@ -122,7 +127,7 @@ testSplitSelectEmpty: ""
 		i: renderInput{
 			templates: []template{{"path/.tmpl/nonYamlFile", "path", "", "nonYamlFile"}},
 			templateContent: [][]byte{content(`
-VAR_1={{ join "-" "hello" "world" "2" }}
+VAR_1={{ joinElems "-" "hello" "world" "2" }}
 VAR_2={{ .value1 }}
 	`)},
 			values: map[string][]byte{
