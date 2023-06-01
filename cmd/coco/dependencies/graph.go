@@ -1,7 +1,6 @@
 package dependencies
 
 import (
-	"os"
 	"path/filepath"
 
 	g "github.com/SAP/configuration-tools-for-gitops/cmd/coco/graph"
@@ -11,7 +10,6 @@ import (
 )
 
 var (
-	readFile     func(string) ([]byte, error)               = os.ReadFile
 	unmarshal    func([]byte, interface{}) error            = yaml.Unmarshal
 	dependencies func(string, string) (*files.Files, error) = deps
 )
@@ -51,11 +49,11 @@ func constructGraph(path, depFileName string) (
 			continue
 		}
 
-		// read dependency information from file
-		df, err := parse(p)
-		if err != nil {
+		var df depFile
+		if err := unmarshal(f.Content, &df); err != nil {
 			return downToUp, componentPaths, err
 		}
+
 		depMap := make(map[string]bool, len(df.Dependencies))
 		for _, d := range df.Dependencies {
 			depMap[d] = true
@@ -87,20 +85,9 @@ type depFile struct {
 	Dependencies []string `yaml:"dependencies"`
 }
 
-func parse(path string) (depFile, error) {
-	b, err := readFile(path)
-	if err != nil {
-		return depFile{}, err
-	}
-	var res depFile
-	if err := unmarshal(b, &res); err != nil {
-		return depFile{}, err
-	}
-	return res, nil
-}
-
 func deps(path, depFileName string) (*files.Files, error) {
 	return files.New(path).
 		Include(files.AND, []string{depFileName}).
+		ReadContent().
 		Execute()
 }
