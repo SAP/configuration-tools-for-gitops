@@ -2,7 +2,6 @@ package dependencies
 
 import (
 	"fmt"
-	"os"
 	"reflect"
 	"testing"
 
@@ -140,22 +139,6 @@ dependencies:
 		},
 	},
 	{
-		title: "error in readFile",
-		input: input{
-			depFileName: "file",
-			files:       map[string][]byte{"file": {}},
-			mock: mockGraph{
-				rf: fmt.Errorf("fail in readFile"),
-				un: nil,
-				rd: nil,
-			},
-		},
-		want: want{
-			res: graph.ComponentDependencies{},
-			err: fmt.Errorf("fail in readFile"),
-		},
-	},
-	{
 		title: "error in unmarshal",
 		input: input{
 			depFileName: "file",
@@ -197,7 +180,6 @@ func (g *graphTest) Test(t *testing.T) {
 }
 
 func (g *graphTest) setup() (testfuncs.TestDir, error) {
-	readFile = g.input.mock.readFile
 	unmarshal = g.input.mock.unmarshal
 	dependencies = g.input.mock.readDeps
 
@@ -218,13 +200,6 @@ type mockGraph struct {
 	rf error
 	un error
 	rd error
-}
-
-func (m mockGraph) readFile(f string) ([]byte, error) {
-	if m.rf != nil {
-		return nil, m.rf
-	}
-	return os.ReadFile(f)
 }
 
 func (m mockGraph) unmarshal(in []byte, out interface{}) error {
