@@ -45,7 +45,7 @@ Flags:
   -c, --component-cfg string       name of the component-specific configuration file (default "coco.yaml")
       --config string              config file (default $HOME/.coco)
   -b, --git-defaultbranch string   default branch (default "main")
-      --git-depth int              [NOT IN USE (upstream bug: see https://github.com/go-git/go-git/issues/328 for issue tracking)]      
+      --git-depth int              [NOT IN USE (upstream bug: see https://github.com/go-git/go-git/issues/328 for issue tracking)]
                                         max checkout depth of the git repository
   -p, --git-path string            path where the configuration repository locally resides
   -r, --git-remote string          remote branch to compare against for changed components (default "origin")
