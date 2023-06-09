@@ -11,18 +11,8 @@ import (
 	gogithub "github.com/google/go-github/v51/github"
 )
 
-type githubClient interface {
-	CompareCommits(branch1 *gogithub.Branch, branch2 *gogithub.Branch) (*gogithub.CommitsComparison, error)
-	CreateBranch(branchName string, target *gogithub.Reference) error
-	CreatePullRequest(head, base string) (*gogithub.PullRequest, error)
-	DeleteBranch(branchName string) error
-	GetBranch(branchName string) (*gogithub.Branch, int, error)
-	GetBranchRef(branchName string) (*gogithub.Reference, error)
-	ListPullRequests() ([]*gogithub.PullRequest, error)
-	MergeBranches(base, head string) (bool, error)
-}
 type ReconcileClient struct {
-	client              githubClient
+	client              github.Interface
 	target              string
 	source              string
 	reconcileBranchName string
@@ -49,15 +39,15 @@ func New(sourceBranch, targetBranch, owner, repo, token string, ctx context.Cont
 	}, nil
 }
 
-func (r *ReconcileClient) Reconcile() error {
-	return r.merge()
+func (r *ReconcileClient) Reconcile(force bool) error {
+	return r.merge(force)
 }
 
-func (r *ReconcileClient) merge() error {
+func (r *ReconcileClient) merge(force bool) error {
 	success, err := r.client.MergeBranches(r.target, r.source)
 	if err == nil {
 		if !success {
-			return r.handleMergeConflict()
+			return r.handleMergeConflict(force)
 		}
 		log.Sugar.Info("Merged successfully")
 		return nil
@@ -66,7 +56,7 @@ func (r *ReconcileClient) merge() error {
 	return fmt.Errorf("failed to merge branches: %w", err)
 }
 
-func (r *ReconcileClient) handleMergeConflict() error {
+func (r *ReconcileClient) handleMergeConflict(force bool) error {
 	reconcileBranch, status, err := r.client.GetBranch(r.reconcileBranchName)
 
 	if status == http.StatusNotFound {
@@ -75,7 +65,7 @@ func (r *ReconcileClient) handleMergeConflict() error {
 
 	if status == http.StatusOK {
 		var resolved bool
-		resolved, err = r.handleExistingReconcileBranch(reconcileBranch)
+		resolved, err = r.handleExistingReconcileBranch(reconcileBranch, force)
 		if err != nil {
 			return err
 		}
@@ -89,7 +79,9 @@ func (r *ReconcileClient) handleMergeConflict() error {
 	return err
 }
 
-func (r *ReconcileClient) handleExistingReconcileBranch(reconcileBranch *gogithub.Branch) (bool, error) {
+func (r *ReconcileClient) handleExistingReconcileBranch(
+	reconcileBranch *gogithub.Branch, force bool,
+) (bool, error) {
 	// Compare the latest target branch and reconcile branch
 	target, status, err := r.client.GetBranch(r.target)
 	if err != nil || status != http.StatusOK {
@@ -102,7 +94,7 @@ func (r *ReconcileClient) handleExistingReconcileBranch(reconcileBranch *gogithu
 		return false, fmt.Errorf("failed to compare commits: %w", err)
 	}
 	if commits.GetAheadBy() > 0 {
-		return r.handleTargetAhead()
+		return r.handleTargetAhead(force)
 	}
 	// check mergability
 	return r.checkMergeability()
@@ -155,38 +147,36 @@ func (r *ReconcileClient) checkMergeability() (bool, error) {
 	return false, err
 }
 
-func (r *ReconcileClient) handleTargetAhead() (bool, error) {
-	printTerminal(fmt.Sprintf(
-		"The target branch has new commits, choose one of the following options:\n\n"+
-			"Option 1: Merge the target branch into the reconcile branch manually and rerun command `coco reconcile`\n\n"+
-			"Option 2: Automatically delete the reconcile branch and rerun the command "+
-			"`coco reconcile --source %s --target %s --owner %s --repo %s`\n\n"+
-			"Enter [1] for Option 1 or [2] for Option 2: ",
-		r.source, r.target, r.owner, r.repo,
-	))
-	input, err := readTerminal()
-	if err != nil {
-		return false, fmt.Errorf("illegal input %v - allowed options are: [1, 2]", input)
+func (r *ReconcileClient) handleTargetAhead(force bool) (bool, error) {
+	if force {
+		return false, r.client.DeleteBranch(r.reconcileBranchName, force)
 	}
 
-	switch input {
-	case 1:
-		printTerminal(fmt.Sprintf(
-			"Please merge the branch `%q` into the branch `%q` and rerun the `coco reconcile` command",
-			r.target, r.reconcileBranchName,
-		))
-	case 2:
-		return false, r.client.DeleteBranch(r.reconcileBranchName)
-	default:
-		return false, fmt.Errorf("illegal input %v - allowed options are: [1, 2]", input)
+	printTerminal(fmt.Sprintf(
+		"The target branch has new commits. "+
+			"Do you want to delete the reconcile branch and rerun the command? %+v",
+		terminal.AffirmationOptions,
+	))
+	deleteBranch, err := confirmed()
+	if err != nil {
+		return false, fmt.Errorf("input must be in %+v: %w", terminal.AffirmationOptions, err)
 	}
+
+	if deleteBranch {
+		return false, r.client.DeleteBranch(r.reconcileBranchName, true)
+	}
+	printTerminal(fmt.Sprintf(
+		"Please merge the branch %q into the branch %q and rerun the command"+
+			"`coco reconcile --source %s --target %s --owner %s --repo %s`",
+		r.target, r.reconcileBranchName, r.source, r.target, r.owner, r.repo,
+	))
 	return true, nil
 }
 
 var (
-	newGithubClient = func(token, owner, repo string, ctx context.Context) (githubClient, error) {
+	newGithubClient = func(token, owner, repo string, ctx context.Context) (github.Interface, error) {
 		return github.New(token, owner, repo, ctx)
 	}
 	printTerminal = terminal.Output
-	readTerminal  = terminal.ReadInt
+	confirmed     = terminal.IsYes
 )
