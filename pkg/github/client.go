@@ -11,21 +11,25 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type Github struct {
-	client *gogithub.Client
-	ctx    context.Context
-	owner  string
-	repo   string
+type Interface interface {
+	CompareCommits(branch1 *gogithub.Branch, branch2 *gogithub.Branch) (*gogithub.CommitsComparison, error)
+	CreateBranch(branchName string, target *gogithub.Reference) error
+	CreatePullRequest(head, base string) (*gogithub.PullRequest, error)
+	DeleteBranch(branchName string, force bool) error
+	GetBranch(branchName string) (*gogithub.Branch, int, error)
+	GetBranchRef(branchName string) (*gogithub.Reference, error)
+	ListPullRequests() ([]*gogithub.PullRequest, error)
+	MergeBranches(base, head string) (bool, error)
 }
 
-func New(token, owner, repo string, ctx context.Context) (*Github, error) {
+func New(token, owner, repo string, ctx context.Context) (Interface, error) {
 	// Authenticate with Github
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	)
 	tc := oauth2.NewClient(ctx, ts)
 	client := gogithub.NewClient(tc)
-	return &Github{
+	return &github{
 		client,
 		ctx,
 		owner,
@@ -33,7 +37,14 @@ func New(token, owner, repo string, ctx context.Context) (*Github, error) {
 	}, nil
 }
 
-func (gh *Github) MergeBranches(base, head string) (bool, error) {
+type github struct {
+	client *gogithub.Client
+	ctx    context.Context
+	owner  string
+	repo   string
+}
+
+func (gh *github) MergeBranches(base, head string) (bool, error) {
 	merge := &gogithub.RepositoryMergeRequest{
 		CommitMessage: gogithub.String("Merge branch " + head + " into " + base),
 		Base:          gogithub.String(base),
@@ -57,12 +68,12 @@ func (gh *Github) MergeBranches(base, head string) (bool, error) {
 	return false, fmt.Errorf("github server error(%v): %v", response.StatusCode, response.Status)
 }
 
-func (gh *Github) GetBranch(branchName string) (*gogithub.Branch, int, error) {
+func (gh *github) GetBranch(branchName string) (*gogithub.Branch, int, error) {
 	branch, response, err := gh.client.Repositories.GetBranch(gh.ctx, gh.owner, gh.repo, branchName, true)
 	return branch, response.StatusCode, err
 }
 
-func (gh *Github) CompareCommits(
+func (gh *github) CompareCommits(
 	branch1 *gogithub.Branch, branch2 *gogithub.Branch,
 ) (*gogithub.CommitsComparison, error) {
 	options := &gogithub.ListOptions{}
@@ -75,40 +86,50 @@ func (gh *Github) CompareCommits(
 	return commits, err
 }
 
-func (gh *Github) DeleteBranch(branchName string) error {
-	printTerminal(
-		fmt.Sprintf(
-			"\n\nYou will lose all the changes made in the reconcile branch. "+
-				"Are you sure you want to delete the branch %s?\n\n"+
-				"Enter [y] for Yes and [n] for No: ",
-			branchName,
-		))
-
-	input, err := readTerminal()
-	if err != nil {
-		printTerminal("abort on user input")
-		return nil
+func (gh *github) DeleteBranch(branchName string, force bool) error {
+	delete := false
+	if force {
+		delete = true
 	}
+	if !delete {
+		printTerminal(
+			fmt.Sprintf(
+				"\n\nYou will lose all the changes made in the reconcile branch. "+
+					"Are you sure you want to delete the branch %s?\n\n"+
+					"Enter [y] for Yes and [n] for No: ",
+				branchName,
+			))
 
-	if strings.EqualFold(input, "y") {
-		_, err = gh.client.Git.DeleteRef(gh.ctx, gh.owner, gh.repo,
-			"refs/heads/"+branchName)
+		input, err := readTerminal()
 		if err != nil {
-			return fmt.Errorf("failed to delete branch %s: %w", branchName, err)
+			printTerminal("abort on user input")
+			return nil
 		}
-		printTerminal(fmt.Sprintf("%s branch deleted successfully", branchName))
+		if strings.EqualFold(input, "y") {
+			delete = true
+		}
+	}
+
+	if delete {
+		_, err := gh.client.Git.DeleteRef(
+			gh.ctx, gh.owner, gh.repo, "refs/heads/"+branchName,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to delete branch %q: %w", branchName, err)
+		}
+		printTerminal(fmt.Sprintf("%q branch deleted successfully", branchName))
 		return nil
 	}
-	return fmt.Errorf("failed to delete branch %s: %w", branchName, err)
+	return fmt.Errorf("delete branch %q aborted due to user input", branchName)
 }
 
-func (gh *Github) GetBranchRef(branchName string) (*gogithub.Reference, error) {
+func (gh *github) GetBranchRef(branchName string) (*gogithub.Reference, error) {
 	branchRef := "refs/heads/" + branchName
 	branch, _, err := gh.client.Git.GetRef(gh.ctx, gh.owner, gh.repo, branchRef)
 	return branch, err
 }
 
-func (gh *Github) CreateBranch(branchName string, target *gogithub.Reference) error {
+func (gh *github) CreateBranch(branchName string, target *gogithub.Reference) error {
 	_, _, err := gh.client.Git.CreateRef(gh.ctx, gh.owner, gh.repo, &gogithub.Reference{
 		Ref:    gogithub.String("refs/heads/" + branchName),
 		Object: target.Object,
@@ -117,7 +138,7 @@ func (gh *Github) CreateBranch(branchName string, target *gogithub.Reference) er
 	return err
 }
 
-func (gh *Github) CreatePullRequest(head, base string) (*gogithub.PullRequest, error) {
+func (gh *github) CreatePullRequest(head, base string) (*gogithub.PullRequest, error) {
 	pr, _, err := gh.client.PullRequests.Create(gh.ctx, gh.owner, gh.repo, &gogithub.NewPullRequest{
 		Title: gogithub.String("Draft PR: Merge " + head + " into " + base),
 		Head:  gogithub.String(head),
@@ -132,7 +153,7 @@ func (gh *Github) CreatePullRequest(head, base string) (*gogithub.PullRequest, e
 	return pr, err
 }
 
-func (gh *Github) ListPullRequests() ([]*gogithub.PullRequest, error) {
+func (gh *github) ListPullRequests() ([]*gogithub.PullRequest, error) {
 	prs, _, err := gh.client.PullRequests.List(gh.ctx, gh.owner, gh.repo, nil)
 
 	return prs, err

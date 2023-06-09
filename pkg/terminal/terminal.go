@@ -19,3 +19,21 @@ func ReadStr() (string, error) {
 	_, err := fmt.Scanln(&res)
 	return res, err
 }
+
+var (
+	AffirmationOptions = []string{"y", "yes"}
+)
+
+func IsYes() (bool, error) {
+	var res string
+	_, err := fmt.Scanln(&res)
+	if err != nil {
+		return false, err
+	}
+	for _, o := range AffirmationOptions {
+		if res == o {
+			return true, nil
+		}
+	}
+	return false, nil
+}
