@@ -18,7 +18,6 @@ func Mock(
 	owner, repo string,
 	reconcileBranchExists, targetAhead, mergeSuccessful bool,
 ) (Interface, error) {
-
 	return &mock{
 		owner,
 		repo,

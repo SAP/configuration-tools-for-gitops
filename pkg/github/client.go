@@ -86,12 +86,8 @@ func (gh *github) CompareCommits(
 	return commits, err
 }
 
-func (gh *github) DeleteBranch(branchName string, force bool) error {
-	delete := false
-	if force {
-		delete = true
-	}
-	if !delete {
+func (gh *github) DeleteBranch(branchName string, forceDelete bool) error {
+	if !forceDelete {
 		printTerminal(
 			fmt.Sprintf(
 				"\n\nYou will lose all the changes made in the reconcile branch. "+
@@ -106,11 +102,11 @@ func (gh *github) DeleteBranch(branchName string, force bool) error {
 			return nil
 		}
 		if strings.EqualFold(input, "y") {
-			delete = true
+			forceDelete = true
 		}
 	}
 
-	if delete {
+	if forceDelete {
 		_, err := gh.client.Git.DeleteRef(
 			gh.ctx, gh.owner, gh.repo, "refs/heads/"+branchName,
 		)

@@ -25,7 +25,7 @@ func New(sourceBranch, targetBranch, owner, repo, token string, ctx context.Cont
 
 	// Authenticate with Github
 	// target is base and source is head
-	client, err := newGithubClient(token, owner, repo, ctx)
+	client, err := githubClient(token, owner, repo, ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authenticate with Github: %w", err)
 	}
@@ -174,9 +174,7 @@ func (r *ReconcileClient) handleTargetAhead(force bool) (bool, error) {
 }
 
 var (
-	newGithubClient = func(token, owner, repo string, ctx context.Context) (github.Interface, error) {
-		return github.New(token, owner, repo, ctx)
-	}
+	githubClient  = github.New
 	printTerminal = terminal.Output
 	confirmed     = terminal.IsYes
 )

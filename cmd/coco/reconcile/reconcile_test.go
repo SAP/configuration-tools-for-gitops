@@ -149,7 +149,7 @@ func TestReconcilition(t *testing.T) {
 
 	for _, tt := range scenarios {
 		t.Run(tt.title, func(t *testing.T) {
-			newGithubClient = func(token, owner, repo string, ctx context.Context) (github.Interface, error) {
+			githubClient = func(token, owner, repo string, ctx context.Context) (github.Interface, error) {
 				return github.Mock(
 					owner, repo,
 					tt.reconcileBranchExists,
