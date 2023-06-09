@@ -24,6 +24,7 @@ type scenario struct {
 	reconcileMergable     bool
 	manualMerge           bool
 	falseInput            bool
+	force                 bool
 }
 
 var (
@@ -97,6 +98,19 @@ var scenarios = []scenario{
 		manualMerge:           false,
 	},
 	{
+		title:                 "default unsuccessful merge with a reconcile branch & target is ahead & force",
+		sourceBranch:          "feature",
+		targetBranch:          "main",
+		owner:                 "test",
+		repo:                  "repo",
+		expectedErr:           nil,
+		mergeSuccessful:       false,
+		reconcileBranchExists: true,
+		targetAhead:           true,
+		manualMerge:           false,
+		force:                 true,
+	},
+	{
 		title:                 "default unsuccessful merge with a reconcile branch & target is ahead & manualmerge true",
 		sourceBranch:          "feature",
 		targetBranch:          "main",
@@ -115,7 +129,7 @@ var scenarios = []scenario{
 		targetBranch:          "main",
 		owner:                 "test",
 		repo:                  "repo",
-		expectedErr:           fmt.Errorf("illegal input 3 - allowed options are: [1, 2]"),
+		expectedErr:           fmt.Errorf("input must be in [y yes]: illegal input"),
 		mergeSuccessful:       false,
 		reconcileBranchExists: true,
 		targetAhead:           true,
@@ -135,36 +149,33 @@ func TestReconcilition(t *testing.T) {
 
 	for _, tt := range scenarios {
 		t.Run(tt.title, func(t *testing.T) {
-			newGithubClient = func(token, owner, repo string, ctx context.Context) (githubClient, error) {
-				return github.NewMock(
-					token,
-					owner,
-					repo,
-					ctx,
+			newGithubClient = func(token, owner, repo string, ctx context.Context) (github.Interface, error) {
+				return github.Mock(
+					owner, repo,
 					tt.reconcileBranchExists,
 					tt.targetAhead,
 					tt.mergeSuccessful,
 				)
 			}
-			readTerminal = func() (int, error) {
+			confirmed = func() (bool, error) {
 				if tt.falseInput {
-					return 3, fmt.Errorf("illegal input")
+					return false, fmt.Errorf("illegal input")
 				}
 				if tt.manualMerge {
-					return 1, nil
+					return false, nil
 				} else {
-					return 2, nil
+					return true, nil
 				}
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
 			client, err := New(tt.sourceBranch, tt.targetBranch, tt.owner, tt.repo, token, ctx)
 			if err != nil && err.Error() != tt.expectedErr.Error() {
-				t.Errorf("unexpected error: got %v, want %v", err, tt.expectedErr)
+				t.Errorf("unexpected error: got %q, want %q", err, tt.expectedErr)
 			}
-			err = client.Reconcile()
+			err = client.Reconcile(tt.force)
 			if err != nil && err.Error() != tt.expectedErr.Error() {
-				t.Errorf("unexpected error: got %v, want %v", err, tt.expectedErr)
+				t.Errorf("unexpected error: got %q, want %q", err, tt.expectedErr)
 			}
 		})
 	}
