@@ -12,8 +12,9 @@ import (
 )
 
 var (
-	owner string
-	repo  string
+	owner          string
+	repo           string
+	forceReconcile bool
 )
 
 var (
@@ -61,7 +62,7 @@ func newReconcile() *cobra.Command {
 				os.Exit(1)
 			}
 
-			err = client.Reconcile()
+			err = client.Reconcile(forceReconcile)
 			if err != nil {
 				log.Sugar.Errorf("reconciliation failed with: %w", err)
 				os.Exit(1)
@@ -89,5 +90,9 @@ func newReconcile() *cobra.Command {
 		log.Sugar.Error(err)
 		os.Exit(1)
 	}
+	c.Flags().BoolVar(
+		&forceReconcile, "force", false,
+		`Allows coco to forcefully deletes the reconcile branch if required.`,
+	)
 	return c
 }
