@@ -22,7 +22,7 @@ type Interface interface {
 	MergeBranches(base, head string) (bool, error)
 }
 
-func New(token, owner, repo, baseURL, uploadURL string, ctx context.Context, isEnterprise bool) (Interface, error) {
+func New(token, owner, repo, baseURL string, ctx context.Context, isEnterprise bool) (Interface, error) {
 	// Authenticate with Github
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
@@ -32,7 +32,7 @@ func New(token, owner, repo, baseURL, uploadURL string, ctx context.Context, isE
 	var err error
 
 	if isEnterprise {
-		client, err = gogithub.NewEnterpriseClient(baseURL, uploadURL, tc)
+		client, err = gogithub.NewEnterpriseClient(baseURL, baseURL, tc)
 		if err != nil {
 			return nil, err
 		}

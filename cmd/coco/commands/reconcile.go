@@ -2,6 +2,8 @@ package commands
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 	"os"
 	"time"
 
@@ -12,12 +14,10 @@ import (
 )
 
 var (
-	owner           string
-	repo            string
-	forceReconcile  bool
-	isEnterprise    bool
-	githubBaseURL   string
-	githubUploadURL string
+	owner          string
+	repo           string
+	forceReconcile bool
+	isEnterprise   bool
 )
 
 var (
@@ -52,14 +52,18 @@ func newReconcile() *cobra.Command {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
-			client, err := reconcile.New(
+			githubBaseURL, err := url.Parse(gitURL)
+			if err != nil {
+				log.Sugar.Errorf("reconciliation failed with: %w", err)
+			}
+			var client *reconcile.ReconcileClient
+			client, err = reconcile.New(
 				sourceBranch,
 				targetBranch,
 				owner,
 				repo,
 				viper.GetString("git-token"),
-				githubBaseURL,
-				githubUploadURL,
+				fmt.Sprintf("https://%s", githubBaseURL.Hostname()),
 				isEnterprise,
 				ctx,
 			)
@@ -103,14 +107,6 @@ func newReconcile() *cobra.Command {
 	c.Flags().BoolVar(
 		&isEnterprise, "enterprise", false,
 		`Uses GitHub Enterprise hostname.`,
-	)
-	c.Flags().StringVar(
-		&githubBaseURL, "githubBaseURL", "https://github.com",
-		`baseURL for GitHub Enterprise usage (often is your GitHub Enterprise hostname).`,
-	)
-	c.Flags().StringVar(
-		&githubUploadURL, "githubUploadURL", "https://github.com",
-		`uploadURL for GitHub Enterprise usage (often is your GitHub Enterprise hostname)`,
 	)
 	return c
 }
