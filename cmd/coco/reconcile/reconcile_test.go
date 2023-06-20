@@ -149,7 +149,8 @@ func TestReconcilition(t *testing.T) {
 
 	for _, tt := range scenarios {
 		t.Run(tt.title, func(t *testing.T) {
-			githubClient = func(token, owner, repo string, ctx context.Context) (github.Interface, error) {
+			githubClient = func(token, owner, repo, baseURL, uploadURL string, ctx context.Context,
+				isEnterprise bool) (github.Interface, error) {
 				return github.Mock(
 					owner, repo,
 					tt.reconcileBranchExists,
@@ -169,7 +170,7 @@ func TestReconcilition(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
-			client, err := New(tt.sourceBranch, tt.targetBranch, tt.owner, tt.repo, token, ctx)
+			client, err := New(tt.sourceBranch, tt.targetBranch, tt.owner, tt.repo, token, "", "", false, ctx)
 			if err != nil && err.Error() != tt.expectedErr.Error() {
 				t.Errorf("unexpected error: got %q, want %q", err, tt.expectedErr)
 			}

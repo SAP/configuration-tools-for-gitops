@@ -12,9 +12,12 @@ import (
 )
 
 var (
-	owner          string
-	repo           string
-	forceReconcile bool
+	owner           string
+	repo            string
+	forceReconcile  bool
+	isEnterprise    bool
+	githubBaseURL   string
+	githubUploadURL string
 )
 
 var (
@@ -26,9 +29,9 @@ func newReconcile() *cobra.Command {
 		Use:   "reconcile",
 		Short: "Reconciles a target branch with source branch",
 		Long: `The command is intended to reconcile a target branch with a source branch
-		by merging them. The reconciling process involves creating a new branch with the 
-		name "reconcile/{target_branch}," where {target_branch} is the name of the 
-		target branch, merging the source branch into the target branch, and 
+		by merging them. The reconciling process involves creating a new branch with the
+		name "reconcile/{target_branch}," where {target_branch} is the name of the
+		target branch, merging the source branch into the target branch, and
 		pushing the result to the remote repository`,
 		PreRun: func(cmd *cobra.Command, args []string) {
 			if viper.GetString("git-token") == "" {
@@ -55,6 +58,9 @@ func newReconcile() *cobra.Command {
 				owner,
 				repo,
 				viper.GetString("git-token"),
+				githubBaseURL,
+				githubUploadURL,
+				isEnterprise,
 				ctx,
 			)
 			if err != nil {
@@ -93,6 +99,18 @@ func newReconcile() *cobra.Command {
 	c.Flags().BoolVar(
 		&forceReconcile, "force", false,
 		`Allows coco to forcefully deletes the reconcile branch if required.`,
+	)
+	c.Flags().BoolVar(
+		&isEnterprise, "enterprise", false,
+		`Uses GitHub Enterprise hostname.`,
+	)
+	c.Flags().StringVar(
+		&githubBaseURL, "githubBaseURL", "https://github.com",
+		`baseURL for GitHub Enterprise usage (often is your GitHub Enterprise hostname).`,
+	)
+	c.Flags().StringVar(
+		&githubUploadURL, "githubUploadURL", "https://github.com",
+		`uploadURL for GitHub Enterprise usage (often is your GitHub Enterprise hostname)`,
 	)
 	return c
 }

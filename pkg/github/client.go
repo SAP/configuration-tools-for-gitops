@@ -22,13 +22,24 @@ type Interface interface {
 	MergeBranches(base, head string) (bool, error)
 }
 
-func New(token, owner, repo string, ctx context.Context) (Interface, error) {
+func New(token, owner, repo, baseURL, uploadURL string, ctx context.Context, isEnterprise bool) (Interface, error) {
 	// Authenticate with Github
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	)
 	tc := oauth2.NewClient(ctx, ts)
-	client := gogithub.NewClient(tc)
+	var client *gogithub.Client
+	var err error
+
+	if isEnterprise {
+		client, err = gogithub.NewEnterpriseClient(baseURL, uploadURL, tc)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		client = gogithub.NewClient(tc)
+	}
+
 	return &github{
 		client,
 		ctx,
