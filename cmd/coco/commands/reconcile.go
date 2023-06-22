@@ -17,7 +17,6 @@ var (
 	owner          string
 	repo           string
 	forceReconcile bool
-	isEnterprise   bool
 )
 
 var (
@@ -64,7 +63,6 @@ func newReconcile() *cobra.Command {
 				repo,
 				viper.GetString("git-token"),
 				fmt.Sprintf("https://%s", githubBaseURL.Hostname()),
-				isEnterprise,
 				ctx,
 			)
 			if err != nil {
@@ -103,10 +101,6 @@ func newReconcile() *cobra.Command {
 	c.Flags().BoolVar(
 		&forceReconcile, "force", false,
 		`Allows coco to forcefully deletes the reconcile branch if required.`,
-	)
-	c.Flags().BoolVar(
-		&isEnterprise, "enterprise", false,
-		`Uses GitHub Enterprise hostname.`,
 	)
 	return c
 }
