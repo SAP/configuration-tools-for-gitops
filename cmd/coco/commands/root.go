@@ -22,10 +22,10 @@ var (
 )
 
 const (
-	gitPath      = "git.path"
-	gitURL       = "git.URL"
-	gitRemote    = "git.remote"
-	gitDepth     = "git.depth"
+	gitPathKey   = "git.path"
+	gitURLKey    = "git.URL"
+	gitRemoteKey = "git.remote"
+	gitDepthKey  = "git.depth"
 	componentCfg = "component.cfg"
 	// cannot restrict checkout depth due to upstream bug
 	// (see https://github.com/go-git/go-git/issues/328 for issue tracking)
@@ -43,7 +43,7 @@ func newRoot() *cobra.Command {
 		Use:   "coco",
 		Short: "CLI to interact with the gitops repository",
 		Long: `coco is a CLI to interact with a gitops repository and shall provide
-	various solutions, ranging from file-generation over the calculation of 
+	various solutions, ranging from file-generation over the calculation of
 	dependency trees to various interactions with git and github.`,
 		// Uncomment the following line if your bare application
 		// has an action associated with it:
@@ -76,18 +76,18 @@ func newRoot() *cobra.Command {
 	c.PersistentFlags().StringVarP(
 		&gp, "git-path", "p", "", "path where the configuration repository locally resides",
 	)
-	bindFlag(c.PersistentFlags(), gitPath, "git-path", "GIT_PATH")
+	bindFlag(c.PersistentFlags(), gitPathKey, "git-path", "GIT_PATH")
 
 	c.PersistentFlags().StringVarP(
 		&gu, "git-url", "u", "", "git URL of the configuration repository",
 	)
-	bindFlag(c.PersistentFlags(), gitURL, "git-url", "GIT_URL")
+	bindFlag(c.PersistentFlags(), gitURLKey, "git-url", "GIT_URL")
 
 	c.PersistentFlags().StringVarP(
 		&remote, "git-remote", "r", "origin",
 		"remote branch to compare against for changed components",
 	)
-	bindFlag(c.PersistentFlags(), gitRemote, "git-remote", "GIT_REMOTE")
+	bindFlag(c.PersistentFlags(), gitRemoteKey, "git-remote", "GIT_REMOTE")
 
 	c.PersistentFlags().StringVarP(
 		&defaultBranch, "git-defaultbranch", "b", "main", "default branch",
@@ -99,7 +99,7 @@ func newRoot() *cobra.Command {
 		`[NOT IN USE (upstream bug: see https://github.com/go-git/go-git/issues/328 for issue tracking)]
 	max checkout depth of the git repository`,
 	)
-	bindFlag(c.PersistentFlags(), gitDepth, "git-depth", "GIT_DEPTH")
+	bindFlag(c.PersistentFlags(), gitDepthKey, "git-depth", "GIT_DEPTH")
 
 	cobra.CheckErr(viper.BindEnv("git-token", "GITHUB_TOKEN"))
 
@@ -135,27 +135,27 @@ func initConfig() {
 		log.Sugar.Debugf("Using config file: %s", viper.ConfigFileUsed())
 	}
 
-	if viper.GetString(gitPath) == "" {
+	if viper.GetString(gitPathKey) == "" {
 		path, err := os.Getwd()
 		if err != nil {
 			zap.S().Fatal(err)
 		}
 		log.Sugar.Debug("git.path not set - using default ", zap.String("git.path", path))
-		viper.Set(gitPath, path)
+		viper.Set(gitPathKey, path)
 	}
 
-	if viper.GetInt(gitDepth) != 0 {
+	if viper.GetInt(gitDepthKey) != 0 {
 		log.Sugar.Warnf(
 			"%s cannot be used at the moment due to upstream bug (https://github.com/go-git/go-git/issues/328)",
-			gitDepth,
+			gitDepthKey,
 		)
 	}
 
 	if ok := consistentGitSetup(
-		viper.GetString(gitPath),
-		viper.GetString(gitURL),
+		viper.GetString(gitPathKey),
+		viper.GetString(gitURLKey),
 		viper.GetString("git-token"),
-		viper.GetString(gitRemote),
+		viper.GetString(gitRemoteKey),
 		viper.GetString("git.defaultBranch"),
 		overWriteGitDepth, // viper.GetInt(gitDepth),
 		logLvl,
@@ -193,7 +193,7 @@ func consistentGitSetup(
 	if url == "" {
 		log.Sugar.Errorf(
 			"\"git.remote\" is set but \"git.URL\" is missing.\n%s",
-			provideBy(gitURL, "--git-url", "git.URL", "GIT_URL"),
+			provideBy(gitURLKey, "--git-url", "git.URL", "GIT_URL"),
 		)
 		return false
 	}

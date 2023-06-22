@@ -51,7 +51,7 @@ func newReconcile() *cobra.Command {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
-			githubBaseURL, err := url.Parse(gitURL)
+			githubBaseURL, err := url.Parse(viper.GetString(gitURLKey))
 			if err != nil {
 				log.Sugar.Errorf("reconciliation failed with: %w", err)
 			}

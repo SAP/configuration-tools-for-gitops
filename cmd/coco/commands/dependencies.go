@@ -31,7 +31,7 @@ func newDependencies() *cobra.Command {
 		Long: `The dependencies command finds all components and their downstream dependencies
 	that are affected by a change from a source to a target commit.
 	This is done by constructing the full dependency graph of upstream components
-	(defined implicitly via the direct upstream dependencies given in the 
+	(defined implicitly via the direct upstream dependencies given in the
 	dependencies.yaml file of each component) and then inverting this graph.
 	In addition all components that have changed between the source and the target
 	commit are identified. Combining the dependency graph and the changed components
@@ -54,10 +54,10 @@ func newDependencies() *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			changedDeps, err := dependencies.ChangeAffectedComponents(
-				viper.GetString(gitURL),
-				viper.GetString(gitRemote),
+				viper.GetString(gitURLKey),
+				viper.GetString(gitRemoteKey),
 				viper.GetString("git-token"),
-				viper.GetString(gitPath),
+				viper.GetString(gitPathKey),
 				viper.GetString(componentCfg),
 				sourceBranch,
 				targetBranch,
@@ -70,7 +70,7 @@ func newDependencies() *cobra.Command {
 				os.Exit(1)
 			}
 
-			writeTo, err := writeTarget(viper.GetString(gitPath), outputFile)
+			writeTo, err := writeTarget(viper.GetString(gitPathKey), outputFile)
 			if err != nil {
 				log.Sugar.Errorf("dependency failed with: %s", err)
 				os.Exit(1)
