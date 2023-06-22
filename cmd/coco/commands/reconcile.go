@@ -2,6 +2,8 @@ package commands
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 	"os"
 	"time"
 
@@ -26,9 +28,9 @@ func newReconcile() *cobra.Command {
 		Use:   "reconcile",
 		Short: "Reconciles a target branch with source branch",
 		Long: `The command is intended to reconcile a target branch with a source branch
-		by merging them. The reconciling process involves creating a new branch with the 
-		name "reconcile/{target_branch}," where {target_branch} is the name of the 
-		target branch, merging the source branch into the target branch, and 
+		by merging them. The reconciling process involves creating a new branch with the
+		name "reconcile/{target_branch}," where {target_branch} is the name of the
+		target branch, merging the source branch into the target branch, and
 		pushing the result to the remote repository`,
 		PreRun: func(cmd *cobra.Command, args []string) {
 			if viper.GetString("git-token") == "" {
@@ -49,12 +51,18 @@ func newReconcile() *cobra.Command {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
-			client, err := reconcile.New(
+			githubBaseURL, err := url.Parse(viper.GetString(gitURLKey))
+			if err != nil {
+				log.Sugar.Errorf("reconciliation failed with: %w", err)
+			}
+			var client *reconcile.ReconcileClient
+			client, err = reconcile.New(
 				sourceBranch,
 				targetBranch,
 				owner,
 				repo,
 				viper.GetString("git-token"),
+				fmt.Sprintf("https://%s", githubBaseURL.Hostname()),
 				ctx,
 			)
 			if err != nil {

@@ -40,7 +40,7 @@ in the gitops repository.
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			basepath := viper.GetString(gitPath)
+			basepath := viper.GetString(gitPathKey)
 			err := generate.Generate(
 				basepath,
 				tmplIdentifier,
@@ -85,7 +85,7 @@ or the yaml tag "!HumanInput" will not be overwritten.`,
 	)
 	c.Flags().BoolVar(
 		&takeControl, "take-control", false,
-		`if this flag is set, coco takes control over all generated files regardless 
+		`if this flag is set, coco takes control over all generated files regardless
 of the version in the generated files`,
 	)
 	if err := c.Flags().MarkDeprecated("take-control", "please use \"--force\" instead"); err != nil {
@@ -94,7 +94,7 @@ of the version in the generated files`,
 	}
 	c.Flags().BoolVar(
 		&takeControl, "force", false,
-		`if this flag is set, coco forcefully regenerats all files regardless of 
+		`if this flag is set, coco forcefully regenerats all files regardless of
 the version in the generated files`,
 	)
 	return c

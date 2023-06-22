@@ -20,12 +20,19 @@ type ReconcileClient struct {
 	repo                string
 }
 
-func New(sourceBranch, targetBranch, owner, repo, token string, ctx context.Context) (*ReconcileClient, error) {
+func New(sourceBranch, targetBranch, owner, repo, token, githubBaseURL string,
+	ctx context.Context) (*ReconcileClient, error) {
 	reconcileBranchName := fmt.Sprintf("reconcile/%s-%s", sourceBranch, targetBranch)
 
 	// Authenticate with Github
+	isEnterprise := false
+	if githubBaseURL != "https://github.com" &&
+		githubBaseURL != "https://www.github.com" &&
+		githubBaseURL != "" {
+		isEnterprise = true
+	}
 	// target is base and source is head
-	client, err := githubClient(token, owner, repo, ctx)
+	client, err := githubClient(token, owner, repo, githubBaseURL, ctx, isEnterprise)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authenticate with Github: %w", err)
 	}
