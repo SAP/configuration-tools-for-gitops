@@ -170,7 +170,7 @@ func TestReconcilition(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
-			client, err := New(tt.sourceBranch, tt.targetBranch, tt.owner, tt.repo, token, "", ctx)
+			client, err := New(tt.sourceBranch, tt.targetBranch, tt.owner, tt.repo, token, "", ctx, log.Sugar)
 			if err != nil && err.Error() != tt.expectedErr.Error() {
 				t.Errorf("unexpected error: got %q, want %q", err, tt.expectedErr)
 			}

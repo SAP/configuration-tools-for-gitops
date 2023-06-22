@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/SAP/configuration-tools-for-gitops/pkg/github"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
 	"github.com/SAP/configuration-tools-for-gitops/pkg/terminal"
 	gogithub "github.com/google/go-github/v51/github"
 )
@@ -18,10 +17,17 @@ type ReconcileClient struct {
 	reconcileBranchName string
 	owner               string
 	repo                string
+	logger              Logger
+}
+
+type Logger interface {
+	Info(args ...interface{})
+	Debugf(template string, args ...interface{})
+	Infof(template string, args ...interface{})
 }
 
 func New(sourceBranch, targetBranch, owner, repo, token, githubBaseURL string,
-	ctx context.Context) (*ReconcileClient, error) {
+	ctx context.Context, logger Logger) (*ReconcileClient, error) {
 	reconcileBranchName := fmt.Sprintf("reconcile/%s-%s", sourceBranch, targetBranch)
 
 	// Authenticate with Github
@@ -43,6 +49,7 @@ func New(sourceBranch, targetBranch, owner, repo, token, githubBaseURL string,
 		reconcileBranchName: reconcileBranchName,
 		owner:               owner,
 		repo:                repo,
+		logger:              logger,
 	}, nil
 }
 
@@ -56,7 +63,7 @@ func (r *ReconcileClient) merge(force bool) error {
 		if !success {
 			return r.handleMergeConflict(force)
 		}
-		log.Sugar.Info("Merged successfully")
+		r.logger.Info("Merged successfully")
 		return nil
 	}
 
@@ -116,13 +123,13 @@ func (r *ReconcileClient) handleNewReconcileBranch() error {
 	if err = r.client.CreateBranch(r.reconcileBranchName, target); err != nil {
 		return fmt.Errorf("failed to create reconcile branch: %w", err)
 	}
-	log.Sugar.Debugf("Created new reconcile branch from %s", r.target)
+	r.logger.Debugf("Created new reconcile branch from %s", r.target)
 
 	pr, err := r.client.CreatePullRequest(r.source, r.reconcileBranchName)
 	if err != nil {
 		return fmt.Errorf("failed to create a draft PR: %w", err)
 	}
-	log.Sugar.Info("Draft pull request #%d created: %s\n", pr.GetNumber(), pr.GetHTMLURL())
+	r.logger.Info("Draft pull request #%d created: %s\n", pr.GetNumber(), pr.GetHTMLURL())
 	return nil
 }
 
@@ -148,7 +155,7 @@ func (r *ReconcileClient) checkMergeability() (bool, error) {
 	// perform the merge
 	_, err = r.client.MergeBranches(r.target, r.reconcileBranchName)
 	if err == nil {
-		log.Sugar.Infof("Successfully merged %s to %s", r.reconcileBranchName, r.target)
+		r.logger.Infof("Successfully merged %s to %s", r.reconcileBranchName, r.target)
 		return true, err
 	}
 	return false, err
