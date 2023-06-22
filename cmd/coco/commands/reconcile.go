@@ -64,6 +64,7 @@ func newReconcile() *cobra.Command {
 				viper.GetString("git-token"),
 				fmt.Sprintf("https://%s", githubBaseURL.Hostname()),
 				ctx,
+				log.Sugar,
 			)
 			if err != nil {
 				log.Sugar.Errorf("reconciliation failed with: %w", err)
