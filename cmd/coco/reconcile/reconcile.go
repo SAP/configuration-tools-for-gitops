@@ -10,7 +10,7 @@ import (
 	gogithub "github.com/google/go-github/v51/github"
 )
 
-type ReconcileClient struct {
+type Client struct {
 	client              github.Interface
 	target              string
 	source              string
@@ -26,8 +26,11 @@ type Logger interface {
 	Infof(template string, args ...interface{})
 }
 
-func New(sourceBranch, targetBranch, owner, repo, token, githubBaseURL string,
-	ctx context.Context, logger Logger) (*ReconcileClient, error) {
+func New(
+	ctx context.Context,
+	sourceBranch, targetBranch, owner, repo, token, githubBaseURL string,
+	logger Logger,
+) (*Client, error) {
 	reconcileBranchName := fmt.Sprintf("reconcile/%s-%s", sourceBranch, targetBranch)
 
 	// Authenticate with Github
@@ -38,11 +41,11 @@ func New(sourceBranch, targetBranch, owner, repo, token, githubBaseURL string,
 		isEnterprise = true
 	}
 	// target is base and source is head
-	client, err := githubClient(token, owner, repo, githubBaseURL, ctx, isEnterprise)
+	client, err := githubClient(ctx, token, owner, repo, githubBaseURL, isEnterprise)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authenticate with Github: %w", err)
 	}
-	return &ReconcileClient{
+	return &Client{
 		client:              client,
 		target:              targetBranch,
 		source:              sourceBranch,
@@ -53,11 +56,11 @@ func New(sourceBranch, targetBranch, owner, repo, token, githubBaseURL string,
 	}, nil
 }
 
-func (r *ReconcileClient) Reconcile(force bool) error {
+func (r *Client) Reconcile(force bool) error {
 	return r.merge(force)
 }
 
-func (r *ReconcileClient) merge(force bool) error {
+func (r *Client) merge(force bool) error {
 	success, err := r.client.MergeBranches(r.target, r.source)
 	if err == nil {
 		if !success {
@@ -70,7 +73,7 @@ func (r *ReconcileClient) merge(force bool) error {
 	return fmt.Errorf("failed to merge branches: %w", err)
 }
 
-func (r *ReconcileClient) handleMergeConflict(force bool) error {
+func (r *Client) handleMergeConflict(force bool) error {
 	reconcileBranch, status, err := r.client.GetBranch(r.reconcileBranchName)
 
 	if status == http.StatusNotFound {
@@ -85,15 +88,14 @@ func (r *ReconcileClient) handleMergeConflict(force bool) error {
 		}
 		if resolved {
 			return nil
-		} else {
-			return r.handleNewReconcileBranch()
 		}
+		return r.handleNewReconcileBranch()
 	}
 
 	return err
 }
 
-func (r *ReconcileClient) handleExistingReconcileBranch(
+func (r *Client) handleExistingReconcileBranch(
 	reconcileBranch *gogithub.Branch, force bool,
 ) (bool, error) {
 	// Compare the latest target branch and reconcile branch
@@ -114,7 +116,7 @@ func (r *ReconcileClient) handleExistingReconcileBranch(
 	return r.checkMergeability()
 }
 
-func (r *ReconcileClient) handleNewReconcileBranch() error {
+func (r *Client) handleNewReconcileBranch() error {
 	// Create a new branch reconcile branch from target branch
 	target, err := r.client.GetBranchRef(r.target)
 	if err != nil {
@@ -133,7 +135,7 @@ func (r *ReconcileClient) handleNewReconcileBranch() error {
 	return nil
 }
 
-func (r *ReconcileClient) checkMergeability() (bool, error) {
+func (r *Client) checkMergeability() (bool, error) {
 	prs, err := r.client.ListPullRequests()
 	if err != nil {
 		return false, err
@@ -161,7 +163,7 @@ func (r *ReconcileClient) checkMergeability() (bool, error) {
 	return false, err
 }
 
-func (r *ReconcileClient) handleTargetAhead(force bool) (bool, error) {
+func (r *Client) handleTargetAhead(force bool) (bool, error) {
 	if force {
 		return false, r.client.DeleteBranch(r.reconcileBranchName, force)
 	}

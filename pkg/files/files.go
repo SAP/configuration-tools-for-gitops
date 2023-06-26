@@ -67,7 +67,7 @@ func CreateOpen(path string) (*os.File, error) {
 	return f, nil
 }
 
-var createOpen func(path string, flag int, permissions fs.FileMode) (*os.File, error) = co
+var createOpen = co
 
 func co(path string, flag int, permissions fs.FileMode) (*os.File, error) {
 	unix.Umask(0)

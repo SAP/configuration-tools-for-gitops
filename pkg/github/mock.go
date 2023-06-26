@@ -30,9 +30,8 @@ func Mock(
 func (gh *mock) MergeBranches(base, head string) (bool, error) {
 	if gh.mergeSuccessful {
 		return true, nil
-	} else {
-		return false, nil
 	}
+	return false, nil
 }
 
 func (gh *mock) GetBranch(branchName string) (*gogithub.Branch, int, error) {

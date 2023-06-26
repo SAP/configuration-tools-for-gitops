@@ -205,7 +205,7 @@ func removeContent(wantRaw map[string]files.File) map[string]files.File {
 func prepareTestDirTree(fs map[string][]byte) (string, error) {
 	tmpDir, err := os.MkdirTemp("", "")
 	if err != nil {
-		return "", fmt.Errorf("error creating temp directory: %v\n", err)
+		return "", fmt.Errorf("error creating temp directory: %v", err)
 	}
 
 	for name, content := range fs {

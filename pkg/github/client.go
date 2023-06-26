@@ -22,7 +22,7 @@ type Interface interface {
 	MergeBranches(base, head string) (bool, error)
 }
 
-func New(token, owner, repo, baseURL string, ctx context.Context, isEnterprise bool) (Interface, error) {
+func New(ctx context.Context, token, owner, repo, baseURL string, isEnterprise bool) (Interface, error) {
 	// Authenticate with Github
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},

@@ -52,7 +52,7 @@ type execute struct {
 	logger     Logger
 }
 
-func New(l Logger, ctx context.Context, workingDir string, envVars ...Input) Exec {
+func New(ctx context.Context, l Logger, workingDir string, envVars ...Input) Exec {
 	return execute{
 		ctx,
 		workingDir,
@@ -61,12 +61,12 @@ func New(l Logger, ctx context.Context, workingDir string, envVars ...Input) Exe
 	}
 }
 
-func NewHome(l Logger, ctx context.Context, workingDir string, envVars ...Input) (Exec, error) {
+func NewHome(ctx context.Context, l Logger, workingDir string, envVars ...Input) (Exec, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return nil, err
 	}
-	return New(l, ctx, workingDir, append(envVars, Public1(fmt.Sprintf("HOME=%s", home)))...), nil
+	return New(ctx, l, workingDir, append(envVars, Public1(fmt.Sprintf("HOME=%s", home)))...), nil
 }
 
 func (e execute) DebugOutput(name string, args []Input) string {

@@ -76,24 +76,24 @@ func (s subnode) node(n *yaml.Node, keys []string) (*yaml.Node, error) {
 
 func (s subnode) mapNode(n *yaml.Node, keys []string) (*yaml.Node, error) {
 	i := 0
-	k0, kRemain := keys[0], keys[1:]
+	key0, keyRemain := keys[0], keys[1:]
 
 	selectedByKey := false
 	for i < len(n.Content) {
 		if i%2 == 0 {
 			// map keys appear at even positions in the Content slice
-			if n.Content[i].Value == k0 {
+			if n.Content[i].Value == key0 {
 				selectedByKey = true
 			}
 			i++
 			continue
 		}
 		if selectedByKey {
-			return s.node(n.Content[i], kRemain)
+			return s.node(n.Content[i], keyRemain)
 		}
 		i++
 	}
-	return nil, fmt.Errorf("%v: %q", errKeyNotPresent, k0)
+	return nil, fmt.Errorf("%v: %q", errKeyNotPresent, key0)
 }
 
 func (s subnode) documentNode(n *yaml.Node, keys []string) (*yaml.Node, error) {
