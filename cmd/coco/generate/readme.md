@@ -9,6 +9,10 @@ Files in this category are e.g.:
 - environment-specific value files (e.g. in a service folder
   `services/service-A/values/cluster-specific/...`)
 
+In addition, this package provides a mechanism to render go-templates directly
+with the `ParseTemplate` function. This function accepts a go-template file, a
+list of value files and a desired target (or output) file.
+
 ## Why is this needed?
 
 The file generation shall solve the following issues

@@ -12,7 +12,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	gotemplate "text/template"
 
 	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
 	"github.com/SAP/configuration-tools-for-gitops/pkg/version"
@@ -176,50 +175,6 @@ func removeHeader(content []byte, header string) ([]byte, error) {
 		return []byte{}, err
 	}
 	return headlessContent.Bytes(), nil
-}
-
-type parserInt interface {
-	parse(filename string, funcs gotemplate.FuncMap) error
-	execute(data interface{}) ([]byte, error)
-}
-
-type parserMock struct {
-	Mock bool
-	Err  error
-}
-
-func (m parserMock) parse(filename string, funcs gotemplate.FuncMap) error {
-	return nil
-}
-
-func (m parserMock) execute(data interface{}) ([]byte, error) {
-	return nil, m.Err
-}
-
-type parser struct {
-	tmpl *gotemplate.Template
-}
-
-func (p *parser) parse(filename string, funcs gotemplate.FuncMap) error {
-	b, err := os.ReadFile(filename)
-	if err != nil {
-		return err
-	}
-	parsed, err := gotemplate.New(filename).Funcs(funcs).Parse(string(b))
-	if err != nil {
-		return err
-	}
-	p.tmpl = parsed
-	return nil
-}
-
-func (p parser) execute(data interface{}) ([]byte, error) {
-	generated := new(bytes.Buffer)
-	err := p.tmpl.Execute(generated, data)
-	if err != nil {
-		return nil, err
-	}
-	return generated.Bytes(), nil
 }
 
 func processFile(
