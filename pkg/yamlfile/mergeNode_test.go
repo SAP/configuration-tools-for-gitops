@@ -459,6 +459,33 @@ func TestMergeNodes(t *testing.T) {
 	}
 }
 
+func TestMergeBytesNodes(t *testing.T) {
+	for _, s := range append(
+		scenariosMergeNodes,
+		scenarioMergeNode{
+			title:   "unmarshal fails",
+			from:    []byte(strings.TrimSpace(`key: {`)),
+			into:    []byte(strings.TrimSpace(`key: value`)),
+			want:    "",
+			wantErr: fmt.Errorf("unmarshalling failed %s", "yaml: line 1: did not find expected node content"),
+		},
+	) {
+		t.Logf("test scenario: %s\n", s.title)
+
+		into, err := yamlfile.New(s.into)
+		testfuncs.CheckErrs(t, nil, err)
+		warnings, err := into.MergeBytes(s.from)
+		testfuncs.CheckErrs(t, s.wantErr, err)
+		s.CheckWarnings(t, warnings)
+		if err == nil {
+			s.CheckRes(t, into, s.want)
+		}
+		if t.Failed() {
+			scetchNodes(into.Node, []int{})
+		}
+	}
+}
+
 func TestMergeSelective(t *testing.T) {
 	for _, s := range scenariosMergeNodes {
 		t.Logf("test scenario: %s\n", s.title)
