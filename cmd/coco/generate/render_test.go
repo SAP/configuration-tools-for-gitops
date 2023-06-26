@@ -685,11 +685,9 @@ func (ri *renderInput) setupFiles() (testfuncs.TestDir, error) {
 			genFiles[t.source] = ri.templateContent[i]
 		}
 	}
-
 	for f, c := range ri.alreadyPresent {
 		genFiles[f] = c
 	}
-
 	return testfuncs.PrepareTestDirTree(genFiles)
 }
 
