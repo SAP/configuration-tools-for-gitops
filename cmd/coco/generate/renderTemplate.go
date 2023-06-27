@@ -16,7 +16,7 @@ var (
 
 func ParseTemplate(filename string, valueFiles []string, target string) error {
 	p := parser{}
-	if err := p.parse(filename, tmplFuncs()); err != nil {
+	if err := p.parse(filename); err != nil {
 		return fmt.Errorf("failed to parse file %q: %w", filename, err)
 	}
 
@@ -39,7 +39,7 @@ func ParseTemplate(filename string, valueFiles []string, target string) error {
 }
 
 type parserInt interface {
-	parse(filename string, funcs gotemplate.FuncMap) error
+	parse(filename string) error
 	execute(data interface{}) ([]byte, error)
 }
 
@@ -48,7 +48,7 @@ type parserMock struct {
 	Err  error
 }
 
-func (m parserMock) parse(filename string, funcs gotemplate.FuncMap) error {
+func (m parserMock) parse(filename string) error {
 	return nil
 }
 
@@ -60,12 +60,12 @@ type parser struct {
 	tmpl *gotemplate.Template
 }
 
-func (p *parser) parse(filename string, funcs gotemplate.FuncMap) error {
+func (p *parser) parse(filename string) error {
 	b, err := os.ReadFile(filename)
 	if err != nil {
 		return err
 	}
-	parsed, err := gotemplate.New(filename).Funcs(funcs).Parse(string(b))
+	parsed, err := gotemplate.New(filename).Funcs(tmplFuncs()).Parse(string(b))
 	if err != nil {
 		return err
 	}

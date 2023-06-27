@@ -670,7 +670,7 @@ func (m *mock) mergeSort(from, into []byte, persistence string) (
 	return []byte("mocked mergeSort\n"), m.o.warnings, nil
 }
 
-func (m *mock) parse(filename string, funcs gotemplate.FuncMap) error {
+func (m *mock) parse(filename string) error {
 	return nil
 }
 

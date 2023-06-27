@@ -80,7 +80,7 @@ func render(
 		}
 		c.AddDebug(logLvl, "go-routine", name)
 
-		err := p.parse(tmpl.source, tmplFuncs())
+		err := p.parse(tmpl.source)
 		if c.checkErr("parse template error", err) {
 			return
 		}
