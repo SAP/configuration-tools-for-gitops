@@ -23,8 +23,8 @@ var (
 	gitTag       = ""                     // inserted from goreleaser
 	gitTreeState = ""                     // inserted from goreleaser
 
-	re            = regexp.MustCompile(`(\d*)\.(\d*)\.(\d*)`)
-	semver SemVer = SemVer{}
+	re     = regexp.MustCompile(`(\d*)\.(\d*)\.(\d*)`)
+	semver = SemVer{}
 )
 
 //nolint:gochecknoinits // The init sets the binaries version once and for all. This comes from build time inputs.

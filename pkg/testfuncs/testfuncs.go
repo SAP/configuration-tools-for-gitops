@@ -23,6 +23,18 @@ func MustBeNil(t *testing.T, err error) {
 }
 
 func CheckErrs(t *testing.T, want, got error) {
+	checkErrs(t, want, got,
+		func(want, got error) bool { return want.Error() != got.Error() },
+	)
+}
+
+func CheckSimilarErrs(t *testing.T, want, got error) {
+	checkErrs(t, want, got,
+		func(want, got error) bool { return strings.HasPrefix(got.Error(), want.Error()) },
+	)
+}
+
+func checkErrs(t *testing.T, want, got error, compare func(want, got error) bool) {
 	if got == nil && want == nil {
 		return
 	} else if got == nil && want != nil {
@@ -31,7 +43,7 @@ func CheckErrs(t *testing.T, want, got error) {
 	} else if got != nil && want == nil {
 		t.Errorf("errors do not match: \nwant = \"%+v\"\ngot =  \"%+v\"", "nil", got)
 		t.Fail()
-	} else if want.Error() != got.Error() {
+	} else if compare(want, got) {
 		t.Errorf("errors do not match: \nwant = \"%+v\"\ngot =  \"%+v\"", want, got)
 		t.Fail()
 	}

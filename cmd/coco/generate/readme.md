@@ -9,7 +9,58 @@ Files in this category are e.g.:
 - environment-specific value files (e.g. in a service folder
   `services/service-A/values/cluster-specific/...`)
 
-## Why is this needed?
+See [General file generation](#general-file-generation) for details.
+
+In addition, this package provides a mechanism to render go-templates directly
+with the `ParseTemplate` function. This function accepts a go-template file, a
+list of value files and a desired target (or output) file. See
+[Custom template rendering](#custom-template-rendering) for details.
+
+## Custom template rendering
+
+Here is an example for a customly rendered go-template:
+
+```bash
+# setup files
+tmp_dir="tmp"
+mkdir "${tmp_dir}"
+
+cat > "${tmp_dir}/template" << EOF
+my first value: {{.key1}}
+something else - {{.key2.key3}}
+EOF
+
+cat > "${tmp_dir}/values_1.yaml" << EOF
+key1: value1
+EOF
+
+cat > "${tmp_dir}/values_2.yaml" << EOF
+key2:
+  key3: value2
+EOF
+
+# render template
+coco generate custom \
+  --value "${tmp_dir}/values_1.yaml" \
+  --value "${tmp_dir}/values_2.yaml" \
+  --target "${tmp_dir}/output" \
+  "${tmp_dir}/template"
+
+# output
+cat "${tmp_dir}/output"
+# expected output:
+
+# > my first value: value1
+# > something else - value2
+
+# cleanup
+
+rm -rf "${tmp_dir}"
+```
+
+## General file generation
+
+### Why is this needed?
 
 The file generation shall solve the following issues
 
@@ -28,7 +79,7 @@ following features:
 - drift prevention: all environment-specific configurations are recreated by the
   tool, which prevents accidental configuration drift between environments
 
-## How it works
+### How it works
 
 In general, the file generation command depends on a set of global inputs (the
 files in the top-level `values` folder). These input files govern which files

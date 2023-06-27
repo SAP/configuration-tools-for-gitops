@@ -60,6 +60,8 @@ in the gitops repository.
 		},
 	}
 
+	c.AddCommand(newGenerateCustom())
+
 	c.PersistentFlags().StringSliceVarP(
 		&environmentFilter, "env-filter", "e", []string{},
 		"restrict the command to one or more environments",

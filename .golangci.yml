@@ -53,7 +53,10 @@ linters-settings:
       - '3'
     ignored-functions:
       - strings.SplitN
-
+  revive:
+    rules:
+      - name: unused-parameter
+        disabled: true
   govet:
     check-shadowing: true
     settings:
@@ -99,6 +102,7 @@ linters:
     - nakedret
     - noctx
     - nolintlint
+    - revive
     - staticcheck
     - stylecheck
     - typecheck
@@ -120,5 +124,4 @@ linters:
   # - nestif
   # - prealloc
   # - testpackage
-  # - revive
   # - wsl

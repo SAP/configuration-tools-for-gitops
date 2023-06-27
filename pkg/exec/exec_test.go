@@ -138,7 +138,7 @@ func (s *scenario) test(t *testing.T) {
 	}
 
 	if s.title == "use $HOME" {
-		ex, err := exec.NewHome(&l, ctx, filepath.Join(tmpDir.Path(), s.workingDir), s.env...)
+		ex, err := exec.NewHome(ctx, &l, filepath.Join(tmpDir.Path(), s.workingDir), s.env...)
 		testfuncs.CheckErrs(t, nil, err)
 		res, err := ex.Command(s.cmd, s.args...).Output()
 		testfuncs.CheckErrs(t, s.wantErr, err)
@@ -151,7 +151,7 @@ func (s *scenario) test(t *testing.T) {
 			t.Fail()
 		}
 	} else {
-		res, err := exec.New(&l, ctx, filepath.Join(tmpDir.Path(), s.workingDir), s.env...).
+		res, err := exec.New(ctx, &l, filepath.Join(tmpDir.Path(), s.workingDir), s.env...).
 			Command(s.cmd, s.args...).Output()
 		testfuncs.CheckErrs(t, s.wantErr, err)
 		s.CheckRes(t, res)

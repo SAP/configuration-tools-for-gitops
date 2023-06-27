@@ -21,6 +21,15 @@ func (y *Yaml) Merge(from Yaml) ([]Warning, error) {
 	return y.mergeSelective(from, "", true)
 }
 
+// Like Merge just with a raw input
+func (y *Yaml) MergeBytes(from []byte) ([]Warning, error) {
+	yFrom, err := New(from)
+	if err != nil {
+		return []Warning{}, err
+	}
+	return y.mergeSelective(yFrom, "", true)
+}
+
 // MergeSelective merges the input Yaml (from) into the Yaml object (y). It
 // follows the same merge rules as the Merge function.
 // Before merging, the MergeSelective function filters the from Yaml by the selectFlag

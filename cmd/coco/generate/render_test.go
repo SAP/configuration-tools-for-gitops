@@ -670,7 +670,7 @@ func (m *mock) mergeSort(from, into []byte, persistence string) (
 	return []byte("mocked mergeSort\n"), m.o.warnings, nil
 }
 
-func (m *mock) parse(filename string, funcs gotemplate.FuncMap) error {
+func (m *mock) parse(filename string) error {
 	return nil
 }
 
@@ -685,11 +685,9 @@ func (ri *renderInput) setupFiles() (testfuncs.TestDir, error) {
 			genFiles[t.source] = ri.templateContent[i]
 		}
 	}
-
 	for f, c := range ri.alreadyPresent {
 		genFiles[f] = c
 	}
-
 	return testfuncs.PrepareTestDirTree(genFiles)
 }
 
