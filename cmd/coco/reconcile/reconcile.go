@@ -67,7 +67,17 @@ func (r *Client) merge(force bool) error {
 			return r.handleMergeConflict(force)
 		}
 		r.logger.Info("Merged successfully")
-		return nil
+		var status int
+		_, status, err = r.client.GetBranch(r.reconcileBranchName)
+
+		if status == http.StatusOK {
+			err = r.client.DeleteBranch(r.reconcileBranchName, true)
+		}
+
+		if status == http.StatusNotFound {
+			return nil
+		}
+		return err
 	}
 
 	return fmt.Errorf("failed to merge branches: %w", err)
@@ -148,19 +158,21 @@ func (r *Client) checkMergeability() (bool, error) {
 		}
 	}
 	if pr == nil {
-		return false, fmt.Errorf("the pull request was not found")
+		r.logger.Infof("the pull request was not found")
+
+		pr, err = r.client.CreatePullRequest(r.source, r.reconcileBranchName)
+		if err != nil {
+			return false, fmt.Errorf("failed to create a draft PR: %w", err)
+		}
+		r.logger.Info("Draft pull request #%d created: %s\n", pr.GetNumber(), pr.GetHTMLURL())
+		return true, nil
 	}
 	// check if the pull request is mergable
 	if !pr.GetMergeable() {
 		return false, fmt.Errorf("please re-try after resolving the merge conflicts here: %s", pr.GetURL())
 	}
-	// perform the merge
-	_, err = r.client.MergeBranches(r.target, r.reconcileBranchName)
-	if err == nil {
-		r.logger.Infof("Successfully merged %s to %s", r.reconcileBranchName, r.target)
-		return true, err
-	}
-	return false, err
+
+	return true, nil
 }
 
 func (r *Client) handleTargetAhead(force bool) (bool, error) {
