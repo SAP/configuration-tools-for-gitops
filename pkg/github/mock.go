@@ -2,6 +2,7 @@ package github
 
 import (
 	"fmt"
+	"net/http"
 
 	gogithub "github.com/google/go-github/v51/github"
 )
@@ -98,4 +99,8 @@ func (gh *mock) ListPullRequests() ([]*gogithub.PullRequest, error) {
 	}
 	prs = append(prs, pr)
 	return prs, nil
+}
+
+func (gh *mock) MergePullRequest(pr int) (int, error) {
+	return http.StatusOK, nil
 }
