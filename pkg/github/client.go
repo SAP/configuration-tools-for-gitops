@@ -20,6 +20,7 @@ type Interface interface {
 	GetBranchRef(branchName string) (*gogithub.Reference, error)
 	ListPullRequests() ([]*gogithub.PullRequest, error)
 	MergeBranches(base, head string) (bool, error)
+	MergePullRequest(pr int) (int, error)
 }
 
 func New(ctx context.Context, token, owner, repo, baseURL string, isEnterprise bool) (Interface, error) {
@@ -164,6 +165,12 @@ func (gh *github) ListPullRequests() ([]*gogithub.PullRequest, error) {
 	prs, _, err := gh.client.PullRequests.List(gh.ctx, gh.owner, gh.repo, nil)
 
 	return prs, err
+}
+
+func (gh *github) MergePullRequest(pr int) (int, error) {
+	_, res, err := gh.client.PullRequests.Merge(gh.ctx, gh.owner, gh.repo, pr, "", nil)
+
+	return res.StatusCode, err
 }
 
 var (
