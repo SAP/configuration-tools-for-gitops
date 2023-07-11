@@ -33,7 +33,7 @@ var (
 
 var scenarios = []scenario{
 	{
-		title:                 "dry run mode with successful merge",
+		title:                 "successful merge",
 		sourceBranch:          "feature",
 		targetBranch:          "main",
 		owner:                 "test",
@@ -43,17 +43,17 @@ var scenarios = []scenario{
 		reconcileBranchExists: false,
 	},
 	{
-		title:                 "dry run mode with successful merge",
+		title:                 "successful merge with reconcile branch exists",
 		sourceBranch:          "feature",
 		targetBranch:          "main",
 		owner:                 "test",
 		repo:                  "repo",
 		expectedErr:           nil,
 		mergeSuccessful:       true,
-		reconcileBranchExists: false,
+		reconcileBranchExists: true,
 	},
 	{
-		title:                 "dry run mode with unsuccessful merge",
+		title:                 "unsuccessful merge",
 		sourceBranch:          "feature",
 		targetBranch:          "main",
 		owner:                 "test",
@@ -76,6 +76,18 @@ var scenarios = []scenario{
 	{
 		title:                 "default unsuccessful merge with a reconcile branch & target not ahead",
 		sourceBranch:          "feature",
+		targetBranch:          "main",
+		owner:                 "test",
+		repo:                  "repo",
+		expectedErr:           nil,
+		mergeSuccessful:       false,
+		reconcileBranchExists: true,
+		targetAhead:           false,
+		reconcileMergable:     true,
+	},
+	{
+		title:                 "default unsuccessful merge with a reconcile branch & target not ahead & no pr exists",
+		sourceBranch:          "feature2",
 		targetBranch:          "main",
 		owner:                 "test",
 		repo:                  "repo",

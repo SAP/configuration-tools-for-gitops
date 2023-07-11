@@ -164,7 +164,7 @@ func (r *Client) checkMergeability() (bool, error) {
 		if err != nil {
 			return false, fmt.Errorf("failed to create a draft PR: %w", err)
 		}
-		r.logger.Info("Draft pull request #%d created: %s\n", pr.GetNumber(), pr.GetHTMLURL())
+		r.logger.Infof("Draft pull request #%d created: %s", pr.GetNumber(), pr.GetHTMLURL())
 		return true, nil
 	}
 	// check if the pull request is mergable
