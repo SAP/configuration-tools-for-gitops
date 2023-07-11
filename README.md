@@ -19,6 +19,8 @@ offering:
   - blast radius analysis of changes
 - [dependency presentation](./cmd/coco/graph/readme.md)
   - structured representation of dependencies
+- [branch reconciliation](./cmd/coco/reconcile.readme.md)
+  - reconciliation of git branches to a single merged commit line
 
 The available commands of the CLI can be explored by running
 
