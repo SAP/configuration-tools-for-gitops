@@ -8,7 +8,9 @@ branch.
 ```shell
 coco reconcile \
   --source <source_branch> \
+  --source-remote <source_remote_url> \
   --target <target_branch> \
+  --target-remote <target_remote_url> \
   --owner <owner_name> \
   --repo <repo_name> \
 ```
@@ -62,7 +64,7 @@ token. The token must be stored in the GITHUB_TOKEN environment variable.
 ## Example
 
 ```shell
-coco reconcile --source main --target dev --owner myorg --repo myrepo
+coco reconcile --source main --target dev --owner myorg --repo myrepo --target-remote https://github.com/<target-remote-url>.git --source-remote https://github.com/<source-remote-url>.git
 ```
 
 This will reconcile the `origin/dev` branch with the `origin/main` branch in the

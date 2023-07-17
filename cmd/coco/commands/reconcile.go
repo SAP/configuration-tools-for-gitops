@@ -16,6 +16,8 @@ import (
 var (
 	owner          string
 	repo           string
+	sourceRemote   string
+	targetRemote   string
 	forceReconcile bool
 )
 
@@ -40,15 +42,13 @@ func newReconcile() *cobra.Command {
 			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			if sourceBranch == "" || targetBranch == "" {
-				log.Sugar.Errorf("source and target branches must be specified")
-				os.Exit(1)
-			}
+			checkEmptyString(sourceBranch, "source and target branches must be specified")
+			checkEmptyString(targetBranch, "source and target branches must be specified")
+			checkEmptyString(sourceRemote, "source and target remotes must be specified")
+			checkEmptyString(targetRemote, "source and target remotes must be specified")
+			checkEmptyString(owner, "owner name and repository name must be specified")
+			checkEmptyString(repo, "owner name and repository name must be specified")
 
-			if owner == "" || repo == "" {
-				log.Sugar.Errorf("owner name and repository name must be specified")
-				os.Exit(1)
-			}
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
 			githubBaseURL, err := url.Parse(viper.GetString(gitURLKey))
@@ -58,12 +58,12 @@ func newReconcile() *cobra.Command {
 			var client *reconcile.Client
 			client, err = reconcile.New(
 				ctx,
-				sourceBranch,
-				targetBranch,
 				owner,
 				repo,
 				viper.GetString("git-token"),
 				fmt.Sprintf("https://%s", githubBaseURL.Hostname()),
+				reconcile.BranchConfig{Name: targetBranch, Remote: targetRemote},
+				reconcile.BranchConfig{Name: sourceBranch, Remote: sourceRemote},
 				log.Sugar,
 			)
 			if err != nil {
@@ -84,8 +84,18 @@ func newReconcile() *cobra.Command {
 		log.Sugar.Error(err)
 		os.Exit(1)
 	}
+	c.PersistentFlags().StringVarP(&sourceRemote, "source-remote", "", "", "The remote for the source branch.")
+	if err := c.MarkPersistentFlagRequired("source-remote"); err != nil {
+		log.Sugar.Error(err)
+		os.Exit(1)
+	}
 	c.PersistentFlags().StringVarP(&targetBranch, "target", "t", "", "The target branch to reconcile to.")
 	if err := c.MarkPersistentFlagRequired("target"); err != nil {
+		log.Sugar.Error(err)
+		os.Exit(1)
+	}
+	c.PersistentFlags().StringVarP(&targetRemote, "target-remote", "", "", "The remote for the target branch.")
+	if err := c.MarkPersistentFlagRequired("target-remote"); err != nil {
 		log.Sugar.Error(err)
 		os.Exit(1)
 	}
@@ -104,4 +114,11 @@ func newReconcile() *cobra.Command {
 		`Allows coco to forcefully deletes the reconcile branch if required.`,
 	)
 	return c
+}
+
+func checkEmptyString(value, errorMessage string) {
+	if value == "" {
+		log.Sugar.Errorf(errorMessage)
+		os.Exit(1)
+	}
 }
