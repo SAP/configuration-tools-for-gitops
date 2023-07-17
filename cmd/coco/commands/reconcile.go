@@ -42,7 +42,6 @@ func newReconcile() *cobra.Command {
 			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-
 			checkEmptyString(sourceBranch, "source and target branches must be specified")
 			checkEmptyString(targetBranch, "source and target branches must be specified")
 			checkEmptyString(sourceRemote, "source and target remotes must be specified")
