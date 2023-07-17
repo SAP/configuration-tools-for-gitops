@@ -37,7 +37,8 @@ type Logger interface {
 }
 
 const (
-	notUsed = "notUsed"
+	notUsed    = "notUsed"
+	allAllowed = 0777
 )
 
 func New(
@@ -91,14 +92,15 @@ func differentRemotes(targetBranch, sourceBranch BranchConfig, token string, log
 	// 		git fetch [remote-name] [x]
 	// 		git branch remote-replica/[sourceBranch] [remote-name]/[sourceBranch] [x]
 	// 		git push origin remote-replica/[sourceBranch] [x]
-
+	logger.Debugf("target and source have different remotes")
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return err
 	}
-	// avoided utilizing a temporary directory due to the high frequency of deletion, necessitating numerous repo cloning operations.
+	// avoided utilizing a temporary directory due to the high frequency of deletion,
+	// necessitating numerous repo cloning operations.
 	targetPath := fmt.Sprintf("%s/reconcile/target/%s", homeDir, targetBranch.Name)
-	err = os.MkdirAll(targetPath, 0777)
+	err = os.MkdirAll(targetPath, allAllowed)
 	if err != nil {
 		return err
 	}
@@ -139,10 +141,30 @@ func differentRemotes(targetBranch, sourceBranch BranchConfig, token string, log
 	} else if err != nil {
 		return err
 	}
-	logger.Debugf("target and source have different remotes")
+
 	// If the remotes are different, add the remote repository of the 'source' branch
 	remoteName := fmt.Sprintf("reconcile/source/%s", sourceBranch.Name)
 
+	err = createRemote(targetRepo, sourceBranch, remoteName)
+
+	if err != nil {
+		return err
+	}
+
+	// Fetch the source branch from the added remote
+	err = targetRepo.Fetch(&git.FetchOptions{
+		Auth:       &githttp.BasicAuth{Username: notUsed, Password: token},
+		RemoteName: remoteName,
+	})
+	if err != nil && err != git.NoErrAlreadyUpToDate {
+		return err
+	}
+
+	// Create replica of source in target repo
+	return createReplica(targetRepo, sourceBranch, remoteName, token)
+}
+
+func createRemote(targetRepo *git.Repository, sourceBranch BranchConfig, remoteName string) error {
 	remotes, err := targetRepo.Remotes()
 	if err != nil {
 		return err
@@ -165,16 +187,10 @@ func differentRemotes(targetBranch, sourceBranch BranchConfig, token string, log
 		}
 	}
 
-	// Fetch the source branch from the added remote
-	err = targetRepo.Fetch(&git.FetchOptions{
-		Auth:       &githttp.BasicAuth{Username: notUsed, Password: token},
-		RemoteName: remoteName,
-	})
-	if err != nil && err != git.NoErrAlreadyUpToDate {
-		return err
-	}
+	return nil
+}
 
-	// Create replica of source in target repo
+func createReplica(targetRepo *git.Repository, sourceBranch BranchConfig, remoteName, token string) error {
 	replicaBranchName := plumbing.NewBranchReferenceName(fmt.Sprintf("remote-replica/%s", sourceBranch.Name))
 	var sourceRef *plumbing.Reference
 	refs, err := targetRepo.References()

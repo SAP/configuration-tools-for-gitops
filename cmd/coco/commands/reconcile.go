@@ -42,19 +42,14 @@ func newReconcile() *cobra.Command {
 			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			if sourceBranch == "" || targetBranch == "" {
-				log.Sugar.Errorf("source and target branches must be specified")
-				os.Exit(1)
-			}
-			if sourceRemote == "" || targetRemote == "" {
-				log.Sugar.Errorf("source and target remotes must be specified")
-				os.Exit(1)
-			}
 
-			if owner == "" || repo == "" {
-				log.Sugar.Errorf("owner name and repository name must be specified")
-				os.Exit(1)
-			}
+			checkEmptyString(sourceBranch, "source and target branches must be specified")
+			checkEmptyString(targetBranch, "source and target branches must be specified")
+			checkEmptyString(sourceRemote, "source and target remotes must be specified")
+			checkEmptyString(targetRemote, "source and target remotes must be specified")
+			checkEmptyString(owner, "owner name and repository name must be specified")
+			checkEmptyString(repo, "owner name and repository name must be specified")
+
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
 			githubBaseURL, err := url.Parse(viper.GetString(gitURLKey))
@@ -120,4 +115,11 @@ func newReconcile() *cobra.Command {
 		`Allows coco to forcefully deletes the reconcile branch if required.`,
 	)
 	return c
+}
+
+func checkEmptyString(value, errorMessage string) {
+	if value == "" {
+		log.Sugar.Errorf(errorMessage)
+		os.Exit(1)
+	}
 }
