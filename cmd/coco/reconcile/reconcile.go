@@ -105,7 +105,7 @@ func differentRemotes(targetBranch, sourceBranch BranchConfig, token string, log
 		return err
 	}
 
-	_, err = git.PlainClone(targetPath, false, &git.CloneOptions{
+	targetRepo, err := git.PlainClone(targetPath, false, &git.CloneOptions{
 		URL:             targetBranch.Remote,
 		Auth:            &githttp.BasicAuth{Username: notUsed, Password: token},
 		RemoteName:      "origin",
@@ -121,9 +121,11 @@ func differentRemotes(targetBranch, sourceBranch BranchConfig, token string, log
 		return err
 	}
 
-	targetRepo, err := git.PlainOpen(targetPath)
-	if err != nil {
-		return err
+	if targetRepo == nil {
+		targetRepo, err = git.PlainOpen(targetPath)
+		if err != nil {
+			return err
+		}
 	}
 
 	targetWorktree, err := targetRepo.Worktree()
