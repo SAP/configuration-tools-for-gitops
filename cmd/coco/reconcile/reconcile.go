@@ -105,7 +105,7 @@ func differentRemotes(targetBranch, sourceBranch BranchConfig, token string, log
 		return err
 	}
 
-	targetRepo, err := git.PlainClone(targetPath, false, &git.CloneOptions{
+	targetRepo, err := gitClone(targetPath, false, &git.CloneOptions{
 		URL:             targetBranch.Remote,
 		Auth:            &githttp.BasicAuth{Username: notUsed, Password: token},
 		RemoteName:      "origin",
@@ -122,17 +122,17 @@ func differentRemotes(targetBranch, sourceBranch BranchConfig, token string, log
 	}
 
 	if targetRepo == nil {
-		targetRepo, err = git.PlainOpen(targetPath)
+		targetRepo, err = gitOpen(targetPath)
 		if err != nil {
 			return err
 		}
 	}
 
-	targetWorktree, err := targetRepo.Worktree()
+	worktree, err := targetRepo.Worktree()
 	if err != nil {
 		return err
 	}
-	err = targetWorktree.Pull(&git.PullOptions{
+	err = gitPull(worktree, &git.PullOptions{
 		Auth:          &githttp.BasicAuth{Username: notUsed, Password: token},
 		RemoteName:    "origin",
 		ReferenceName: plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", targetBranch.Name)),
@@ -147,14 +147,14 @@ func differentRemotes(targetBranch, sourceBranch BranchConfig, token string, log
 	// If the remotes are different, add the remote repository of the 'source' branch
 	remoteName := fmt.Sprintf("reconcile/source/%s", sourceBranch.Name)
 
-	err = createRemote(targetRepo, sourceBranch, remoteName)
+	err = gitCreateRemote(targetRepo, sourceBranch.Remote, remoteName)
 
 	if err != nil {
 		return err
 	}
 
 	// Fetch the source branch from the added remote
-	err = targetRepo.Fetch(&git.FetchOptions{
+	err = gitFetch(targetRepo, &git.FetchOptions{
 		Auth:       &githttp.BasicAuth{Username: notUsed, Password: token},
 		RemoteName: remoteName,
 	})
@@ -164,32 +164,6 @@ func differentRemotes(targetBranch, sourceBranch BranchConfig, token string, log
 
 	// Create replica of source in target repo
 	return createReplica(targetRepo, sourceBranch, remoteName, token)
-}
-
-func createRemote(targetRepo *git.Repository, sourceBranch BranchConfig, remoteName string) error {
-	remotes, err := targetRepo.Remotes()
-	if err != nil {
-		return err
-	}
-	remoteExists := false
-
-	for _, remote := range remotes {
-		if remoteName == remote.Config().Name {
-			remoteExists = true
-		}
-	}
-
-	if !remoteExists {
-		_, err = targetRepo.CreateRemote(&config.RemoteConfig{
-			Name: remoteName,
-			URLs: []string{sourceBranch.Remote},
-		})
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func createReplica(targetRepo *git.Repository, sourceBranch BranchConfig, remoteName, token string) error {
@@ -213,7 +187,7 @@ func createReplica(targetRepo *git.Repository, sourceBranch BranchConfig, remote
 	if err != nil {
 		return err
 	}
-	err = targetRepo.Push(&git.PushOptions{
+	err = gitPush(targetRepo, &git.PushOptions{
 		RemoteName: "origin",
 		Auth:       &githttp.BasicAuth{Username: notUsed, Password: token},
 		Progress:   os.Stdout,
@@ -370,4 +344,44 @@ var (
 	githubClient  = github.New
 	printTerminal = terminal.Output
 	confirmed     = terminal.IsYes
+	gitClone      = git.PlainClone
+	gitOpen       = git.PlainOpen
 )
+
+var gitPull = func(worktree *git.Worktree, o *git.PullOptions) error {
+	return worktree.Pull(o)
+}
+
+var gitFetch = func(repo *git.Repository, o *git.FetchOptions) error {
+	return repo.Fetch(o)
+}
+
+var gitPush = func(repo *git.Repository, o *git.PushOptions) error {
+	return repo.Push(o)
+}
+
+var gitCreateRemote = func(repo *git.Repository, remoteURL, remoteName string) error {
+	remotes, err := repo.Remotes()
+	if err != nil {
+		return err
+	}
+	remoteExists := false
+
+	for _, remote := range remotes {
+		if remoteName == remote.Config().Name {
+			remoteExists = true
+		}
+	}
+
+	if !remoteExists {
+		_, err = repo.CreateRemote(&config.RemoteConfig{
+			Name: remoteName,
+			URLs: []string{remoteURL},
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

@@ -8,6 +8,10 @@ import (
 
 	"github.com/SAP/configuration-tools-for-gitops/pkg/github"
 	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
+	"github.com/go-git/go-billy/v5/memfs"
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/storage/memory"
 	"go.uber.org/zap"
 )
 
@@ -36,6 +40,16 @@ var scenarios = []scenario{
 		title:                 "successful merge",
 		sourceBranch:          BranchConfig{Name: "feature", Remote: "https://github.com/<remote-url>.git"},
 		targetBranch:          BranchConfig{Name: "main", Remote: "https://github.com/<remote-url>.git"},
+		owner:                 "test",
+		repo:                  "repo",
+		expectedErr:           nil,
+		mergeSuccessful:       true,
+		reconcileBranchExists: false,
+	},
+	{
+		title:                 "target and source have different remotes",
+		sourceBranch:          BranchConfig{Name: "feature", Remote: "https://github.com/<source-remote-url>.git"},
+		targetBranch:          BranchConfig{Name: "main", Remote: "https://github.com/<target-remote-url>.git"},
 		owner:                 "test",
 		repo:                  "repo",
 		expectedErr:           nil,
@@ -159,8 +173,43 @@ func TestReconcilition(t *testing.T) {
 	printTerminal = func(msg string) {
 	}
 
+	gitPull = func(worktree *git.Worktree, o *git.PullOptions) error {
+		return nil
+	}
+	gitFetch = func(repo *git.Repository, o *git.FetchOptions) error {
+		return nil
+	}
+	gitPush = func(repo *git.Repository, o *git.PushOptions) error {
+		return nil
+	}
+
 	for _, tt := range scenarios {
 		t.Run(tt.title, func(t *testing.T) {
+			remoteName := fmt.Sprintf("reconcile/source/%s", tt.sourceBranch.Name)
+			gitClone = func(path string, isBare bool, o *git.CloneOptions) (*git.Repository, error) {
+				r, err := git.InitWithOptions(memory.NewStorage(), memfs.New(), git.InitOptions{
+					DefaultBranch: "refs/heads/foo",
+				})
+				if err != nil {
+					return nil, err
+				}
+				ref := plumbing.NewHashReference(
+					plumbing.ReferenceName(fmt.Sprintf("refs/remotes/%s/%s", remoteName, tt.sourceBranch.Name)),
+					plumbing.NewHash("dummytest"))
+				return r, r.Storer.SetReference(ref)
+			}
+			gitOpen = func(path string) (*git.Repository, error) {
+				r, err := git.InitWithOptions(memory.NewStorage(), memfs.New(), git.InitOptions{
+					DefaultBranch: "refs/heads/foo",
+				})
+				if err != nil {
+					return nil, err
+				}
+				ref := plumbing.NewHashReference(
+					plumbing.ReferenceName(fmt.Sprintf("refs/remotes/%s/%s", remoteName, tt.sourceBranch.Name)),
+					plumbing.NewHash("dummytest"))
+				return r, r.Storer.SetReference(ref)
+			}
 			githubClient = func(ctx context.Context, stoken, owner, repo, baseURL string,
 				isEnterprise bool) (github.Interface, error) {
 				return github.Mock(
