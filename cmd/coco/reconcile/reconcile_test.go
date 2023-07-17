@@ -13,8 +13,8 @@ import (
 
 type scenario struct {
 	title                 string
-	sourceBranch          string
-	targetBranch          string
+	sourceBranch          BranchConfig
+	targetBranch          BranchConfig
 	owner                 string
 	repo                  string
 	expectedErr           error
@@ -34,8 +34,8 @@ var (
 var scenarios = []scenario{
 	{
 		title:                 "successful merge",
-		sourceBranch:          "feature",
-		targetBranch:          "main",
+		sourceBranch:          BranchConfig{Name: "feature", Remote: "https://github.com/<remote-url>.git"},
+		targetBranch:          BranchConfig{Name: "main", Remote: "https://github.com/<remote-url>.git"},
 		owner:                 "test",
 		repo:                  "repo",
 		expectedErr:           nil,
@@ -44,8 +44,8 @@ var scenarios = []scenario{
 	},
 	{
 		title:                 "successful merge with reconcile branch exists",
-		sourceBranch:          "feature",
-		targetBranch:          "main",
+		sourceBranch:          BranchConfig{Name: "feature", Remote: "https://github.com/<remote-url>.git"},
+		targetBranch:          BranchConfig{Name: "main", Remote: "https://github.com/<remote-url>.git"},
 		owner:                 "test",
 		repo:                  "repo",
 		expectedErr:           nil,
@@ -54,8 +54,8 @@ var scenarios = []scenario{
 	},
 	{
 		title:                 "unsuccessful merge",
-		sourceBranch:          "feature",
-		targetBranch:          "main",
+		sourceBranch:          BranchConfig{Name: "feature", Remote: "https://github.com/<remote-url>.git"},
+		targetBranch:          BranchConfig{Name: "main", Remote: "https://github.com/<remote-url>.git"},
 		owner:                 "test",
 		repo:                  "repo",
 		expectedErr:           fmt.Errorf("merge conflicts detected"),
@@ -64,8 +64,8 @@ var scenarios = []scenario{
 	},
 	{
 		title:                 "default unsuccessful merge with no reconcile branch",
-		sourceBranch:          "feature",
-		targetBranch:          "main",
+		sourceBranch:          BranchConfig{Name: "feature", Remote: "https://github.com/<remote-url>.git"},
+		targetBranch:          BranchConfig{Name: "main", Remote: "https://github.com/<remote-url>.git"},
 		owner:                 "test",
 		repo:                  "repo",
 		expectedErr:           nil,
@@ -75,8 +75,8 @@ var scenarios = []scenario{
 	// // need to add mergability check in the pkg
 	{
 		title:                 "default unsuccessful merge with a reconcile branch & target not ahead",
-		sourceBranch:          "feature",
-		targetBranch:          "main",
+		sourceBranch:          BranchConfig{Name: "feature", Remote: "https://github.com/<remote-url>.git"},
+		targetBranch:          BranchConfig{Name: "main", Remote: "https://github.com/<remote-url>.git"},
 		owner:                 "test",
 		repo:                  "repo",
 		expectedErr:           nil,
@@ -87,8 +87,8 @@ var scenarios = []scenario{
 	},
 	{
 		title:                 "default unsuccessful merge with a reconcile branch & target not ahead & no pr exists",
-		sourceBranch:          "feature2",
-		targetBranch:          "main",
+		sourceBranch:          BranchConfig{Name: "feature2", Remote: "https://github.com/<remote-url>.git"},
+		targetBranch:          BranchConfig{Name: "main", Remote: "https://github.com/<remote-url>.git"},
 		owner:                 "test",
 		repo:                  "repo",
 		expectedErr:           nil,
@@ -99,8 +99,8 @@ var scenarios = []scenario{
 	},
 	{
 		title:                 "default unsuccessful merge with a reconcile branch & target is ahead & manualmerge false",
-		sourceBranch:          "feature",
-		targetBranch:          "main",
+		sourceBranch:          BranchConfig{Name: "feature", Remote: "https://github.com/<remote-url>.git"},
+		targetBranch:          BranchConfig{Name: "main", Remote: "https://github.com/<remote-url>.git"},
 		owner:                 "test",
 		repo:                  "repo",
 		expectedErr:           nil,
@@ -111,8 +111,8 @@ var scenarios = []scenario{
 	},
 	{
 		title:                 "default unsuccessful merge with a reconcile branch & target is ahead & force",
-		sourceBranch:          "feature",
-		targetBranch:          "main",
+		sourceBranch:          BranchConfig{Name: "feature", Remote: "https://github.com/<remote-url>.git"},
+		targetBranch:          BranchConfig{Name: "main", Remote: "https://github.com/<remote-url>.git"},
 		owner:                 "test",
 		repo:                  "repo",
 		expectedErr:           nil,
@@ -124,8 +124,8 @@ var scenarios = []scenario{
 	},
 	{
 		title:                 "default unsuccessful merge with a reconcile branch & target is ahead & manualmerge true",
-		sourceBranch:          "feature",
-		targetBranch:          "main",
+		sourceBranch:          BranchConfig{Name: "feature", Remote: "https://github.com/<remote-url>.git"},
+		targetBranch:          BranchConfig{Name: "main", Remote: "https://github.com/<remote-url>.git"},
 		owner:                 "test",
 		repo:                  "repo",
 		expectedErr:           nil,
@@ -137,8 +137,8 @@ var scenarios = []scenario{
 	},
 	{
 		title:                 "default unsuccessful merge with a reconcile branch & target is ahead & false input",
-		sourceBranch:          "feature",
-		targetBranch:          "main",
+		sourceBranch:          BranchConfig{Name: "feature", Remote: "https://github.com/<remote-url>.git"},
+		targetBranch:          BranchConfig{Name: "main", Remote: "https://github.com/<remote-url>.git"},
 		owner:                 "test",
 		repo:                  "repo",
 		expectedErr:           fmt.Errorf("input must be in [y yes]: illegal input"),
@@ -182,7 +182,7 @@ func TestReconcilition(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
 			client, err := New(
-				ctx, tt.sourceBranch, tt.targetBranch, tt.owner, tt.repo, token, "", log.Sugar,
+				ctx, tt.owner, tt.repo, token, "", tt.targetBranch, tt.sourceBranch, log.Sugar,
 			)
 			if err != nil && err.Error() != tt.expectedErr.Error() {
 				t.Errorf("unexpected error: got %q, want %q", err, tt.expectedErr)
