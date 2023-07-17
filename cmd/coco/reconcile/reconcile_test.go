@@ -87,7 +87,7 @@ var scenarios = []scenario{
 	},
 	{
 		title:                 "default unsuccessful merge with a reconcile branch & target not ahead & no pr exists",
-		sourceBranch:          BranchConfig{Name: "feature", Remote: "https://github.com/<remote-url>.git"},
+		sourceBranch:          BranchConfig{Name: "feature2", Remote: "https://github.com/<remote-url>.git"},
 		targetBranch:          BranchConfig{Name: "main", Remote: "https://github.com/<remote-url>.git"},
 		owner:                 "test",
 		repo:                  "repo",

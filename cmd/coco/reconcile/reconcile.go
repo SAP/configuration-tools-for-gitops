@@ -92,12 +92,18 @@ func differentRemotes(targetBranch, sourceBranch BranchConfig, token string, log
 	// 		git branch remote-replica/[sourceBranch] [remote-name]/[sourceBranch] [x]
 	// 		git push origin remote-replica/[sourceBranch] [x]
 
-	//FIXME: change the directory
-	targetPath := fmt.Sprintf(
-		"/Users/I543581/Library/CloudStorage/OneDrive-SAPSE/Desktop/SAP_dev/configuration-tools-for-gitops/tmp/%s",
-		targetBranch.Name)
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+	// avoided utilizing a temporary directory due to the high frequency of deletion, necessitating numerous repo cloning operations.
+	targetPath := fmt.Sprintf("%s/reconcile/target/%s", homeDir, targetBranch.Name)
+	err = os.MkdirAll(targetPath, 0777)
+	if err != nil {
+		return err
+	}
 
-	_, err := git.PlainClone(targetPath, false, &git.CloneOptions{
+	_, err = git.PlainClone(targetPath, false, &git.CloneOptions{
 		URL:             targetBranch.Remote,
 		Auth:            &githttp.BasicAuth{Username: notUsed, Password: token},
 		RemoteName:      "origin",
