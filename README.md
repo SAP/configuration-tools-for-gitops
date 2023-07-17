@@ -1,6 +1,6 @@
 # Configuration tools for GitOps
 
-![Coverage](https://img.shields.io/badge/Coverage-81.2%25-brightgreen)
+![Coverage](https://img.shields.io/badge/Coverage-80.9%25-brightgreen)
 [![REUSE status](https://api.reuse.software/badge/github.com/SAP/configuration-tools-for-gitops)](https://api.reuse.software/info/github.com/SAP/configuration-tools-for-gitops)
 
 ## About this project
