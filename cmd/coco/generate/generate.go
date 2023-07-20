@@ -27,7 +27,7 @@ var (
 //   - takeControl: overwrite to do file generation also on files that have a different version
 //   - logLvl: specifies the log level that will be used
 func Generate(
-	basepath, templateIdentifier, persistenceFlag string,
+	basepath, templateIdentifier, persistenceFlag, configFileName string,
 	v *version.Version,
 	clusterValues, envFilters, folderFilters, excludeFolders []string,
 	logLvl log.Level, takeControl bool,
@@ -39,6 +39,7 @@ func Generate(
 
 	vals, err := readValueFiles(
 		basepath,
+		configFileName,
 		clusterValues,
 		envFilters,
 		[]string{templateIdentifier},
