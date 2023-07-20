@@ -1,6 +1,7 @@
 package dependencies
 
 import (
+	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/inputfile"
 	"path/filepath"
 
 	g "github.com/SAP/configuration-tools-for-gitops/cmd/coco/graph"
@@ -10,8 +11,8 @@ import (
 )
 
 var (
-	unmarshal    func([]byte, interface{}) error            = yaml.Unmarshal
-	dependencies func(string, string) (*files.Files, error) = deps
+	unmarshal    func([]byte, interface{}) error                                                   = yaml.Unmarshal
+	dependencies func(string, string, []string, []string, []string) (map[string]files.File, error) = inputfile.FindAll
 )
 
 func Graph(path, depFileName string) (
@@ -35,11 +36,10 @@ func logErr(c log.Context, err error) bool {
 func constructGraph(path, depFileName string) (
 	downToUp g.DownToUp, componentPaths map[string]string, err error,
 ) {
-	depFiles, err := dependencies(path, depFileName)
+	fs, err := dependencies(path, depFileName, []string{}, []string{}, []string{})
 	if err != nil {
 		return
 	}
-	fs := depFiles.Content()
 
 	downToUp = make(g.DownToUp, len(fs))
 	componentPaths = make(map[string]string, len(fs))
@@ -49,7 +49,13 @@ func constructGraph(path, depFileName string) (
 			continue
 		}
 
-		var df depFile
+		df, err := inputfile.Load(p)
+		if !df.IsComponent() {
+			continue
+		}
+		if err != nil {
+			return downToUp, componentPaths, err
+		}
 		if err := unmarshal(f.Content, &df); err != nil {
 			return downToUp, componentPaths, err
 		}
@@ -78,16 +84,4 @@ func relativeComponentPath(p, path string) string {
 		return cleanedPath[1:]
 	}
 	return cleanedPath
-}
-
-type depFile struct {
-	Name         string   `yaml:"name"`
-	Dependencies []string `yaml:"dependencies"`
-}
-
-func deps(path, depFileName string) (*files.Files, error) {
-	return files.New(path).
-		Include(files.AND, []string{depFileName}).
-		ReadContent().
-		Execute()
 }

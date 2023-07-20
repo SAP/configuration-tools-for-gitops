@@ -18,6 +18,7 @@ import (
 type scenarioGenerate struct {
 	title          string
 	tmplIdentifier string
+	configFileName string
 	valueFilters   []string
 	envFilters     []string
 	folderFilters  []string
@@ -38,6 +39,7 @@ var scenariosGenerate = []scenarioGenerate{
 	{
 		title:          "simple test",
 		tmplIdentifier: ".tmpl",
+		configFileName: "coco.yaml",
 		valueFilters:   []string{"values"},
 		envFilters:     []string{},
 		folderFilters:  []string{},
@@ -52,12 +54,24 @@ parse:
 `),
 		},
 		values: map[string][]byte{
-			"values/c1": []byte(`
+			"values/c1/coco.yaml": []byte(`
+type: environment
+name: c1
+values:
+  - v1
+`),
+			"values/c2/coco.yaml": []byte(`
+type: environment
+name: c2
+values:
+  - v1
+`),
+			"values/c1/v1.yaml": []byte(`
 value1: v1
 value2: v2
 ifKey: parse
 `),
-			"values/c2": []byte(`value1: v22`),
+			"values/c2/v1.yaml": []byte(`value1: v22`),
 		},
 		logs: []logItem{},
 		want: map[string]want{
@@ -85,6 +99,7 @@ ifKey: parse
 	{
 		title:          "test error",
 		tmplIdentifier: ".tmpl",
+		configFileName: "coco.yaml",
 		valueFilters:   []string{"values"},
 		envFilters:     []string{},
 		folderFilters:  []string{},
@@ -92,7 +107,13 @@ ifKey: parse
 			"services/a/.tmpl": []byte(`key: {`),
 		},
 		values: map[string][]byte{
-			"values/c1": []byte(`value1: fromValues-1`),
+			"values/coco.yaml": []byte(`
+type: environment
+name: values
+values: 
+  - c1
+`),
+			"values/c1.yaml": []byte(`value1: fromValues-1`),
 		},
 		logs: []logItem{
 			{
@@ -112,7 +133,7 @@ ifKey: parse
 					},
 				},
 				vals: map[string]interface{}{
-					"c1": map[string]interface{}{"value1": "fromValues-1"},
+					"values": map[string]interface{}{"value1": "fromValues-1"},
 				},
 			},
 		},
@@ -121,6 +142,7 @@ ifKey: parse
 	{
 		title:          "test template does not exist error",
 		tmplIdentifier: ".tmpl",
+		configFileName: "coco.yaml",
 		valueFilters:   []string{"values"},
 		envFilters:     []string{},
 		folderFilters:  []string{},
@@ -128,11 +150,66 @@ ifKey: parse
 			"services/a/.tmpl": []byte(`key: {`),
 		},
 		values: map[string][]byte{
-			"values/c1": []byte(`value1: fromValues-1`),
+			"values/coco.yaml": []byte(`
+type: environment
+values:
+  - c1`),
+			"values/c1.yaml": []byte(`value1: fromValues-1`),
 		},
 		logs:    []logItem{},
 		want:    map[string]want{},
 		wantErr: errors.New("lstat : no such file or directory"),
+	},
+	{
+		title:          "template folder",
+		tmplIdentifier: ".tmpl",
+		configFileName: "coco.yaml",
+		valueFilters:   []string{"values"},
+		envFilters:     nil,
+		folderFilters:  nil,
+		exclFilters:    nil,
+		logs:           nil,
+		want: map[string]want{
+			"services/a": {
+				tmpls: []template{
+					{
+						source:     "services/a/.tmpl/template1.yaml",
+						basepath:   "services/a",
+						namePrefix: "",
+						subpath:    "/template1.yaml",
+					},
+					{
+						source:     "services/a/.tmpl/template2.yaml",
+						basepath:   "services/a",
+						namePrefix: "",
+						subpath:    "/template2.yaml",
+					},
+				},
+				vals: map[string]interface{}{
+					"env1": map[string]interface{}{
+						"test":  "v1",
+						"test2": "v2",
+					},
+				},
+			},
+		},
+		wantErr: nil,
+		templates: map[string][]byte{
+			"services/a/.tmpl/template1.yaml": []byte(`
+test: {{.test}}`),
+			"services/a/.tmpl/template2.yaml": []byte(`
+test2: {{.test2}}`),
+		},
+		values: map[string][]byte{
+			"services/a/values/coco.yaml": []byte(`
+type: environment
+name: env1
+values: 
+  - value1`),
+			"services/a/values/value1.yaml": []byte(`
+test: v1
+test2: v2`),
+		},
 	},
 }
 
@@ -178,6 +255,7 @@ func (s *scenarioGenerate) Test(t *testing.T) {
 		tmpDir,
 		s.tmplIdentifier,
 		"irrelevant",
+		s.configFileName,
 		&version.Version{},
 		s.valueFilters,
 		s.envFilters,

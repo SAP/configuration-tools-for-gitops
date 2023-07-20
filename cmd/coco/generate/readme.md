@@ -82,7 +82,18 @@ following features:
 ### How it works
 
 In general, the file generation command depends on a set of global inputs (the
-files in the top-level `values` folder). These input files govern which files
+files in the top-level `values` folder). 
+For each values file to be generated there needs to be a folder with the desired name. 
+Within the folder should be a `coco.yaml` configuration file, with the following structure: 
+```file 
+type: environment
+values: 
+  - names of value.yaml files
+  - with path relative to coco.yaml
+``` 
+The value files need to be `.yaml` files, 
+however in the list the file ending must not be provided. 
+These input files govern which files
 will be generated and what values are generated automatically.
 
 ### Naming rules
@@ -156,8 +167,13 @@ The relevant inputs for file-generation CLI are in the following files
 |   |   |   |   +-- cluster_1.yaml
 ...
 +-- values
-|   +-- cluster_1.yaml
-|   +-- cluster_2.yaml
+|   +-- cluster_1
+|   |   +-- coco.yaml
+|   |   +-- value1.yaml
+|   +-- cluster_2
+|   |   +-- coco.yaml
+|   |   +-- value2.yaml
+|   |   +-- value22.yaml
 ```
 
 Here the `.tmpl` file contains a golang template. This template will be rendered
@@ -201,8 +217,13 @@ After the file-generation CLI runs, the following file structure will exists
 |   |   |   |   +-- cluster_2.yaml
 ...
 +-- values
-|   +-- cluster_1.yaml
-|   +-- cluster_2.yaml
+|   +-- cluster_1
+|   |   +-- coco.yaml
+|   |   +-- value1.yaml
+|   +-- cluster_2
+|   |   +-- coco.yaml
+|   |   +-- value2.yaml
+|   |   +-- value22.yaml
 ```
 
 and the newly generated files contain:
@@ -245,8 +266,13 @@ following files
 |   |   |   |   +-- vars-cm.yaml
 ...
 +-- values
-|   +-- cluster_1.yaml
-|   +-- cluster_2.yaml
+|   +-- cluster_1
+|   |   +-- coco.yaml
+|   |   +-- value1.yaml
+|   +-- cluster_2
+|   |   +-- coco.yaml
+|   |   +-- value2.yaml
+|   |   +-- value22.yaml
 ```
 
 After file-generation, this gives the following folders
@@ -266,8 +292,13 @@ After file-generation, this gives the following folders
                 ...
 ...
 +-- values
-|   +-- cluster_1.yaml
-|   +-- cluster_2.yaml
+|   +-- cluster_1
+|   |   +-- coco.yaml
+|   |   +-- value1.yaml
+|   +-- cluster_2
+|   |   +-- coco.yaml
+|   |   +-- value2.yaml
+|   |   +-- value22.yaml
 ```
 
 where we droped the remaining files for brevity.

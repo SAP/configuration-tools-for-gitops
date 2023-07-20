@@ -2,6 +2,7 @@ package dependencies
 
 import (
 	"fmt"
+	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/inputfile"
 	"reflect"
 	"testing"
 
@@ -34,7 +35,7 @@ var graphScenarios = []graphTest{
 	{
 		title: "happy path empty",
 		input: input{
-			depFileName: "dependencies.yaml",
+			depFileName: "coco.yaml",
 			files:       map[string][]byte{"someOtherFile": {}},
 			mock: mockGraph{
 				rf: nil,
@@ -50,13 +51,15 @@ var graphScenarios = []graphTest{
 	{
 		title: "happy path no dependencies",
 		input: input{
-			depFileName: "dependencies.yaml",
+			depFileName: "coco.yaml",
 			files: map[string][]byte{
-				"component-1/dependencies.yaml": []byte(string(`
+				"component-1/coco.yaml": []byte(string(`
+type: component
 name: component-1
 dependencies:
 `)),
-				"component-2/dependencies.yaml": []byte(string(`
+				"component-2/coco.yaml": []byte(string(`
+type: component
 name: component-2
 dependencies:
 `)),
@@ -78,15 +81,17 @@ dependencies:
 	{
 		title: "happy path with dependencies",
 		input: input{
-			depFileName: "dependencies.yaml",
+			depFileName: "coco.yaml",
 			files: map[string][]byte{
-				"component-1/dependencies.yaml": []byte(string(`
+				"component-1/coco.yaml": []byte(string(`
+type: component
 name: component-1
 dependencies:
 - component-2
 - unknown-component
 `)),
-				"component-2/dependencies.yaml": []byte(string(`
+				"component-2/coco.yaml": []byte(string(`
+type: component
 name: component-2
 dependencies:
 `)),
@@ -109,8 +114,13 @@ dependencies:
 	{
 		title: "folder selected",
 		input: input{
-			depFileName: "folder",
-			files:       map[string][]byte{"folder/otherFile": {}},
+			depFileName: "coco.yaml",
+			files: map[string][]byte{
+				"coco.yaml": []byte(`
+type: component
+dependencies:
+`),
+				"folder/otherFile": {}},
 			mock: mockGraph{
 				rf: nil,
 				un: nil,
@@ -125,7 +135,7 @@ dependencies:
 	{
 		title: "error in readDeps",
 		input: input{
-			depFileName: "dependencies.yaml",
+			depFileName: "coco.yaml",
 			files:       map[string][]byte{},
 			mock: mockGraph{
 				rf: nil,
@@ -141,8 +151,13 @@ dependencies:
 	{
 		title: "error in unmarshal",
 		input: input{
-			depFileName: "file",
-			files:       map[string][]byte{"file": {}},
+			depFileName: "coco.yaml",
+			files: map[string][]byte{"coco.yaml": []byte(`
+type: component
+name: component-1
+dependencies:
+  - dep1`),
+				"dep1": {}},
 			mock: mockGraph{
 				rf: nil,
 				un: fmt.Errorf("fail in unmarshal"),
@@ -209,9 +224,9 @@ func (m mockGraph) unmarshal(in []byte, out interface{}) error {
 	return yaml.Unmarshal(in, out)
 }
 
-func (m mockGraph) readDeps(path, depFileName string) (*files.Files, error) {
+func (m mockGraph) readDeps(path, depFileName string, includeOr, includeAnd, exclude []string) (map[string]files.File, error) {
 	if m.rd != nil {
 		return nil, m.rd
 	}
-	return deps(path, depFileName)
+	return inputfile.FindAll(path, depFileName, includeOr, includeAnd, exclude)
 }
