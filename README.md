@@ -1,6 +1,6 @@
 # Configuration tools for GitOps
 
-![Coverage](https://img.shields.io/badge/Coverage-84.9%25-brightgreen)
+![Coverage](https://img.shields.io/badge/Coverage-85.4%25-brightgreen)
 [![REUSE status](https://api.reuse.software/badge/github.com/SAP/configuration-tools-for-gitops)](https://api.reuse.software/info/github.com/SAP/configuration-tools-for-gitops)
 
 ## About this project
@@ -19,6 +19,8 @@ offering:
   - blast radius analysis of changes
 - [dependency presentation](./cmd/coco/graph/readme.md)
   - structured representation of dependencies
+- [branch reconciliation](./cmd/coco/reconcile.readme.md)
+  - reconciliation of git branches to a single merged commit line
 
 The available commands of the CLI can be explored by running
 
