@@ -211,6 +211,66 @@ test: v1
 test2: v2`),
 		},
 	},
+	{
+		title:          "relative path and value overwriting test",
+		tmplIdentifier: ".tmpl",
+		configFileName: "coco.yaml",
+		valueFilters:   []string{"values"},
+		envFilters:     []string{},
+		folderFilters:  []string{},
+		templates: map[string][]byte{
+			"services/a/.tmpl": []byte(`
+keyInParentFolder: {{.value1}}
+keyInSubfolder: {{.value2}}
+keyInBothFolders: {{.value3}}
+`),
+		},
+		values: map[string][]byte{
+			"values/c1/coco.yaml": []byte(`
+type: environment
+name: c1
+values:
+  - v1
+`),
+			"values/c1/c2/coco.yaml": []byte(`
+type: environment
+name: c2
+values:
+  - ../v1
+  - v1
+`),
+			"values/c1/v1.yaml": []byte(`
+keyInParentFolder: v1
+keyInBothFolders: v2
+`),
+			"values/c1/c2/v1.yaml": []byte(`
+keyInSubfolder: v3
+keyInBothFolders: v22
+`),
+		},
+		logs: []logItem{},
+		want: map[string]want{
+			"services/a": {
+				tmpls: []template{
+					{
+						source:     "services/a/.tmpl",
+						basepath:   "services/a",
+						namePrefix: "",
+						subpath:    "",
+					},
+				},
+				vals: map[string]interface{}{
+					"c1": map[string]interface{}{
+						"keyInParentFolder": "v1", "keyInBothFolders": "v2",
+					},
+					"c2": map[string]interface{}{
+						"keyInParentFolder": "v1", "keyInBothFolders": "v22", "keyInSubfolder": "v3",
+					},
+				},
+			},
+		},
+		wantErr: nil,
+	},
 }
 
 func TestGenerate(t *testing.T) {
