@@ -82,8 +82,21 @@ following features:
 ### How it works
 
 In general, the file generation command depends on a set of global inputs (the
-files in the top-level `values` folder). These input files govern which files
+files in the top-level `values` folder). 
+For each values file to be generated there needs to be a folder with the desired name. 
+Within the folder should be a `coco.yaml` configuration file, with the following structure: 
+```file 
+type: environment
+values: 
+  - names of value.yaml files
+  - with path relative to coco.yaml
+``` 
+The value files need to be `.yaml` files, 
+however in the list the file ending must not be provided. 
+These input files govern which files
 will be generated and what values are generated automatically.
+Note that all keys will be merged and if multiple value files contain the same key, 
+the values lower in the list overwrite previous values.
 
 ### Naming rules
 
@@ -156,8 +169,13 @@ The relevant inputs for file-generation CLI are in the following files
 |   |   |   |   +-- cluster_1.yaml
 ...
 +-- values
-|   +-- cluster_1.yaml
-|   +-- cluster_2.yaml
+|   +-- cluster_1
+|   |   +-- coco.yaml
+|   |   +-- value1.yaml
+|   +-- cluster_2
+|   |   +-- coco.yaml
+|   |   +-- value2.yaml
+|   |   +-- value22.yaml
 ```
 
 Here the `.tmpl` file contains a golang template. This template will be rendered
@@ -184,7 +202,7 @@ cluster_1_value: true
 And finally, the `.tmpl` has the form
 
 ```gotmpl
-generalValue: {{ .value1 }}
+generalValue: {{ .generalValue }}
 ```
 
 #### Results
@@ -201,8 +219,13 @@ After the file-generation CLI runs, the following file structure will exists
 |   |   |   |   +-- cluster_2.yaml
 ...
 +-- values
-|   +-- cluster_1.yaml
-|   +-- cluster_2.yaml
+|   +-- cluster_1
+|   |   +-- coco.yaml
+|   |   +-- value1.yaml
+|   +-- cluster_2
+|   |   +-- coco.yaml
+|   |   +-- value2.yaml
+|   |   +-- value22.yaml
 ```
 
 and the newly generated files contain:
@@ -245,8 +268,13 @@ following files
 |   |   |   |   +-- vars-cm.yaml
 ...
 +-- values
-|   +-- cluster_1.yaml
-|   +-- cluster_2.yaml
+|   +-- cluster_1
+|   |   +-- coco.yaml
+|   |   +-- value1.yaml
+|   +-- cluster_2
+|   |   +-- coco.yaml
+|   |   +-- value2.yaml
+|   |   +-- value22.yaml
 ```
 
 After file-generation, this gives the following folders
@@ -266,8 +294,103 @@ After file-generation, this gives the following folders
                 ...
 ...
 +-- values
-|   +-- cluster_1.yaml
-|   +-- cluster_2.yaml
+|   +-- cluster_1
+|   |   +-- coco.yaml
+|   |   +-- value1.yaml
+|   +-- cluster_2
+|   |   +-- coco.yaml
+|   |   +-- value2.yaml
+|   |   +-- value22.yaml
 ```
 
 where we droped the remaining files for brevity.
+
+### Example subfolder, relative path, merging and overwriting of values
+### Setup
+
+```file
++-- services
+|   +-- serviceA
+|   |   +-- values
+|   |   |   +-- .tmpl
+...
++-- values
+|   +-- cluster_1
+|   |   +-- coco.yaml
+|   |   +-- value1.yaml
+|   |   +-- cluster_2
+|   |   |   +-- coco.yaml
+|   |   |   +-- value2.yaml
+```
+
+The value file in the cluster_1 folder contains the following keys and values:
+
+```yaml
+generalValue: generalValue
+parentValue: parentValue
+```
+With the coco.yaml file: 
+```yaml
+type: environment
+name: parentFolderCluster
+values:
+  - value1
+```
+
+Whereas the values file in the subfolder look like this: 
+
+```yaml
+generalValue: specificValue
+subValue: subValue
+```
+
+With the coco.yaml file:
+```yaml
+type: environment
+name: subfolderCluster
+values:
+  - ../value1
+  - value2
+```
+
+And finally, the `.tmpl` has the form
+
+```gotmpl
+generalValue: {{ .generalValue }}
+parentValue: {{ .parentValue }}
+subValue: {{ .subValue }}
+```
+
+#### Results
+
+```file
++-- services
+|   +-- serviceA
+|   |   +-- values
+|   |   |   +-- .tmpl
+|   |   |   +-- parentFolderCluster.yaml
+|   |   |   +-- subfolderCluster.yaml
+...
++-- values
+|   +-- cluster_1
+|   |   +-- coco.yaml
+|   |   +-- value1.yaml
+|   |   +-- cluster_2
+|   |   |   +-- coco.yaml
+|   |   |   +-- value2.yaml
+```
+ Where 'parentFolderCluster.yaml' contains these key-value pairs:
+ ```yaml
+generalValue: generalValue
+parentValue: parentValue
+```
+
+Whereas  'subfolderCluster.yaml' looks like this: 
+```yaml
+generalValue: specificValue
+parentValue: parentValue
+subValue: subValue
+```
+
+Note that the value2 key 'generalValue' overwrites the corresponding key from 'value1'
+since it is listed below in '/values/cluster_1/cluster_2/coco.yaml' and still inherits the 'parentValue.

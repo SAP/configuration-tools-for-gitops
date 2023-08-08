@@ -41,10 +41,12 @@ in the gitops repository.
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			basepath := viper.GetString(gitPathKey)
+			configFileName := viper.GetString(componentCfg)
 			err := generate.Generate(
 				basepath,
 				tmplIdentifier,
 				persistenceFlag,
+				configFileName,
 				version.ReadAll(),
 				cleanValuePaths(valuesFolders, basepath),
 				environmentFilter,
