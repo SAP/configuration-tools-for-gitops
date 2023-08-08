@@ -82,21 +82,22 @@ following features:
 ### How it works
 
 In general, the file generation command depends on a set of global inputs (the
-files in the top-level `values` folder). 
-For each values file to be generated there needs to be a folder with the desired name. 
-Within the folder should be a `coco.yaml` configuration file, with the following structure: 
-```file 
+files in the top-level `values` folder). For each values file to be generated
+there needs to be a folder with the desired name. Within the folder should be a
+`coco.yaml` configuration file, with the following structure:
+
+```file
 type: environment
-values: 
+values:
   - names of value.yaml files
   - with path relative to coco.yaml
-``` 
-The value files need to be `.yaml` files, 
-however in the list the file ending must not be provided. 
-These input files govern which files
-will be generated and what values are generated automatically.
-Note that all keys will be merged and if multiple value files contain the same key, 
-the values lower in the list overwrite previous values.
+```
+
+The value files need to be `.yaml` files, however in the list the file ending
+must not be provided. These input files govern which files will be generated and
+what values are generated automatically. Note that all keys will be merged and
+if multiple value files contain the same key, the values lower in the list
+overwrite previous values.
 
 ### Naming rules
 
@@ -306,6 +307,7 @@ After file-generation, this gives the following folders
 where we droped the remaining files for brevity.
 
 ### Example subfolder, relative path, merging and overwriting of values
+
 ### Setup
 
 ```file
@@ -329,7 +331,9 @@ The value file in the cluster_1 folder contains the following keys and values:
 generalValue: generalValue
 parentValue: parentValue
 ```
-With the coco.yaml file: 
+
+With the coco.yaml file:
+
 ```yaml
 type: environment
 name: parentFolderCluster
@@ -337,7 +341,7 @@ values:
   - value1
 ```
 
-Whereas the values file in the subfolder look like this: 
+Whereas the values file in the subfolder look like this:
 
 ```yaml
 generalValue: specificValue
@@ -345,6 +349,7 @@ subValue: subValue
 ```
 
 With the coco.yaml file:
+
 ```yaml
 type: environment
 name: subfolderCluster
@@ -379,18 +384,22 @@ subValue: {{ .subValue }}
 |   |   |   +-- coco.yaml
 |   |   |   +-- value2.yaml
 ```
- Where 'parentFolderCluster.yaml' contains these key-value pairs:
- ```yaml
+
+Where 'parentFolderCluster.yaml' contains these key-value pairs:
+
+```yaml
 generalValue: generalValue
 parentValue: parentValue
 ```
 
-Whereas  'subfolderCluster.yaml' looks like this: 
+Whereas 'subfolderCluster.yaml' looks like this:
+
 ```yaml
 generalValue: specificValue
 parentValue: parentValue
 subValue: subValue
 ```
 
-Note that the value2 key 'generalValue' overwrites the corresponding key from 'value1'
-since it is listed below in '/values/cluster_1/cluster_2/coco.yaml' and still inherits the 'parentValue.
+Note that the value2 key 'generalValue' overwrites the corresponding key from
+'value1' since it is listed below in '/values/cluster_1/cluster_2/coco.yaml' and
+still inherits the 'parentValue.

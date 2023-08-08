@@ -55,7 +55,9 @@ func Load(file string) (Coco, error) {
 	return res, nil
 }
 
-func FindAll(basepath, configFileName string, includeOr, includeAnd, exclude []string) (map[string]files.File, error) {
+func FindAll(
+	basepath, configFileName string, includeOr, includeAnd, exclude []string,
+) (map[string]files.File, error) {
 	includeAnd = append(includeAnd, configFileName)
 	fileRunner := files.New(basepath).
 		Include(files.OR, includeOr).
