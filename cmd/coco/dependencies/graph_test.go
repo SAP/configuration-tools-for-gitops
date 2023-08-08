@@ -2,9 +2,10 @@ package dependencies
 
 import (
 	"fmt"
-	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/inputfile"
 	"reflect"
 	"testing"
+
+	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/inputfile"
 
 	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/graph"
 	"github.com/SAP/configuration-tools-for-gitops/pkg/files"
@@ -224,7 +225,11 @@ func (m mockGraph) unmarshal(in []byte, out interface{}) error {
 	return yaml.Unmarshal(in, out)
 }
 
-func (m mockGraph) readDeps(path, depFileName string, includeOr, includeAnd, exclude []string) (map[string]files.File, error) {
+func (m mockGraph) readDeps(path,
+	depFileName string,
+	includeOr,
+	includeAnd,
+	exclude []string) (map[string]files.File, error) {
 	if m.rd != nil {
 		return nil, m.rd
 	}

@@ -1,8 +1,9 @@
 package sliceutils
 
 import (
-	"golang.org/x/exp/constraints"
 	"sort"
+
+	"golang.org/x/exp/constraints"
 )
 
 func Sort[T constraints.Ordered](s []T) {

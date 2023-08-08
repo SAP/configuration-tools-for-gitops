@@ -2,6 +2,7 @@ package inputfile
 
 import (
 	"fmt"
+
 	"github.com/SAP/configuration-tools-for-gitops/pkg/files"
 	"github.com/SAP/configuration-tools-for-gitops/pkg/maputils"
 	"gopkg.in/yaml.v3"
@@ -9,6 +10,8 @@ import (
 
 // Coco struct contains keys for both components and environments.
 // Unused fields are set nil by the unmarshal function
+//
+//nolint:lll // no linebreaks available for struct tags
 type Coco struct {
 	Type         ConfigType `yaml:"type" doc:"msg=type of the configuration file,req,o=environment,o=component"`
 	Values       []string   `yaml:"values" doc:"msg=list of .yaml files relative to the config file without file ending, opt,"`
@@ -66,10 +69,10 @@ func FindAll(basepath, configFileName string, includeOr, includeAnd, exclude []s
 	return vFiles.Content(), nil
 }
 
-func (c Coco) IsComponent() bool {
+func (c *Coco) IsComponent() bool {
 	return c.Type == COMPONENT
 }
 
-func (c Coco) IsEnvironment() bool {
+func (c *Coco) IsEnvironment() bool {
 	return c.Type == ENVIRONMENT
 }

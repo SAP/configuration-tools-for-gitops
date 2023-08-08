@@ -2,9 +2,10 @@ package generate
 
 import (
 	"bytes"
+	"path/filepath"
+
 	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/inputfile"
 	"gopkg.in/yaml.v3"
-	"path/filepath"
 )
 
 func readValueFiles(
@@ -16,7 +17,6 @@ func readValueFiles(
 		return nil, err
 	}
 	res := make(map[string]interface{}, len(valueFiles))
-	var excludeFiles []string
 	for path, file := range valueFiles {
 		if file.IsDir {
 			continue
@@ -39,16 +39,20 @@ func readValueFiles(
 		}
 
 		merged, err := mergeValues(valueFilesForEnv)
-		excludeFiles = append(excludeFiles, dir)
+		if err != nil {
+			return nil, err
+		}
 		var renderedData bytes.Buffer
-		if err = merged.Encode(&renderedData, 2); err != nil {
+		err = merged.Encode(&renderedData, 2)
+		if err != nil {
 			return nil, err
 		}
 
 		var finalValues interface{}
 		finalValuesDecoder := yaml.NewDecoder(bytes.NewReader(renderedData.Bytes()))
 
-		if err = finalValuesDecoder.Decode(&finalValues); err != nil {
+		err = finalValuesDecoder.Decode(&finalValues)
+		if err != nil {
 			return nil, err
 		}
 

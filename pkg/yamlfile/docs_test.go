@@ -1,9 +1,10 @@
 package yamlfile_test
 
 import (
-	"github.com/SAP/configuration-tools-for-gitops/pkg/yamlfile"
 	"reflect"
 	"testing"
+
+	"github.com/SAP/configuration-tools-for-gitops/pkg/yamlfile"
 )
 
 type scenarioDoc struct {

@@ -2,12 +2,13 @@ package commands
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/inputfile"
 	"github.com/SAP/configuration-tools-for-gitops/pkg/yamlfile"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
-	"os"
 )
 
 func newInspect() *cobra.Command {

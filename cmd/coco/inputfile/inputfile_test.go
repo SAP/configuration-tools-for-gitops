@@ -2,13 +2,14 @@ package inputfile
 
 import (
 	"fmt"
+	"reflect"
+	"strings"
+	"testing"
+
 	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
 	"github.com/SAP/configuration-tools-for-gitops/pkg/maputils"
 	"github.com/SAP/configuration-tools-for-gitops/pkg/testfuncs"
 	"go.uber.org/zap"
-	"reflect"
-	"strings"
-	"testing"
 )
 
 type inputfile struct {
@@ -187,7 +188,7 @@ func TestInputfile(t *testing.T) {
 	}
 }
 
-func (i inputFindAll) FindTest(t *testing.T) {
+func (i *inputFindAll) FindTest(t *testing.T) {
 	td, err := testfuncs.PrepareTestDirTree(i.input)
 	if err != nil {
 		t.Logf("unable to create test dir tree: %v\n", err)

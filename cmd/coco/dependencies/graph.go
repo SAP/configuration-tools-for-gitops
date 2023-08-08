@@ -1,8 +1,9 @@
 package dependencies
 
 import (
-	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/inputfile"
 	"path/filepath"
+
+	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/inputfile"
 
 	g "github.com/SAP/configuration-tools-for-gitops/cmd/coco/graph"
 	"github.com/SAP/configuration-tools-for-gitops/pkg/files"

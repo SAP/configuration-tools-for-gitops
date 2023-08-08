@@ -3,12 +3,13 @@ package generate
 import (
 	"bytes"
 	"fmt"
-	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/inputfile"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/maputils"
-	"github.com/spf13/viper"
 	"reflect"
 	"sort"
 	"testing"
+
+	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/inputfile"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/maputils"
+	"github.com/spf13/viper"
 
 	"github.com/SAP/configuration-tools-for-gitops/pkg/testfuncs"
 	"gopkg.in/yaml.v3"
@@ -170,7 +171,6 @@ func (s *scenarioValueFiles) CheckRes(t *testing.T, basedir string, got map[stri
 	var expected map[string]interface{}
 	if len(s.wantFiles) > 0 {
 		expected = make(map[string]interface{}, len(s.wantFiles))
-
 	}
 
 	for name, rawValues := range s.wantFiles {
