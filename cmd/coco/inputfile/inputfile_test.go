@@ -96,14 +96,14 @@ var inputsFindAll = []inputFindAll{
 type: environment
 name: env1
 values: 
-  - v1
-  - v11`),
+  - v1.yaml
+  - v11.yaml`),
 			"values/env2/coco.yaml": []byte(`
 type: environment
 name: env2
 values: 
-  - v2
-  - v22`),
+  - v2.yaml
+  - v22.yaml`),
 			"dependencies/coco.yaml": []byte(`
 type: component
 name: comp1
@@ -119,14 +119,14 @@ dependencies:
 type: environment
 name: env1
 values: 
-  - v1
-  - v11`),
+  - v1.yaml
+  - v11.yaml`),
 			"/values/env2/coco.yaml": []byte(`
 type: environment
 name: env2
 values: 
-  - v2
-  - v22`),
+  - v2.yaml
+  - v22.yaml`),
 			"/dependencies/coco.yaml": []byte(`
 type: component
 name: comp1
@@ -144,14 +144,14 @@ dependencies:
 type: environment
 name: env1
 values: 
-  - v1
-  - v11`),
+  - v1.yaml
+  - v11.yaml`),
 			"values/env2/custom.yaml": []byte(`
 type: environment
 name: env2
 values: 
-  - v2
-  - v22`),
+  - v2.yaml
+  - v22.yaml`),
 			"dependencies/coco.yaml": []byte(`
 type: component
 name: comp1
@@ -167,8 +167,8 @@ dependencies:
 type: environment
 name: env2
 values: 
-  - v2
-  - v22`),
+  - v2.yaml
+  - v22.yaml`),
 		},
 		wantErr: nil,
 	},

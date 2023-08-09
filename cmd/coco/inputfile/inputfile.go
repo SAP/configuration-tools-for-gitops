@@ -14,9 +14,9 @@ import (
 //nolint:lll // no linebreaks available for struct tags
 type Coco struct {
 	Type         ConfigType `yaml:"type" doc:"msg=type of the configuration file,req,o=environment,o=component"`
-	Values       []string   `yaml:"values" doc:"msg=list of .yaml files relative to the config file without file ending, opt,"`
+	Values       []string   `yaml:"values" doc:"msg=list relative paths to config files, req=for environments only"`
 	Name         string     `yaml:"name" doc:"msg=name of component or environment,req"`
-	Dependencies []string   `yaml:"dependencies" doc:"msg=list of dependencies, opt"`
+	Dependencies []string   `yaml:"dependencies" doc:"msg=list of components that this component depends on, req=for components only"`
 }
 
 // Types of config files.

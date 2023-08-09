@@ -1,11 +1,9 @@
 package generate
 
 import (
-	"bytes"
 	"path/filepath"
 
 	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/inputfile"
-	"gopkg.in/yaml.v3"
 )
 
 func readValueFiles(
@@ -33,28 +31,22 @@ func readValueFiles(
 		}
 
 		dir := filepath.Dir(path)
-		var valueFilesForEnv []string
+		valueFilesForEnv := make([]string, 0, len(coco.Values))
 		for _, v := range coco.Values {
-			valueFilesForEnv = append(valueFilesForEnv, dir+"/"+v+".yaml")
+			valueFilesForEnv = append(valueFilesForEnv, filepath.Join(dir, v))
 		}
 
 		merged, err := mergeValues(valueFilesForEnv)
 		if err != nil {
 			return nil, err
 		}
-		var renderedData bytes.Buffer
-		err = merged.Encode(&renderedData, 2)
-		if err != nil {
-			return nil, err
-		}
 
 		var finalValues interface{}
-		finalValuesDecoder := yaml.NewDecoder(bytes.NewReader(renderedData.Bytes()))
-
-		err = finalValuesDecoder.Decode(&finalValues)
+		err = merged.Decode(&finalValues)
 		if err != nil {
 			return nil, err
 		}
+		res[coco.Name] = finalValues
 
 		res[coco.Name] = finalValues
 	}

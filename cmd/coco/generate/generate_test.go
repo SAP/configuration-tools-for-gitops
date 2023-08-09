@@ -58,13 +58,13 @@ parse:
 type: environment
 name: c1
 values:
-  - v1
+  - v1.yaml
 `),
 			"values/c2/coco.yaml": []byte(`
 type: environment
 name: c2
 values:
-  - v1
+  - v1.yaml
 `),
 			"values/c1/v1.yaml": []byte(`
 value1: v1
@@ -111,7 +111,7 @@ ifKey: parse
 type: environment
 name: values
 values: 
-  - c1
+  - c1.yaml
 `),
 			"values/c1.yaml": []byte(`value1: fromValues-1`),
 		},
@@ -153,7 +153,7 @@ values:
 			"values/coco.yaml": []byte(`
 type: environment
 values:
-  - c1`),
+  - c1.yaml`),
 			"values/c1.yaml": []byte(`value1: fromValues-1`),
 		},
 		logs:    []logItem{},
@@ -205,7 +205,7 @@ test2: {{.test2}}`),
 type: environment
 name: env1
 values: 
-  - value1`),
+  - value1.yaml`),
 			"services/a/values/value1.yaml": []byte(`
 test: v1
 test2: v2`),
@@ -230,14 +230,14 @@ keyInBothFolders: {{.value3}}
 type: environment
 name: c1
 values:
-  - v1
+  - v1.yaml
 `),
 			"values/c1/c2/coco.yaml": []byte(`
 type: environment
 name: c2
 values:
-  - ../v1
-  - v1
+  - ../v1.yaml
+  - v1.yaml
 `),
 			"values/c1/v1.yaml": []byte(`
 keyInParentFolder: v1

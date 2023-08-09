@@ -51,13 +51,16 @@ func constructGraph(path, depFileName string) (
 		}
 
 		df, err := inputfile.Load(p)
-		if !df.IsComponent() {
-			continue
-		}
 		if err != nil {
 			return downToUp, componentPaths, err
 		}
-		if err := unmarshal(f.Content, &df); err != nil {
+
+		if !df.IsComponent() {
+			continue
+		}
+
+		err = unmarshal(f.Content, &df)
+		if err != nil {
 			return downToUp, componentPaths, err
 		}
 

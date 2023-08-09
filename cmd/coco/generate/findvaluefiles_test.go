@@ -55,14 +55,14 @@ k33: v33
 type: environment
 name: name1
 values: 
-  - file1
-  - file2
+  - file1.yaml
+  - file2.yaml
 `),
 			"values/env2/coco.yaml": []byte(`
 type: environment
 name: name2
 values: 
-  - file3
+  - file3.yaml
 `),
 		},
 		wantFiles: map[string][]byte{
@@ -79,7 +79,7 @@ k33: v33
 		wantErr: nil,
 	},
 	{
-		title:          "working general example",
+		title:          "working general example with different values directories",
 		includeFilters: []string{"${BASEPATH}/values/", "${BASEPATH}/values2/"},
 		excludeFilters: []string{".tmpl"},
 		files: map[string][]byte{
@@ -103,14 +103,14 @@ k33: v33
 type: environment
 name: name1
 values: 
-  - file1
-  - file2
+  - file1.yaml
+  - file2.yaml
 `),
 			"values2/env/coco.yaml": []byte(`
 type: environment
 name: name2
 values: 
-  - file3
+  - file3.yaml
 `),
 		},
 		wantFiles: map[string][]byte{
