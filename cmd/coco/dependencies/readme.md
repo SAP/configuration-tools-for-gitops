@@ -6,6 +6,7 @@ the `git.path`. A component is identified by a `coco.yaml` file with the format:
 ```yaml
 # coco.yaml content
 
+type: component
 name: name of the component
 dependencies:
   - list of

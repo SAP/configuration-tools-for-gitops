@@ -2,8 +2,12 @@ package generate
 
 import (
 	"bytes"
+	"fmt"
 	"reflect"
 	"testing"
+
+	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/inputfile"
+	"github.com/SAP/configuration-tools-for-gitops/pkg/maputils"
 
 	"github.com/SAP/configuration-tools-for-gitops/pkg/testfuncs"
 	"gopkg.in/yaml.v3"
@@ -18,6 +22,11 @@ type scenarioValueFiles struct {
 	wantErr        error
 }
 
+var (
+	allConfigTypes = maputils.KeysSorted(inputfile.AllConfigTypes)
+	configFileName = "coco.yaml"
+)
+
 var scenariosValueFiles = []scenarioValueFiles{
 	{
 		title:          "working general example",
@@ -28,27 +37,47 @@ var scenariosValueFiles = []scenarioValueFiles{
 			"folder/name.tmpl":               nil,
 			"values/.tmpl/test":              nil,
 			"values/name.tmpl":               nil,
-			"values/file1.yaml":              []byte(`k1: v1`),
-			"values/file2": []byte(`
+			"values/env1/file1.yaml":         []byte(`k1: v1`),
+			"values/env1/file2.yaml": []byte(`
 k2: v2
 k22: v22
 `),
-			"values2/file3": nil,
-			"values2/file4": nil,
-			"values3/file3": nil,
-			"values3/file4": nil,
+			"values2/env2/file3": nil,
+			"values2/env2/file4": nil,
+			"values/env2/file3.yaml": []byte(`
+k3: v3
+k33: v33
+`),
+			"values/env2/file4.yaml": []byte(`k4: v4`),
+			"values/env1/coco.yaml": []byte(`
+type: environment
+name: name1
+values: 
+  - file1.yaml
+  - file2.yaml
+`),
+			"values/env2/coco.yaml": []byte(`
+type: environment
+name: name2
+values: 
+  - file3.yaml
+`),
 		},
 		wantFiles: map[string][]byte{
-			"file1": []byte(`k1: v1`),
-			"file2": []byte(`
+			"name1": []byte(`
+k1: v1
 k2: v2
 k22: v22
+`),
+			"name2": []byte(`
+k3: v3
+k33: v33
 `),
 		},
 		wantErr: nil,
 	},
 	{
-		title:          "working general example",
+		title:          "working general example with different values directories",
 		includeFilters: []string{"${BASEPATH}/values/", "${BASEPATH}/values2/"},
 		excludeFilters: []string{".tmpl"},
 		files: map[string][]byte{
@@ -56,26 +85,60 @@ k22: v22
 			"folder/name.tmpl":               nil,
 			"values/.tmpl/test":              nil,
 			"values/name.tmpl":               nil,
-			"values/file1":                   []byte(`k1: v1`),
-			"values/file2": []byte(`
+			"values/env1/file1.yaml":         []byte(`k1: v1`),
+			"values/env1/file2.yaml": []byte(`
 k2: v2
 k22: v22
 `),
-			"values2/file3": []byte(`k3: v3`),
-			"values2/file4": []byte(`k4: v4`),
-			"values3/file3": nil,
-			"values3/file4": nil,
+			"values/env2/file3": nil,
+			"values/env2/file4": nil,
+			"values2/env/file3.yaml": []byte(`
+k3: v3
+k33: v33
+`),
+			"values2/env/file4.yaml": []byte(`k4: v4`),
+			"values/env1/coco.yaml": []byte(`
+type: environment
+name: name1
+values: 
+  - file1.yaml
+  - file2.yaml
+`),
+			"values2/env/coco.yaml": []byte(`
+type: environment
+name: name2
+values: 
+  - file3.yaml
+`),
 		},
 		wantFiles: map[string][]byte{
-			"file1": []byte(`k1: v1`),
-			"file2": []byte(`
+			"name1": []byte(`
+k1: v1
 k2: v2
 k22: v22
 `),
-			"file3": []byte(`k3: v3`),
-			"file4": []byte(`k4: v4`),
+			"name2": []byte(`
+k3: v3
+k33: v33
+`),
 		},
 		wantErr: nil,
+	},
+	{
+		title:          "Unsupported coco type",
+		includeFilters: []string{"${BASEPATH}/values/", "${BASEPATH}/values2/"},
+		excludeFilters: []string{".tmpl"},
+		files: map[string][]byte{
+			"values/coco.yaml": []byte(`
+type: unsupportedType
+`),
+		},
+		wantFiles: nil,
+		wantErr: fmt.Errorf(
+			"unsupported type: %q, available options: %+v",
+			"unsupportedType",
+			allConfigTypes,
+		),
 	},
 }
 
@@ -95,14 +158,17 @@ func (s *scenarioValueFiles) Test(t *testing.T) {
 	defer td.Cleanup(t)
 	tmpDir := td.Path()
 
-	got, err := readValueFiles(tmpDir, s.includeFilters, []string{}, s.excludeFilters)
+	got, err := readValueFiles(tmpDir, configFileName, s.includeFilters, []string{}, s.excludeFilters)
 	testfuncs.CheckErrs(t, s.wantErr, err)
 
 	s.CheckRes(t, tmpDir, got)
 }
 
 func (s *scenarioValueFiles) CheckRes(t *testing.T, basedir string, got map[string]interface{}) {
-	expected := make(map[string]interface{}, len(s.wantFiles))
+	var expected map[string]interface{}
+	if len(s.wantFiles) > 0 {
+		expected = make(map[string]interface{}, len(s.wantFiles))
+	}
 
 	for name, rawValues := range s.wantFiles {
 		d := yaml.NewDecoder(bytes.NewReader(rawValues))
