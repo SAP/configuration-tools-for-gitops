@@ -225,11 +225,13 @@ func (m mockGraph) unmarshal(in []byte, out interface{}) error {
 	return yaml.Unmarshal(in, out)
 }
 
-func (m mockGraph) readDeps(path,
+func (m mockGraph) readDeps(
+	path,
 	depFileName string,
 	includeOr,
 	includeAnd,
-	exclude []string) (map[string]files.File, error) {
+	exclude []string,
+) (map[string]files.File, error) {
 	if m.rd != nil {
 		return nil, m.rd
 	}
