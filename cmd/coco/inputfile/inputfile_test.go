@@ -174,21 +174,27 @@ values:
 	},
 }
 
-func TestInputfile(t *testing.T) {
+func TestFindAll(t *testing.T) {
+	if err := log.Init(log.Debug(), "", true); err != nil {
+		zap.S().Fatal(err)
+	}
+	for _, i := range inputsFindAll {
+		t.Logf("test scenario: %s\n", i.title)
+		i.findAll(t)
+	}
+}
+
+func TestLoad(t *testing.T) {
 	if err := log.Init(log.Debug(), "", true); err != nil {
 		zap.S().Fatal(err)
 	}
 	for _, i := range inputfiles {
 		t.Logf("test scenario: %s\n", i.title)
-		i.Test(t)
-	}
-	for _, i := range inputsFindAll {
-		t.Logf("test scenario: %s\n", i.title)
-		i.FindTest(t)
+		i.load(t)
 	}
 }
 
-func (i *inputFindAll) FindTest(t *testing.T) {
+func (i *inputFindAll) findAll(t *testing.T) {
 	td, err := testfuncs.PrepareTestDirTree(i.input)
 	if err != nil {
 		t.Logf("unable to create test dir tree: %v\n", err)
@@ -214,7 +220,7 @@ func (i *inputFindAll) FindTest(t *testing.T) {
 	}
 }
 
-func (i inputfile) Test(t *testing.T) {
+func (i inputfile) load(t *testing.T) {
 	td, err := testfuncs.PrepareTestDirTree(i.input)
 	if err != nil {
 		t.Logf("unable to create test dir tree: %v\n", err)
