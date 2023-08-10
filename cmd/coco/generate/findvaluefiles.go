@@ -20,7 +20,6 @@ func readValueFiles(
 			continue
 		}
 
-		var coco inputfile.Coco
 		coco, err := inputfile.Load(path)
 		if err != nil {
 			return nil, err
