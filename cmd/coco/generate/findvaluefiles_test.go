@@ -4,12 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"reflect"
-	"sort"
 	"testing"
 
 	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/inputfile"
 	"github.com/SAP/configuration-tools-for-gitops/pkg/maputils"
-	"github.com/spf13/viper"
 
 	"github.com/SAP/configuration-tools-for-gitops/pkg/testfuncs"
 	"gopkg.in/yaml.v3"
@@ -25,7 +23,7 @@ type scenarioValueFiles struct {
 }
 
 var (
-	allConfigTypes = sortConfigTypes(maputils.Keys(inputfile.AllConfigTypes))
+	allConfigTypes = maputils.KeysSorted(inputfile.AllConfigTypes)
 	configFileName = "coco.yaml"
 )
 
@@ -145,7 +143,6 @@ type: unsupportedType
 }
 
 func TestFindValueFiles(t *testing.T) {
-	fmt.Println(viper.GetString("component.cfg"))
 	for _, s := range scenariosValueFiles {
 		t.Logf("test scenario: %s\n", s.title)
 		s.Test(t)
@@ -188,11 +185,4 @@ func (s *scenarioValueFiles) CheckRes(t *testing.T, basedir string, got map[stri
 		)
 		t.Fail()
 	}
-}
-
-func sortConfigTypes(a []inputfile.ConfigType) []inputfile.ConfigType {
-	sort.Slice(a, func(i, j int) bool {
-		return a[i] < a[j]
-	})
-	return a
 }
