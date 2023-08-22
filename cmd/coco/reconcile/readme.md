@@ -64,7 +64,13 @@ token. The token must be stored in the GITHUB_TOKEN environment variable.
 ## Example
 
 ```shell
-coco reconcile --source main --target dev --owner myorg --repo myrepo --target-remote https://github.com/<target-remote-url>.git --source-remote https://github.com/<source-remote-url>.git
+coco reconcile \
+  --source main \
+  --target dev \
+  --owner myorg \
+  --repo myrepo \
+  --target-remote https://github.com/<target-remote-url>.git \
+  --source-remote https://github.com/<source-remote-url>.git
 ```
 
 This will reconcile the `origin/dev` branch with the `origin/main` branch in the

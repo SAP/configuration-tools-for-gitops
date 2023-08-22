@@ -58,8 +58,7 @@ func New(
 	// target is base and source is head
 
 	if targetBranch.Remote != sourceBranch.Remote {
-		err := differentRemotes(targetBranch, sourceBranch, token, logger)
-		if err != nil {
+		if err := differentRemotes(targetBranch, sourceBranch, token, logger); err != nil {
 			return nil, err
 		}
 	}
@@ -87,11 +86,11 @@ func (r *Client) Reconcile(force bool) error {
 }
 
 func differentRemotes(targetBranch, sourceBranch BranchConfig, token string, logger Logger) error {
-	// 		clone target repo [x]
-	// 		add source repo as remote [x]
-	// 		git fetch [remote-name] [x]
-	// 		git branch remote-replica/[sourceBranch] [remote-name]/[sourceBranch] [x]
-	// 		git push origin remote-replica/[sourceBranch] [x]
+	// 		1. clone target repo
+	// 		2. add source repo as remote
+	// 		3. git fetch [remote-name]
+	// 		4. git branch remote-replica/[sourceBranch] [remote-name]/[sourceBranch]
+	// 		5. git push origin remote-replica/[sourceBranch]
 	logger.Debugf("target and source have different remotes")
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -99,7 +98,7 @@ func differentRemotes(targetBranch, sourceBranch BranchConfig, token string, log
 	}
 	// avoided utilizing a temporary directory due to the high frequency of deletion,
 	// necessitating numerous repo cloning operations.
-	targetPath := fmt.Sprintf("%s/reconcile/target/%s", homeDir, targetBranch.Name)
+	targetPath := fmt.Sprintf("%s/.coco-cache/reconcile/target/%s", homeDir, targetBranch.Name)
 	err = os.MkdirAll(targetPath, allAllowed)
 	if err != nil {
 		return err
@@ -147,9 +146,7 @@ func differentRemotes(targetBranch, sourceBranch BranchConfig, token string, log
 	// If the remotes are different, add the remote repository of the 'source' branch
 	remoteName := fmt.Sprintf("reconcile/source/%s", sourceBranch.Name)
 
-	err = gitCreateRemote(targetRepo, sourceBranch.Remote, remoteName)
-
-	if err != nil {
+	if err := gitCreateRemote(targetRepo, sourceBranch.Remote, remoteName); err != nil {
 		return err
 	}
 
@@ -162,11 +159,11 @@ func differentRemotes(targetBranch, sourceBranch BranchConfig, token string, log
 		return err
 	}
 
-	// Create replica of source in target repo
-	return createReplica(targetRepo, sourceBranch, remoteName, token)
+	// Replicate the branch from the source repository into the target repository
+	return copyBranch(targetRepo, sourceBranch, remoteName, token)
 }
 
-func createReplica(targetRepo *git.Repository, sourceBranch BranchConfig, remoteName, token string) error {
+func copyBranch(targetRepo *git.Repository, sourceBranch BranchConfig, remoteName, token string) error {
 	replicaBranchName := plumbing.NewBranchReferenceName(fmt.Sprintf("remote-replica/%s", sourceBranch.Name))
 	var sourceRef *plumbing.Reference
 	refs, err := targetRepo.References()
@@ -183,17 +180,15 @@ func createReplica(targetRepo *git.Repository, sourceBranch BranchConfig, remote
 		return err
 	}
 	ref := plumbing.NewHashReference(replicaBranchName, sourceRef.Hash())
-	err = targetRepo.Storer.SetReference(ref)
-	if err != nil {
+	if err := targetRepo.Storer.SetReference(ref); err != nil {
 		return err
 	}
-	err = gitPush(targetRepo, &git.PushOptions{
+	return gitPush(targetRepo, &git.PushOptions{
 		RemoteName: "origin",
 		Auth:       &githttp.BasicAuth{Username: notUsed, Password: token},
 		Progress:   os.Stdout,
 		Force:      true,
 	})
-	return err
 }
 
 func (r *Client) merge(force bool) error {
@@ -265,9 +260,7 @@ func (r *Client) handleExistingReconcileBranch(
 
 func (r *Client) handleNewReconcileBranch() error {
 	// Create a new branch reconcile branch from target branch
-	fmt.Println(r.target.Name)
 	target, err := r.client.GetBranchRef(r.target.Name)
-	fmt.Println(target.String())
 	if err != nil {
 		return fmt.Errorf("failed to get target branch reference: %w", err)
 	}

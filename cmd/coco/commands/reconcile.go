@@ -42,12 +42,12 @@ func newReconcile() *cobra.Command {
 			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			checkEmptyString(sourceBranch, "source and target branches must be specified")
-			checkEmptyString(targetBranch, "source and target branches must be specified")
-			checkEmptyString(sourceRemote, "source and target remotes must be specified")
-			checkEmptyString(targetRemote, "source and target remotes must be specified")
-			checkEmptyString(owner, "owner name and repository name must be specified")
-			checkEmptyString(repo, "owner name and repository name must be specified")
+			checkEmptyString(sourceBranch, "source branch must be specified")
+			checkEmptyString(targetBranch, "target branch must be specified")
+			checkEmptyString(sourceRemote, "source remote must be specified")
+			checkEmptyString(targetRemote, "target remote must be specified")
+			checkEmptyString(owner, "owner name must be specified")
+			checkEmptyString(repo, "repository name must be specified")
 
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
