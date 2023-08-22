@@ -1,44 +1,53 @@
 package generate
 
 import (
-	"bytes"
 	"path/filepath"
-	"strings"
 
-	"github.com/SAP/configuration-tools-for-gitops/pkg/files"
-	"gopkg.in/yaml.v3"
+	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/inputfile"
 )
 
 func readValueFiles(
-	basepath string,
+	basepath, configFileName string,
 	includeOr, includeAnd, exclude []string,
 ) (map[string]interface{}, error) {
-	fileRunner := files.New(basepath).
-		Include(files.OR, includeOr).
-		Include(files.AND, includeAnd).
-		Exclude(files.OR, exclude).
-		ReadContent()
-
-	if len(includeAnd) > 0 {
-		fileRunner = fileRunner.Include(files.AND, includeAnd)
-	}
-	vFiles, err := fileRunner.Execute()
+	valueFiles, err := inputfile.FindAll(basepath, configFileName, includeOr, includeAnd, exclude)
 	if err != nil {
 		return nil, err
 	}
-	valueFiles := vFiles.Content()
 	res := make(map[string]interface{}, len(valueFiles))
 	for path, file := range valueFiles {
 		if file.IsDir {
 			continue
 		}
-		d := yaml.NewDecoder(bytes.NewReader(file.Content))
-		var values interface{}
-		err := d.Decode(&values)
+
+		coco, err := inputfile.Load(path)
 		if err != nil {
 			return nil, err
 		}
-		res[strings.Replace(filepath.Base(path), ".yaml", "", 1)] = values
+
+		if !coco.IsEnvironment() {
+			continue
+		}
+
+		dir := filepath.Dir(path)
+		valueFilesForEnv := make([]string, 0, len(coco.Values))
+		for _, v := range coco.Values {
+			valueFilesForEnv = append(valueFilesForEnv, filepath.Join(dir, v))
+		}
+
+		merged, err := mergeValues(valueFilesForEnv)
+		if err != nil {
+			return nil, err
+		}
+
+		var finalValues interface{}
+		err = merged.Decode(&finalValues)
+		if err != nil {
+			return nil, err
+		}
+		res[coco.Name] = finalValues
+
+		res[coco.Name] = finalValues
 	}
 	return res, nil
 }
