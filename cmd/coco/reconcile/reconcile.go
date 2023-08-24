@@ -146,7 +146,8 @@ func differentRemotes(targetBranch, sourceBranch BranchConfig, token string, log
 	// If the remotes are different, add the remote repository of the 'source' branch
 	remoteName := fmt.Sprintf("reconcile/source/%s", sourceBranch.Name)
 
-	if err := gitCreateRemote(targetRepo, sourceBranch.Remote, remoteName); err != nil {
+	err = gitCreateRemote(targetRepo, sourceBranch.Remote, remoteName)
+	if err != nil {
 		return err
 	}
 
