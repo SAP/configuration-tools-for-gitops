@@ -3,17 +3,27 @@ package reconcile
 import (
 	"context"
 	"fmt"
+
 	"net/http"
+	"os"
 
 	"github.com/SAP/configuration-tools-for-gitops/pkg/github"
 	"github.com/SAP/configuration-tools-for-gitops/pkg/terminal"
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/plumbing"
+	githttp "github.com/go-git/go-git/v5/plumbing/transport/http"
 	gogithub "github.com/google/go-github/v51/github"
 )
 
+type BranchConfig struct {
+	Name   string
+	Remote string
+}
 type Client struct {
 	client              github.Interface
-	target              string
-	source              string
+	target              BranchConfig
+	source              BranchConfig
 	reconcileBranchName string
 	owner               string
 	repo                string
@@ -26,12 +36,17 @@ type Logger interface {
 	Infof(template string, args ...interface{})
 }
 
+const (
+	notUsed    = "notUsed"
+	allAllowed = 0777
+)
+
 func New(
-	ctx context.Context,
-	sourceBranch, targetBranch, owner, repo, token, githubBaseURL string,
+	ctx context.Context, owner, repo, token, githubBaseURL string,
+	targetBranch, sourceBranch BranchConfig,
 	logger Logger,
 ) (*Client, error) {
-	reconcileBranchName := fmt.Sprintf("reconcile/%s-%s", sourceBranch, targetBranch)
+	reconcileBranchName := fmt.Sprintf("reconcile/%s-%s", sourceBranch.Name, targetBranch.Name)
 
 	// Authenticate with Github
 	isEnterprise := false
@@ -41,6 +56,13 @@ func New(
 		isEnterprise = true
 	}
 	// target is base and source is head
+
+	if targetBranch.Remote != sourceBranch.Remote {
+		if err := differentRemotes(targetBranch, sourceBranch, token, logger); err != nil {
+			return nil, err
+		}
+	}
+
 	client, err := githubClient(ctx, token, owner, repo, githubBaseURL, isEnterprise)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authenticate with Github: %w", err)
@@ -57,11 +79,122 @@ func New(
 }
 
 func (r *Client) Reconcile(force bool) error {
+	if r.target.Remote != r.source.Remote {
+		return nil
+	}
 	return r.merge(force)
 }
 
+func differentRemotes(targetBranch, sourceBranch BranchConfig, token string, logger Logger) error {
+	// 		1. clone target repo
+	// 		2. add source repo as remote
+	// 		3. git fetch [remote-name]
+	// 		4. git branch remote-replica/[sourceBranch] [remote-name]/[sourceBranch]
+	// 		5. git push origin remote-replica/[sourceBranch]
+	logger.Debugf("target and source have different remotes")
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+	// avoided utilizing a temporary directory due to the high frequency of deletion,
+	// necessitating numerous repo cloning operations.
+	targetPath := fmt.Sprintf("%s/.coco-cache/reconcile/target/%s", homeDir, targetBranch.Name)
+	err = os.MkdirAll(targetPath, allAllowed)
+	if err != nil {
+		return err
+	}
+
+	targetRepo, err := gitClone(targetPath, false, &git.CloneOptions{
+		URL:             targetBranch.Remote,
+		Auth:            &githttp.BasicAuth{Username: notUsed, Password: token},
+		RemoteName:      "origin",
+		ReferenceName:   plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", targetBranch.Name)),
+		Tags:            0,
+		InsecureSkipTLS: false,
+		CABundle:        []byte{},
+		Progress:        os.Stdout,
+	})
+	if err == git.ErrRepositoryAlreadyExists {
+		logger.Debugf("Target repository already exists")
+	} else if err != nil {
+		return err
+	}
+
+	if targetRepo == nil {
+		targetRepo, err = gitOpen(targetPath)
+		if err != nil {
+			return err
+		}
+	}
+
+	worktree, err := targetRepo.Worktree()
+	if err != nil {
+		return err
+	}
+	err = gitPull(worktree, &git.PullOptions{
+		Auth:          &githttp.BasicAuth{Username: notUsed, Password: token},
+		RemoteName:    "origin",
+		ReferenceName: plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", targetBranch.Name)),
+		Progress:      os.Stdout,
+	})
+	if err == git.NoErrAlreadyUpToDate {
+		logger.Debugf("Target branch is already up to date")
+	} else if err != nil {
+		return err
+	}
+
+	// If the remotes are different, add the remote repository of the 'source' branch
+	remoteName := fmt.Sprintf("reconcile/source/%s", sourceBranch.Name)
+
+	err = gitCreateRemote(targetRepo, sourceBranch.Remote, remoteName)
+	if err != nil {
+		return err
+	}
+
+	// Fetch the source branch from the added remote
+	err = gitFetch(targetRepo, &git.FetchOptions{
+		Auth:       &githttp.BasicAuth{Username: notUsed, Password: token},
+		RemoteName: remoteName,
+	})
+	if err != nil && err != git.NoErrAlreadyUpToDate {
+		return err
+	}
+
+	// Replicate the branch from the source repository into the target repository
+	return copyBranch(targetRepo, sourceBranch, remoteName, token)
+}
+
+func copyBranch(targetRepo *git.Repository, sourceBranch BranchConfig, remoteName, token string) error {
+	replicaBranchName := plumbing.NewBranchReferenceName(fmt.Sprintf("remote-replica/%s", sourceBranch.Name))
+	var sourceRef *plumbing.Reference
+	refs, err := targetRepo.References()
+	if err != nil {
+		return err
+	}
+	err = refs.ForEach(func(ref *plumbing.Reference) error {
+		if ref.Name() == plumbing.ReferenceName(fmt.Sprintf("refs/remotes/%s/%s", remoteName, sourceBranch.Name)) {
+			sourceRef = ref
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	ref := plumbing.NewHashReference(replicaBranchName, sourceRef.Hash())
+	if err := targetRepo.Storer.SetReference(ref); err != nil {
+		return err
+	}
+	return gitPush(targetRepo, &git.PushOptions{
+		RemoteName: "origin",
+		Auth:       &githttp.BasicAuth{Username: notUsed, Password: token},
+		Progress:   os.Stdout,
+		Force:      true,
+	})
+}
+
 func (r *Client) merge(force bool) error {
-	success, err := r.client.MergeBranches(r.target, r.source)
+	// perform merge source -> target
+	success, err := r.client.MergeBranches(r.target.Name, r.source.Name)
 	if err == nil {
 		if !success {
 			return r.handleMergeConflict(force)
@@ -109,7 +242,7 @@ func (r *Client) handleExistingReconcileBranch(
 	reconcileBranch *gogithub.Branch, force bool,
 ) (bool, error) {
 	// Compare the latest target branch and reconcile branch
-	target, status, err := r.client.GetBranch(r.target)
+	target, status, err := r.client.GetBranch(r.target.Name)
 	if err != nil || status != http.StatusOK {
 		return false, fmt.Errorf("failed to get target branch: %w", err)
 	}
@@ -128,7 +261,7 @@ func (r *Client) handleExistingReconcileBranch(
 
 func (r *Client) handleNewReconcileBranch() error {
 	// Create a new branch reconcile branch from target branch
-	target, err := r.client.GetBranchRef(r.target)
+	target, err := r.client.GetBranchRef(r.target.Name)
 	if err != nil {
 		return fmt.Errorf("failed to get target branch reference: %w", err)
 	}
@@ -137,7 +270,7 @@ func (r *Client) handleNewReconcileBranch() error {
 	}
 	r.logger.Debugf("Created new reconcile branch from %s", r.target)
 
-	pr, err := r.client.CreatePullRequest(r.source, r.reconcileBranchName)
+	pr, err := r.client.CreatePullRequest(r.source.Name, r.reconcileBranchName)
 	if err != nil {
 		return fmt.Errorf("failed to create a draft PR: %w", err)
 	}
@@ -152,7 +285,7 @@ func (r *Client) checkMergeability() (bool, error) {
 	}
 	var pr *gogithub.PullRequest
 	for _, p := range prs {
-		if p.Head.GetRef() == r.source && p.Base.GetRef() == r.reconcileBranchName {
+		if p.Head.GetRef() == r.source.Name && p.Base.GetRef() == r.reconcileBranchName {
 			pr = p
 			break
 		}
@@ -160,7 +293,7 @@ func (r *Client) checkMergeability() (bool, error) {
 	if pr == nil {
 		r.logger.Infof("the pull request was not found")
 
-		pr, err = r.client.CreatePullRequest(r.source, r.reconcileBranchName)
+		pr, err = r.client.CreatePullRequest(r.source.Name, r.reconcileBranchName)
 		if err != nil {
 			return false, fmt.Errorf("failed to create a draft PR: %w", err)
 		}
@@ -205,4 +338,44 @@ var (
 	githubClient  = github.New
 	printTerminal = terminal.Output
 	confirmed     = terminal.IsYes
+	gitClone      = git.PlainClone
+	gitOpen       = git.PlainOpen
 )
+
+var gitPull = func(worktree *git.Worktree, o *git.PullOptions) error {
+	return worktree.Pull(o)
+}
+
+var gitFetch = func(repo *git.Repository, o *git.FetchOptions) error {
+	return repo.Fetch(o)
+}
+
+var gitPush = func(repo *git.Repository, o *git.PushOptions) error {
+	return repo.Push(o)
+}
+
+var gitCreateRemote = func(repo *git.Repository, remoteURL, remoteName string) error {
+	remotes, err := repo.Remotes()
+	if err != nil {
+		return err
+	}
+	remoteExists := false
+
+	for _, remote := range remotes {
+		if remoteName == remote.Config().Name {
+			remoteExists = true
+		}
+	}
+
+	if !remoteExists {
+		_, err = repo.CreateRemote(&config.RemoteConfig{
+			Name: remoteName,
+			URLs: []string{remoteURL},
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
