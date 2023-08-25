@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/maputils"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/testfuncs"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/log"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/maputils"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/testfuncs"
 	"go.uber.org/zap"
 )
 
@@ -95,13 +95,13 @@ var inputsFindAll = []inputFindAll{
 			"values/env1/coco.yaml": []byte(`
 type: environment
 name: env1
-values: 
+values:
   - v1.yaml
   - v11.yaml`),
 			"values/env2/coco.yaml": []byte(`
 type: environment
 name: env2
-values: 
+values:
   - v2.yaml
   - v22.yaml`),
 			"dependencies/coco.yaml": []byte(`
@@ -118,13 +118,13 @@ dependencies:
 			"/values/env1/coco.yaml": []byte(`
 type: environment
 name: env1
-values: 
+values:
   - v1.yaml
   - v11.yaml`),
 			"/values/env2/coco.yaml": []byte(`
 type: environment
 name: env2
-values: 
+values:
   - v2.yaml
   - v22.yaml`),
 			"/dependencies/coco.yaml": []byte(`
@@ -143,13 +143,13 @@ dependencies:
 			"values/env1/coco.yaml": []byte(`
 type: environment
 name: env1
-values: 
+values:
   - v1.yaml
   - v11.yaml`),
 			"values/env2/custom.yaml": []byte(`
 type: environment
 name: env2
-values: 
+values:
   - v2.yaml
   - v22.yaml`),
 			"dependencies/coco.yaml": []byte(`
@@ -166,7 +166,7 @@ dependencies:
 			"/values/env2/custom.yaml": []byte(`
 type: environment
 name: env2
-values: 
+values:
   - v2.yaml
   - v22.yaml`),
 		},

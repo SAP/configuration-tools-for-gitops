@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/SAP/configuration-tools-for-gitops/pkg/testfuncs"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/yamlfile"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/testfuncs"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/yamlfile"
 	"gopkg.in/yaml.v3"
 )
 
@@ -245,14 +245,14 @@ k4:
 		title: "array nested object merge",
 		from: []byte(strings.TrimSpace(`
 - nested1: n1
-- nested2: 
+- nested2:
     - nn1: n1
     - nn2: !HumanInput n2
-- nested3: !HumanInput 
+- nested3: !HumanInput
     l2:
       - nn1: n1
       - nn2: n2
-- nested4: !HumanInput 
+- nested4: !HumanInput
     l21: n1
     l22: n2
 `)),
@@ -266,7 +266,7 @@ k4:
     l2:
       - nn1: o1
       - nn2: o2
-- nested4: 
+- nested4:
     l21: o1
     l22: o2
 `)),
@@ -403,12 +403,12 @@ key3: o3
 	{
 		title: "merge non existent submap",
 		from: []byte(strings.TrimSpace(`
-k: 
+k:
   nested: !HumanInput n1
 `)),
 		selectiveFlag: "HumanInput",
 		into: []byte(strings.TrimSpace(`
-v: 
+v:
   exists: o1
 `)),
 		want: `

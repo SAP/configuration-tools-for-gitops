@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/SAP/configuration-tools-for-gitops/pkg/terminal"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/terminal"
 	gogithub "github.com/google/go-github/v51/github"
 	"golang.org/x/oauth2"
 )

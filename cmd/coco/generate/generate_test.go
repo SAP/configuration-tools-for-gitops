@@ -9,9 +9,9 @@ import (
 
 	// The Generate function makes use of the general CLI logger. Hence its test
 	// needs to set it up correctly to test logging output as well.
-	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/testfuncs"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/version"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/log"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/testfuncs"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/version"
 	"go.uber.org/zap"
 )
 
@@ -110,7 +110,7 @@ ifKey: parse
 			"values/coco.yaml": []byte(`
 type: environment
 name: values
-values: 
+values:
   - c1.yaml
 `),
 			"values/c1.yaml": []byte(`value1: fromValues-1`),
@@ -204,7 +204,7 @@ test2: {{.test2}}`),
 			"services/a/values/coco.yaml": []byte(`
 type: environment
 name: env1
-values: 
+values:
   - value1.yaml`),
 			"services/a/values/value1.yaml": []byte(`
 test: v1

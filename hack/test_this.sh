@@ -13,6 +13,6 @@ cmd=(go test -timeout 30s -v -race)
 if [[ "${testFunc}" != "" ]]; then
 	cmd+=(-run "^${testFunc}$")
 fi
-cmd+=("github.com/SAP/configuration-tools-for-gitops/${package}")
+cmd+=("github.com/SAP/configuration-tools-for-gitops/v2/${package}")
 echo "${cmd[*]}"
 eval $(echo "${cmd[*]}")

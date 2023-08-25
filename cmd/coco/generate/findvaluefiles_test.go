@@ -6,10 +6,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/inputfile"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/maputils"
+	"github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/inputfile"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/maputils"
 
-	"github.com/SAP/configuration-tools-for-gitops/pkg/testfuncs"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/testfuncs"
 	"gopkg.in/yaml.v3"
 )
 
@@ -52,14 +52,14 @@ k33: v33
 			"values/env1/coco.yaml": []byte(`
 type: environment
 name: name1
-values: 
+values:
   - file1.yaml
   - file2.yaml
 `),
 			"values/env2/coco.yaml": []byte(`
 type: environment
 name: name2
-values: 
+values:
   - file3.yaml
 `),
 		},
@@ -100,14 +100,14 @@ k33: v33
 			"values/env1/coco.yaml": []byte(`
 type: environment
 name: name1
-values: 
+values:
   - file1.yaml
   - file2.yaml
 `),
 			"values2/env/coco.yaml": []byte(`
 type: environment
 name: name2
-values: 
+values:
   - file3.yaml
 `),
 		},

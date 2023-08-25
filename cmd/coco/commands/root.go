@@ -5,9 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/SAP/configuration-tools-for-gitops/pkg/git"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/version"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/git"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/log"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/version"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 

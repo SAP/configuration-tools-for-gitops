@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/SAP/configuration-tools-for-gitops/pkg/github"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/terminal"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/github"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/terminal"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"

@@ -3,9 +3,9 @@ package commands
 import (
 	"os"
 
-	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/dependencies"
-	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/graph"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
+	"github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/dependencies"
+	"github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/graph"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

@@ -5,9 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/generate"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/version"
+	"github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/generate"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/log"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"

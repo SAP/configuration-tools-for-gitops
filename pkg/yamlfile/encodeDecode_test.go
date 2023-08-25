@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/SAP/configuration-tools-for-gitops/pkg/testfuncs"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/yamlfile"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/testfuncs"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/yamlfile"
 )
 
 type scenarioDecodeEncode struct {
@@ -50,7 +50,7 @@ array:
 k: v
 k2:
   nested: value
-# comment 
+# comment
 array:
 - v1
 - v2  # human overwrite
@@ -71,7 +71,7 @@ array:
 		wantEncode: `k: v
 k2:
   nested: value
-# comment 
+# comment
 array:
   - v1
   - v2 # human overwrite
