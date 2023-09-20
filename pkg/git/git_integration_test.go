@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/testfuncs"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/log"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/testfuncs"
 )
 
 const (

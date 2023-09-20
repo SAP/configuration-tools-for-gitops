@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/SAP/configuration-tools-for-gitops/pkg/testfuncs"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/yamlfile"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/testfuncs"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/yamlfile"
 	"gopkg.in/yaml.v3"
 )
 

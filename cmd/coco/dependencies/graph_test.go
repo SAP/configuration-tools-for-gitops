@@ -5,12 +5,12 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/inputfile"
+	"github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/inputfile"
 
-	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/graph"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/files"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/testfuncs"
+	"github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/graph"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/files"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/log"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/testfuncs"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )

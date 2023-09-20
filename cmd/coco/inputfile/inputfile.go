@@ -3,8 +3,8 @@ package inputfile
 import (
 	"fmt"
 
-	"github.com/SAP/configuration-tools-for-gitops/pkg/files"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/maputils"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/files"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/maputils"
 	"gopkg.in/yaml.v3"
 )
 

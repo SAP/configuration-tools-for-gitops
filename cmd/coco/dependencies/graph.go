@@ -3,11 +3,11 @@ package dependencies
 import (
 	"path/filepath"
 
-	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/inputfile"
+	"github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/inputfile"
 
-	g "github.com/SAP/configuration-tools-for-gitops/cmd/coco/graph"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/files"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
+	g "github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/graph"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/files"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/log"
 	"gopkg.in/yaml.v3"
 )
 

@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"strconv"
 
-	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/log"
 )
 
 const (

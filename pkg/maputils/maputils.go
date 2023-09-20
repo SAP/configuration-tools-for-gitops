@@ -1,7 +1,7 @@
 package maputils
 
 import (
-	"github.com/SAP/configuration-tools-for-gitops/pkg/sliceutils"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/sliceutils"
 	"golang.org/x/exp/constraints"
 )
 

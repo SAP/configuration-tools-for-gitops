@@ -6,8 +6,8 @@ import (
 	"os"
 	gotemplate "text/template"
 
-	"github.com/SAP/configuration-tools-for-gitops/pkg/files"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/yamlfile"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/files"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/yamlfile"
 )
 
 var (

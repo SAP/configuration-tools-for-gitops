@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SAP/configuration-tools-for-gitops/pkg/github"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/github"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/log"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"

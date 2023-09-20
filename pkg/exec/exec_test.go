@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SAP/configuration-tools-for-gitops/pkg/exec"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/testfuncs"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/exec"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/testfuncs"
 )
 
 const (

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	g "github.com/SAP/configuration-tools-for-gitops/cmd/coco/graph"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/git"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
+	g "github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/graph"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/git"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/log"
 )
 
 type gitRepo interface {
