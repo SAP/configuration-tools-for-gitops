@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/log"
@@ -16,7 +17,11 @@ func bindFlag(fs *pflag.FlagSet, key, flag, env string) {
 
 func failOnError(err error, command string) {
 	if err != nil {
-		log.Sugar.Errorf("failed in command %q: %v", command, err)
+		if log.Sugar != nil {
+			log.Sugar.Errorf("failed in command %q: %v", command, err)
+		} else {
+			fmt.Printf("failed in command %q: %v\n", command, err)
+		}
 		os.Exit(1)
 	}
 }
