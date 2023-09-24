@@ -35,7 +35,7 @@ func newGraph() *cobra.Command {
 				viper.GetString(gitPathKey),
 				viper.GetString(componentCfg),
 			)
-			failOnError(fmt.Errorf("graph failed with: %s", err), "graph")
+			failOnError(err, "graph")
 			deps.Print(os.Stdout, format)
 		},
 	}
