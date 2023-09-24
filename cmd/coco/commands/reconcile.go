@@ -89,6 +89,7 @@ func newReconcile() *cobra.Command {
 
 	c.PersistentFlags().StringVar(&targetRemote, "target-remote", "origin", "The remote for the target branch.")
 
+	c.PersistentFlags().StringVar(&repositoryName, "repo", "", "The name of the gihtub repository.")
 	failOnError(
 		c.PersistentFlags().MarkDeprecated("repo", `please use "repository" flag instead.`),
 		"reconcile",
