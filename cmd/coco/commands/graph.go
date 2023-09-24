@@ -1,11 +1,11 @@
 package commands
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/dependencies"
 	"github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/graph"
-	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -27,8 +27,7 @@ func newGraph() *cobra.Command {
 			var ok bool
 			format, ok = graph.CastOutputFormat(rawFormat)
 			if !ok {
-				log.Sugar.Errorf("illegal format %q", rawFormat)
-				os.Exit(1)
+				failOnError(fmt.Errorf("illegal format %q", rawFormat), "graph")
 			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
@@ -36,10 +35,7 @@ func newGraph() *cobra.Command {
 				viper.GetString(gitPathKey),
 				viper.GetString(componentCfg),
 			)
-			if err != nil {
-				log.Sugar.Errorf("graph failed with: %s", err)
-				os.Exit(1)
-			}
+			failOnError(fmt.Errorf("graph failed with: %s", err), "graph")
 			deps.Print(os.Stdout, format)
 		},
 	}

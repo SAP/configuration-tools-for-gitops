@@ -1,13 +1,13 @@
 package commands
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 
 	"github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/dependencies"
 	"github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/graph"
-	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -48,8 +48,7 @@ func newDependencies() *cobra.Command {
 			var ok bool
 			format, ok = graph.CastOutputFormat(rawFormat)
 			if !ok {
-				log.Sugar.Errorf("illegal format %q", rawFormat)
-				os.Exit(1)
+				failOnError(fmt.Errorf("illegal format %q", rawFormat), "dependencies")
 			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
@@ -65,16 +64,11 @@ func newDependencies() *cobra.Command {
 				overWriteGitDepth, // viper.GetInt(gitDepth),
 				logLvl,
 			)
-			if err != nil {
-				log.Sugar.Errorf("dependency failed with: %s", err)
-				os.Exit(1)
-			}
+			failOnError(err, "dependencies")
 
 			writeTo, err := writeTarget(viper.GetString(gitPathKey), outputFile)
-			if err != nil {
-				log.Sugar.Errorf("dependency failed with: %s", err)
-				os.Exit(1)
-			}
+			failOnError(err, "dependencies")
+
 			changedDeps.Print(writeTo, format)
 		},
 	}
