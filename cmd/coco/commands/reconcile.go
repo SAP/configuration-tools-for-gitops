@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"os"
 	"time"
 
 	"github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/reconcile"
@@ -15,7 +14,7 @@ import (
 
 var (
 	owner          string
-	repo           string
+	repositoryName string
 	sourceRemote   string
 	targetRemote   string
 	forceReconcile bool
@@ -35,90 +34,74 @@ func newReconcile() *cobra.Command {
 		target branch, merging the source branch into the target branch, and
 		pushing the result to the remote repository`,
 		PreRun: func(cmd *cobra.Command, args []string) {
-			if viper.GetString("git-token") == "" {
-				cobra.CheckErr(
-					"environment variable \"GITHUB_TOKEN\" must be set for the \"reconcile\" command.",
-				)
+			if !viper.IsSet("git-token") {
+				cobra.CheckErr(`environment variable "GITHUB_TOKEN" must be set`)
+			}
+			missingParams := []string{}
+			if sourceBranch == "" {
+				missingParams = append(missingParams, "source")
+			}
+			if targetBranch == "" {
+				missingParams = append(missingParams, "target")
+			}
+			if owner == "" {
+				missingParams = append(missingParams, "owner")
+			}
+			if repositoryName == "" {
+				missingParams = append(missingParams, "repository")
+			}
+			if !viper.IsSet(gitURLKey) {
+				missingParams = append(missingParams, "git-url")
+			}
+			if len(missingParams) != 0 {
+				failOnError(fmt.Errorf("the CLI parameters %v must be set", missingParams), "reconcile")
 			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			checkEmptyString(sourceBranch, "source branch must be specified")
-			checkEmptyString(targetBranch, "target branch must be specified")
-			checkEmptyString(sourceRemote, "source remote must be specified")
-			checkEmptyString(targetRemote, "target remote must be specified")
-			checkEmptyString(owner, "owner name must be specified")
-			checkEmptyString(repo, "repository name must be specified")
-
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
 			githubBaseURL, err := url.Parse(viper.GetString(gitURLKey))
-			if err != nil {
-				log.Sugar.Errorf("reconciliation failed with: %w", err)
-			}
-			var client *reconcile.Client
-			client, err = reconcile.New(
+			failOnError(err, "reconcile")
+
+			client, err := reconcile.New(
 				ctx,
 				owner,
-				repo,
+				repositoryName,
 				viper.GetString("git-token"),
 				fmt.Sprintf("https://%s", githubBaseURL.Hostname()),
 				reconcile.BranchConfig{Name: targetBranch, Remote: targetRemote},
 				reconcile.BranchConfig{Name: sourceBranch, Remote: sourceRemote},
 				log.Sugar,
 			)
-			if err != nil {
-				log.Sugar.Errorf("reconciliation failed with: %w", err)
-				os.Exit(1)
-			}
+			failOnError(err, "reconcile")
 
-			err = client.Reconcile(forceReconcile)
-			if err != nil {
-				log.Sugar.Errorf("reconciliation failed with: %w", err)
-				os.Exit(1)
-			}
+			failOnError(client.Reconcile(forceReconcile), "reconcile")
 		},
 	}
 
 	c.PersistentFlags().StringVarP(&sourceBranch, "source", "s", "", "The souce branch to reconcile from.")
-	if err := c.MarkPersistentFlagRequired("source"); err != nil {
-		log.Sugar.Error(err)
-		os.Exit(1)
-	}
-	c.PersistentFlags().StringVarP(&sourceRemote, "source-remote", "", "", "The remote for the source branch.")
-	if err := c.MarkPersistentFlagRequired("source-remote"); err != nil {
-		log.Sugar.Error(err)
-		os.Exit(1)
-	}
+	failOnError(c.MarkPersistentFlagRequired("source"), "reconcile")
+
+	c.PersistentFlags().StringVar(&sourceRemote, "source-remote", "origin", "The remote for the source branch.")
+
 	c.PersistentFlags().StringVarP(&targetBranch, "target", "t", "", "The target branch to reconcile to.")
-	if err := c.MarkPersistentFlagRequired("target"); err != nil {
-		log.Sugar.Error(err)
-		os.Exit(1)
-	}
-	c.PersistentFlags().StringVarP(&targetRemote, "target-remote", "", "", "The remote for the target branch.")
-	if err := c.MarkPersistentFlagRequired("target-remote"); err != nil {
-		log.Sugar.Error(err)
-		os.Exit(1)
-	}
-	c.PersistentFlags().StringVarP(&repo, "repo", "", "", "The name of the gihtub repository.")
-	if err := c.MarkPersistentFlagRequired("repo"); err != nil {
-		log.Sugar.Error(err)
-		os.Exit(1)
-	}
-	c.PersistentFlags().StringVarP(&owner, "owner", "", "", "The account owner of the github repository.")
-	if err := c.MarkPersistentFlagRequired("owner"); err != nil {
-		log.Sugar.Error(err)
-		os.Exit(1)
-	}
+	failOnError(c.MarkPersistentFlagRequired("target"), "reconcile")
+
+	c.PersistentFlags().StringVar(&targetRemote, "target-remote", "origin", "The remote for the target branch.")
+
+	failOnError(
+		c.PersistentFlags().MarkDeprecated("repo", `please use "repository" flag instead.`),
+		"reconcile",
+	)
+	c.PersistentFlags().StringVar(&repositoryName, "repository", "", "The name of the gihtub repository.")
+	failOnError(c.MarkPersistentFlagRequired("repository"), "reconcile")
+
+	c.PersistentFlags().StringVar(&owner, "owner", "", "The account owner of the github repository.")
+	failOnError(c.MarkPersistentFlagRequired("owner"), "reconcile")
+
 	c.Flags().BoolVar(
 		&forceReconcile, "force", false,
 		`Allows coco to forcefully deletes the reconcile branch if required.`,
 	)
 	return c
-}
-
-func checkEmptyString(value, errorMessage string) {
-	if value == "" {
-		log.Sugar.Errorf(errorMessage)
-		os.Exit(1)
-	}
 }

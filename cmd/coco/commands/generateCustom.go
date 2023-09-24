@@ -1,10 +1,9 @@
 package commands
 
 import (
-	"os"
+	"fmt"
 
 	"github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/generate"
-	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/log"
 	"github.com/spf13/cobra"
 )
 
@@ -21,17 +20,18 @@ func newGenerateCustom() *cobra.Command {
 
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
-				log.Sugar.Errorf("no go-template provided, please provide a template as argument")
-				os.Exit(1)
+				failOnError(
+					fmt.Errorf("no go-template provided, please provide a template as argument"),
+					"custom",
+				)
 			}
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			err := generate.ParseTemplate(args[0], customValues, customTarget)
-			if err != nil {
-				log.Sugar.Errorf("generate failed: %s", err)
-				os.Exit(1)
-			}
+			failOnError(
+				generate.ParseTemplate(args[0], customValues, customTarget),
+				"custom",
+			)
 		},
 	}
 

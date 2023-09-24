@@ -101,7 +101,7 @@ func newRoot() *cobra.Command {
 	)
 	bindFlag(c.PersistentFlags(), gitDepthKey, "git-depth", "GIT_DEPTH")
 
-	cobra.CheckErr(viper.BindEnv("git-token", "GITHUB_TOKEN"))
+	failOnError(viper.BindEnv("git-token", "GITHUB_TOKEN"), "root")
 
 	return c
 }
