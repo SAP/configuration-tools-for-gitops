@@ -19,7 +19,8 @@ func (y Yaml) SelectSubElement(keys []string) (Yaml, error) {
 	if err != nil {
 		return Yaml{}, err
 	}
-	return Yaml{subNode}, nil
+	s := y.settings.Copy()
+	return Yaml{subNode, &s}, nil
 }
 
 func (y *Yaml) Insert(parentKeys []string, subelement interface{}) ([]Warning, error) {

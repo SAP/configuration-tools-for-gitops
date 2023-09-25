@@ -10,9 +10,11 @@ import (
 // Merge merges the input Yaml (from) into the Yaml object (y). Merge rules are:
 //   - maps are merged on matching keys
 //   - any submap in from is added under the last matching key in into
-//   - slices are merged following the 2 rules:
+//   - slices are merged either with standard policy:
 //     1) merges happen element by element
 //     2) if the keys in sub-elements match, elements are deep-merged
+//     or with strict policy:
+//     1) the from value overwrites the into value entirely.
 //   - scalars from overwrite scalars in into
 //   - all other combinations the object in into is overwritten with the object in from
 //
@@ -40,13 +42,14 @@ func (y *Yaml) MergeSelective(from Yaml, selectFlag string) ([]Warning, error) {
 	return y.mergeSelective(from, selectFlag, false)
 }
 
-func (y *Yaml) mergeSelective(from Yaml, selectFlag string, parentSelected bool,
+func (y *Yaml) mergeSelective(
+	from Yaml, selectFlag string, parentSelected bool,
 ) ([]Warning, error) {
 	// from Yaml is empty
 	if from.Node.Kind == 0 || len(from.Node.Content) == 0 {
 		return []Warning{}, nil
 	}
-	m := newMerger(selectFlag)
+	m := newMerger(selectFlag, y.settings.arrayMergePolicy)
 	// into yaml is empty
 	if y.Node.Kind == 0 || len(y.Node.Content) == 0 {
 		y.Node.Kind = 1
@@ -63,16 +66,17 @@ func (y *Yaml) mergeSelective(from Yaml, selectFlag string, parentSelected bool,
 	return m.warnings, err
 }
 
-func newMerger(selectFlag string) merger {
-	return merger{selectFlag, []Warning{}}
+func newMerger(selectFlag string, arrayMergePolicy ArrayMergePolicy) merger {
+	return merger{selectFlag, arrayMergePolicy, []Warning{}}
 }
 
 // merger holds general information for the yaml merging procedure. It holds the
 // selectFlag which will be used for filtering the from Yaml and a slice to capture
 // all occurring warnings.
 type merger struct {
-	selectFlag string
-	warnings   []Warning
+	selectFlag       string
+	arrayMergePolicy ArrayMergePolicy
+	warnings         []Warning
 }
 
 // Warning holds the ordered list of nested keys for which a warning occurred and
@@ -90,7 +94,7 @@ func (m merger) newContent(from *yaml.Node, parentSelected bool) (*yaml.Node, er
 	if parentSelected || m.selectNode(from) {
 		return from, nil
 	}
-	selectedNodes := Yaml{from}
+	selectedNodes := Yaml{from, &settings{arrayMergePolicy: m.arrayMergePolicy}}
 	if err := selectedNodes.FilterBy(m.selectFlag); err != nil {
 		return nil, err
 	}
@@ -167,7 +171,20 @@ func (m *merger) mergeDefault(from, into *yaml.Node, parentSelected bool, parent
 	return nil
 }
 
-// mergeSequences applies the following rules for merging sequences
+// mergeSequences runs in 1 of 2 different modes: standard and strict
+//
+// in strict mode, the following rules for merging sequences are applied
+//
+// the value of from will always overwrite the value of into, e.g.
+//
+//	from = [a,b]
+//	into = [d,e,f]
+//
+// will result in
+//
+//	res = [a,b]
+//
+// in standard mode, the following rules for merging sequences are applied
 //
 //	from = [a,b]
 //	into = [d,e,f]
@@ -182,9 +199,13 @@ func (m *merger) mergeDefault(from, into *yaml.Node, parentSelected bool, parent
 // will result in
 //
 //	res = [{k1: o1, k2:o2, k3: NN3, k4: NN4}, {k3: NN5, k4: NN4, k7: NN7}, d]
-func (m *merger) mergeSequences(from, into *yaml.Node,
-	parentSelected bool, parentKeys []string,
+func (m *merger) mergeSequences(
+	from, into *yaml.Node, parentSelected bool, parentKeys []string,
 ) error {
+	if m.arrayMergePolicy == Strict {
+		into.Content = from.Content
+		return nil
+	}
 	lenFrom := len(from.Content)
 	lenInto := len(into.Content)
 
@@ -275,7 +296,10 @@ func (m *merger) mergeMaps(from, into *yaml.Node,
 				into.Content = append(into.Content, from.Content[i:i+2]...)
 				continue
 			}
-			selectedNodes := PartialCopy(Yaml{from}, i, i+2)
+			selectedNodes := PartialCopy(
+				Yaml{from, &settings{arrayMergePolicy: m.arrayMergePolicy}},
+				i, i+2,
+			)
 			if err := selectedNodes.FilterBy(m.selectFlag); err != nil {
 				return err
 			}
