@@ -437,13 +437,40 @@ k: value
 		want:    ``,
 		wantErr: fmt.Errorf("merge for non-scalar map keys is not implemented"),
 	},
+	{
+		title:    "array merge strict",
+		settings: []yamlfile.UpdateSettingsFunc{yamlfile.SetArrayMergePolicy(yamlfile.Strict)},
+		from: []byte(strings.TrimSpace(`
+k1:
+- k1n1
+- k1n2
+`)),
+		selectiveFlag: "HumanInput",
+		into: []byte(strings.TrimSpace(`
+k1:
+- !HumanInput k1o1
+- k1o2
+- k1o3
+`)),
+		want: `
+k1:
+  - k1n1
+  - k1n2
+`,
+		wantSelective: `
+k1:
+  - k1n1
+  - k1n2
+`,
+		wantErr: nil,
+	},
 }
 
 func TestMergeNodes(t *testing.T) {
 	for _, s := range scenariosMergeNodes {
 		t.Logf("test scenario: %s\n", s.title)
 
-		into, err := yamlfile.New(s.into)
+		into, err := yamlfile.New(s.into, s.settings...)
 		testfuncs.CheckErrs(t, nil, err)
 		from, err := yamlfile.New(s.from)
 		testfuncs.CheckErrs(t, nil, err)
@@ -472,7 +499,7 @@ func TestMergeBytesNodes(t *testing.T) {
 	) {
 		t.Logf("test scenario: %s\n", s.title)
 
-		into, err := yamlfile.New(s.into)
+		into, err := yamlfile.New(s.into, s.settings...)
 		testfuncs.CheckErrs(t, nil, err)
 		warnings, err := into.MergeBytes(s.from)
 		testfuncs.CheckErrs(t, s.wantErr, err)
@@ -490,7 +517,7 @@ func TestMergeSelective(t *testing.T) {
 	for _, s := range scenariosMergeNodes {
 		t.Logf("test scenario: %s\n", s.title)
 
-		into, err := yamlfile.New(s.into)
+		into, err := yamlfile.New(s.into, s.settings...)
 		testfuncs.CheckErrs(t, nil, err)
 		from, err := yamlfile.New(s.from)
 		testfuncs.CheckErrs(t, nil, err)
@@ -512,6 +539,7 @@ type scenarioMergeNode struct {
 	title         string
 	from          []byte
 	into          []byte
+	settings      []yamlfile.UpdateSettingsFunc
 	selectiveFlag string
 	want          string
 	wantSelective string
