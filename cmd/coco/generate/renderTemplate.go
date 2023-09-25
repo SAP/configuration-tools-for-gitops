@@ -83,7 +83,7 @@ func (p parser) execute(data interface{}) ([]byte, error) {
 }
 
 func mergeValues(valueFiles []string) (res yamlfile.Yaml, err error) {
-	res, err = yamlfile.New([]byte{})
+	res, err = yamlfile.New([]byte{}, yamlfile.SetArrayMergePolicy(yamlfile.Strict))
 	if err != nil {
 		err = fmt.Errorf("failed to create combined values file: %w", err)
 		return
