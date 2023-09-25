@@ -197,6 +197,7 @@ func (r *Client) merge(force bool) error {
 	success, err := r.client.MergeBranches(r.target.Name, r.source.Name)
 	if err == nil {
 		if !success {
+			r.logger.Infof("merge conflict encountered")
 			return r.handleMergeConflict(force)
 		}
 		r.logger.Info("Merged successfully")
@@ -274,7 +275,7 @@ func (r *Client) handleNewReconcileBranch() error {
 	if err != nil {
 		return fmt.Errorf("failed to create a draft PR: %w", err)
 	}
-	r.logger.Info("Draft pull request #%d created: %s\n", pr.GetNumber(), pr.GetHTMLURL())
+	r.logger.Infof("Draft pull request #%d created: %s\n", pr.GetNumber(), pr.GetHTMLURL())
 	return nil
 }
 

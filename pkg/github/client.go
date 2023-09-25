@@ -63,6 +63,7 @@ func (gh *github) MergeBranches(base, head string) (bool, error) {
 		Head:          gogithub.String(head),
 	}
 	_, response, err := gh.client.Repositories.Merge(gh.ctx, gh.owner, gh.repo, merge)
+	defer response.Body.Close()
 
 	// Merge conflict
 	if response.StatusCode == http.StatusConflict {
@@ -77,7 +78,13 @@ func (gh *github) MergeBranches(base, head string) (bool, error) {
 	if response.StatusCode == http.StatusCreated || response.StatusCode == http.StatusNoContent {
 		return true, nil
 	}
-	return false, fmt.Errorf("github server error(%v): %v", response.StatusCode, response.Status)
+
+	var body []byte
+	if _, err := response.Body.Read(body); err != nil {
+		return false, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	return false, fmt.Errorf("github server error(%v): %v", response.StatusCode, string(body))
 }
 
 func (gh *github) GetBranch(branchName string) (*gogithub.Branch, int, error) {
