@@ -61,6 +61,7 @@ func New(
 		if err := differentRemotes(targetBranch, sourceBranch, token, logger); err != nil {
 			return nil, err
 		}
+		reconcileBranchName = fmt.Sprintf("reconcile/remote-replica/%s-%s", sourceBranch.Name, targetBranch.Name)
 	}
 
 	client, err := githubClient(ctx, token, owner, repo, githubBaseURL, isEnterprise)
@@ -80,7 +81,8 @@ func New(
 
 func (r *Client) Reconcile(force bool) error {
 	if r.target.Remote != r.source.Remote {
-		return nil
+		//change source.name to remote-replica/source.Name and continue
+		r.source.Name = fmt.Sprintf("remote-replica/%s", r.source.Name)
 	}
 	return r.merge(force)
 }
@@ -140,7 +142,7 @@ func differentRemotes(targetBranch, sourceBranch BranchConfig, token string, log
 	if err == git.NoErrAlreadyUpToDate {
 		logger.Debugf("Target branch is already up to date")
 	} else if err != nil {
-		return err
+		return fmt.Errorf("target pull failed: %w", err)
 	}
 
 	// If the remotes are different, add the remote repository of the 'source' branch
@@ -171,6 +173,7 @@ func copyBranch(targetRepo *git.Repository, sourceBranch BranchConfig, remoteNam
 	if err != nil {
 		return err
 	}
+
 	err = refs.ForEach(func(ref *plumbing.Reference) error {
 		if ref.Name() == plumbing.ReferenceName(fmt.Sprintf("refs/remotes/%s/%s", remoteName, sourceBranch.Name)) {
 			sourceRef = ref
@@ -184,12 +187,16 @@ func copyBranch(targetRepo *git.Repository, sourceBranch BranchConfig, remoteNam
 	if err := targetRepo.Storer.SetReference(ref); err != nil {
 		return err
 	}
-	return gitPush(targetRepo, &git.PushOptions{
+	err = gitPush(targetRepo, &git.PushOptions{
 		RemoteName: "origin",
 		Auth:       &githttp.BasicAuth{Username: notUsed, Password: token},
 		Progress:   os.Stdout,
 		Force:      true,
 	})
+	if err == git.NoErrAlreadyUpToDate {
+		return nil
+	}
+	return err
 }
 
 func (r *Client) merge(force bool) error {
