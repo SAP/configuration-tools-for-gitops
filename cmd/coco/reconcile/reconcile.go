@@ -81,7 +81,7 @@ func New(
 
 func (r *Client) Reconcile(force bool) error {
 	if r.target.Remote != r.source.Remote {
-		//change source.name to remote-replica/source.Name and continue
+		// change source.name to remote-replica/source.Name and continue
 		r.source.Name = fmt.Sprintf("remote-replica/%s", r.source.Name)
 	}
 	return r.merge(force)
@@ -184,7 +184,7 @@ func copyBranch(targetRepo *git.Repository, sourceBranch BranchConfig, remoteNam
 		return err
 	}
 	ref := plumbing.NewHashReference(replicaBranchName, sourceRef.Hash())
-	if err := targetRepo.Storer.SetReference(ref); err != nil {
+	if err = targetRepo.Storer.SetReference(ref); err != nil {
 		return err
 	}
 	err = gitPush(targetRepo, &git.PushOptions{
