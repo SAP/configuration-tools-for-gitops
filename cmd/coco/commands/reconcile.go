@@ -79,7 +79,7 @@ func newReconcile() *cobra.Command {
 		},
 	}
 
-	c.PersistentFlags().StringVarP(&sourceBranch, "source", "s", "", "The souce branch to reconcile from.")
+	c.PersistentFlags().StringVarP(&sourceBranch, "source", "s", "", "The source branch to reconcile from.")
 	failOnError(c.MarkPersistentFlagRequired("source"), "reconcile")
 
 	c.PersistentFlags().StringVar(&sourceRemote, "source-remote", "origin", "The remote for the source branch.")
@@ -89,15 +89,15 @@ func newReconcile() *cobra.Command {
 
 	c.PersistentFlags().StringVar(&targetRemote, "target-remote", "origin", "The remote for the target branch.")
 
-	c.PersistentFlags().StringVar(&repositoryName, "repo", "", "The name of the gihtub repository.")
+	c.PersistentFlags().StringVar(&repositoryName, "repo", "", "The name of the TARGET github repository.")
 	failOnError(
 		c.PersistentFlags().MarkDeprecated("repo", `please use "repository" flag instead.`),
 		"reconcile",
 	)
-	c.PersistentFlags().StringVar(&repositoryName, "repository", "", "The name of the gihtub repository.")
+	c.PersistentFlags().StringVar(&repositoryName, "repository", "", "The name of the TARGET github repository.")
 	failOnError(c.MarkPersistentFlagRequired("repository"), "reconcile")
 
-	c.PersistentFlags().StringVar(&owner, "owner", "", "The account owner of the github repository.")
+	c.PersistentFlags().StringVar(&owner, "owner", "", "The account owner of the TARGET github repository.")
 	failOnError(c.MarkPersistentFlagRequired("owner"), "reconcile")
 
 	c.Flags().BoolVar(
