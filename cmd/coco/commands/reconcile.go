@@ -82,12 +82,14 @@ func newReconcile() *cobra.Command {
 	c.PersistentFlags().StringVarP(&sourceBranch, "source", "s", "", "The source branch to reconcile from.")
 	failOnError(c.MarkPersistentFlagRequired("source"), "reconcile")
 
-	c.PersistentFlags().StringVar(&sourceRemote, "source-remote", "origin", "The remote for the source branch.")
+	c.PersistentFlags().StringVar(&sourceRemote, "source-remote", "origin", `The URL for the source branch.
+	Can be left out incase the source and target branches are in the same repository.`)
 
 	c.PersistentFlags().StringVarP(&targetBranch, "target", "t", "", "The target branch to reconcile to.")
 	failOnError(c.MarkPersistentFlagRequired("target"), "reconcile")
 
-	c.PersistentFlags().StringVar(&targetRemote, "target-remote", "origin", "The remote for the target branch.")
+	c.PersistentFlags().StringVar(&targetRemote, "target-remote", "origin", `The URL for the target branch.
+	Can be left out incase the source and target branches are in the same repository.`)
 
 	c.PersistentFlags().StringVar(&repositoryName, "repo", "", "The name of the TARGET github repository.")
 	failOnError(
