@@ -184,7 +184,8 @@ func copyBranch(targetRepo *git.Repository, sourceBranch BranchConfig, remoteNam
 		return err
 	}
 	ref := plumbing.NewHashReference(replicaBranchName, sourceRef.Hash())
-	if err := targetRepo.Storer.SetReference(ref); err != nil {
+	err = targetRepo.Storer.SetReference(ref)
+	if err != nil {
 		return err
 	}
 	err = gitPush(targetRepo, &git.PushOptions{
