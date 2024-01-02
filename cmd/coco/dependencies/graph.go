@@ -39,7 +39,7 @@ func constructGraph(path, depFileName string) (
 ) {
 	fs, err := dependencies(path, depFileName, []string{}, []string{}, []string{})
 	if err != nil {
-		return
+		return nil, nil, err
 	}
 
 	downToUp = make(g.DownToUp, len(fs))

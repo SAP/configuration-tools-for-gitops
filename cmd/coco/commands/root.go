@@ -151,13 +151,8 @@ func initConfig() {
 	}
 
 	if ok := consistentGitSetup(
-		viper.GetString(gitPathKey),
 		viper.GetString(gitURLKey),
-		viper.GetString("git-token"),
 		viper.GetString(gitRemoteKey),
-		viper.GetString("git.defaultBranch"),
-		overWriteGitDepth, // viper.GetInt(gitDepth),
-		logLvl,
 	); !ok {
 		os.Exit(1)
 	}
@@ -175,9 +170,7 @@ func initConfig() {
 	}
 }
 
-func consistentGitSetup(
-	path, url, token, remote, defaultBranch string, gitDepth int, logLvl log.Level,
-) bool {
+func consistentGitSetup(url, remote string) bool {
 	if remote == "" {
 		return true
 	}
