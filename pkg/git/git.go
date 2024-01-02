@@ -60,13 +60,13 @@ func New(
 			CABundle:          []byte{},
 		})
 		if err != nil {
-			return
+			return repo, err
 		}
 	} else {
 		var remotes []*git.Remote
 		remotes, err = client.Remotes()
 		if err != nil {
-			return
+			return repo, err
 		}
 
 		remoteFound := false
@@ -84,8 +84,7 @@ func New(
 					fmt.Sprintf("+refs/heads/*:refs/remotes/%s/*", remote),
 				)},
 			}); err != nil {
-				err = fmt.Errorf("cannot create remote \"%s\": %s", remote, err)
-				return
+				return repo, fmt.Errorf("cannot create remote \"%s\": %s", remote, err)
 			}
 		}
 	}
@@ -200,31 +199,30 @@ func checkoutTree(
 	case commitT:
 		options.Hash = newCommit(ref)
 	default:
-		err = fmt.Errorf("illegal refType \"%s\" found", rt)
-		return
+		return nil, fmt.Errorf("illegal refType \"%s\" found", rt)
 	}
 	w, err := c.Worktree()
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	if err = w.Checkout(&options); err != nil {
-		return
+	if e := w.Checkout(&options); e != nil {
+		return nil, e
 	}
 
 	reference, err := c.Head()
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	commit, err := c.CommitObject(reference.Hash())
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	tree, err := commit.Tree()
 	if err != nil {
-		return
+		return nil, err
 	}
 	return &Tree{c, tree, commit}, nil
 }

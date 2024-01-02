@@ -4,7 +4,7 @@ import (
 	"strings"
 	gotemplate "text/template"
 
-	"github.com/Masterminds/sprig"
+	"github.com/Masterminds/sprig/v3"
 )
 
 func tmplFuncs() gotemplate.FuncMap {

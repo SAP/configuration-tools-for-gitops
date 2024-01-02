@@ -58,7 +58,7 @@ type github struct {
 
 func (gh *github) MergeBranches(base, head string) (bool, error) {
 	merge := &gogithub.RepositoryMergeRequest{
-		CommitMessage: gogithub.String("Merge branch " + head + " into " + base),
+		CommitMessage: gogithub.String(fmt.Sprintf("Merge branch %q into %q", head, base)),
 		Base:          gogithub.String(base),
 		Head:          gogithub.String(head),
 	}
@@ -127,7 +127,7 @@ func (gh *github) DeleteBranch(branchName string, forceDelete bool) error {
 
 	if forceDelete {
 		_, err := gh.client.Git.DeleteRef(
-			gh.ctx, gh.owner, gh.repo, "refs/heads/"+branchName,
+			gh.ctx, gh.owner, gh.repo, fmt.Sprintf("refs/heads/%s", branchName),
 		)
 		if err != nil {
 			return fmt.Errorf("failed to delete branch %q: %w", branchName, err)
