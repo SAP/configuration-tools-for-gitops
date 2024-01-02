@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/git"
 	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/log"
 	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/version"
 	"github.com/spf13/cobra"
@@ -194,14 +193,6 @@ func consistentGitSetup(
 		log.Sugar.Errorf(
 			"\"git.remote\" is set but \"git.URL\" is missing.\n%s",
 			provideBy(gitURLKey, "--git-url", "git.URL", "GIT_URL"),
-		)
-		return false
-	}
-	if _, err := git.New(
-		path, url, token, remote, defaultBranch, gitDepth, logLvl,
-	); err != nil {
-		log.Sugar.Errorf(
-			"failed to validate repository in path \"%s\": %s", path, err,
 		)
 		return false
 	}
