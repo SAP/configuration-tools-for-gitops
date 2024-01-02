@@ -251,7 +251,7 @@ func (s sieve) mapNode(
 	removeAll = false
 	err = nil
 	if parentSelected {
-		return
+		return removeAll, err
 	}
 	if s.selected(n) {
 		parentSelected = true
@@ -288,7 +288,7 @@ func (s sieve) mapNode(
 		if selectedByKey {
 			remove, err = s.node(n.Content[i], parentSelected, childRestrictKeys)
 			if err != nil {
-				return
+				return false, err
 			}
 		}
 		if remove {
@@ -315,7 +315,7 @@ func (s sieve) sequenceNode(
 	removeAll = false
 	err = nil
 	if parentSelected {
-		return
+		return removeAll, err
 	}
 	if s.selected(n) {
 		parentSelected = true
@@ -327,7 +327,7 @@ func (s sieve) sequenceNode(
 		if len(restrictToKeys) == 0 {
 			remove, err = s.node(n.Content[i], parentSelected, restrictToKeys)
 			if err != nil {
-				return
+				return false, err
 			}
 		}
 		if remove {
