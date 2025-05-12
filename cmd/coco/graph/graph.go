@@ -32,8 +32,10 @@ import (
 //	  D: map[0:map[A:true, C:true]],
 //	  E: map[0:map[C:true], 1:map[A:true]]
 //	]
-type ComponentDependencies map[string]WeightedDeps
-type WeightedDeps map[int]map[string]bool
+type (
+	ComponentDependencies map[string]WeightedDeps
+	WeightedDeps          map[int]map[string]bool
+)
 
 type OutputFormat string
 

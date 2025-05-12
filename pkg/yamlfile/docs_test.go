@@ -83,8 +83,7 @@ var scenariosDocs = []scenarioDoc{
 			}
 		}{},
 		wantOutput: map[string]interface{}{
-			"Root": map[string]interface {
-			}{
+			"Root": map[string]interface{}{
 				"L11": "(string) REQUIRED",
 				"L12": map[string]interface{}{
 					"L2": "(string) REQUIRED",
@@ -103,8 +102,7 @@ var scenariosDocs = []scenarioDoc{
 			}
 		}{},
 		wantOutput: map[string]interface{}{
-			"Root": map[string]interface {
-			}{
+			"Root": map[string]interface{}{
 				"Slice": []interface{}{map[string]interface{}{"S": "(bool) REQUIRED"}},
 				"Map": map[string]interface{}{
 					"string": map[string]interface{}{"M": "(string)"},

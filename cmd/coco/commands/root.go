@@ -8,9 +8,8 @@ import (
 	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/log"
 	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/version"
 	"github.com/spf13/cobra"
-	"go.uber.org/zap"
-
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 var (
@@ -38,7 +37,7 @@ func Execute() {
 }
 
 func newRoot() *cobra.Command {
-	var c = &cobra.Command{
+	c := &cobra.Command{
 		Use:   "coco",
 		Short: "CLI to interact with the gitops repository",
 		Long: `coco is a CLI to interact with a gitops repository and shall provide

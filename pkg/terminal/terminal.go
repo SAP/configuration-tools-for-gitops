@@ -20,9 +20,7 @@ func ReadStr() (string, error) {
 	return res, err
 }
 
-var (
-	AffirmationOptions = []string{"y", "yes"}
-)
+var AffirmationOptions = []string{"y", "yes"}
 
 func IsYes() (bool, error) {
 	var res string

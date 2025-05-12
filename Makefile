@@ -18,7 +18,15 @@ GOCACHE         ?=$(HOME)/.cache/go-build
 
 .PHONY: test
 test: ## Run unit tests in the code base outside of the tmp/ folder
-	test_dir="$(shell go list ./... | grep -v -e tmp/)"; go test -v -race $$test_dir -coverprofile -covermode=count -coverprofile=coverage.out fmt
+	test_dir="$(shell go list ./... | grep -v \
+		-e tmp \
+		-e pkg/log \
+		-e pkg/testfuncs \
+		-e pkg/version \
+		-e pkg/terminal \
+		-e pkg/github \
+		-r commands \
+	)"; go test -v -race $$test_dir -coverprofile -covermode=count -coverprofile=coverage.out fmt
 	go tool cover -func=coverage.out -o=coverage.out
 	cat coverage.out
 

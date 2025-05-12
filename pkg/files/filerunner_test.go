@@ -213,14 +213,14 @@ func prepareTestDirTree(fs map[string][]byte) (string, error) {
 		fileName := fSlice[len(fSlice)-1]
 		filePath := strings.Join(fSlice[:len(fSlice)-1], "/")
 
-		if err := os.MkdirAll(filepath.Join(tmpDir, filePath), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Join(tmpDir, filePath), 0o755); err != nil {
 			os.RemoveAll(tmpDir)
 			return "", fmt.Errorf("failed to create dir %s: %s", filePath, err)
 		}
 
 		if err := files.Write(
 			filepath.Join(tmpDir, filePath, fileName),
-			0666, content,
+			0o666, content,
 		); err != nil {
 			os.RemoveAll(tmpDir)
 			return "", err

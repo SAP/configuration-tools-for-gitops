@@ -12,7 +12,7 @@ import (
 )
 
 func newInspect() *cobra.Command {
-	var c = &cobra.Command{
+	c := &cobra.Command{
 		Use:   "inspect",
 		Short: "show the current coco configuration",
 		Long:  `Returns the configuration of coco as well as the default configuration options.`,

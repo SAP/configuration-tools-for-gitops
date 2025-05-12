@@ -7,12 +7,10 @@ import (
 	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/version"
 )
 
-var (
-	renderer func(
-		string, []template, map[string]interface{},
-		chan<- renderReport, log.Level, string, *version.Version, bool,
-	) = render
-)
+var renderer func(
+	string, []template, map[string]interface{},
+	chan<- renderReport, log.Level, string, *version.Version, bool,
+) = render
 
 // Generate is the main entry function for the generate package which governs
 // file generation from templates as described in the ./readme.md.

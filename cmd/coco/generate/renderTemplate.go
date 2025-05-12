@@ -10,9 +10,7 @@ import (
 	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/yamlfile"
 )
 
-var (
-	filesWrite = files.Write
-)
+var filesWrite = files.Write
 
 func ParseTemplate(filename string, valueFiles []string, target string) error {
 	p := parser{}

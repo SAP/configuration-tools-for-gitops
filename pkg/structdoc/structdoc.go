@@ -127,6 +127,7 @@ func structKeyName(f *reflect.StructField) string {
 	}
 	return strings.TrimSuffix(name, ",omitempty")
 }
+
 func docFromTag(tag, typeVal string) string {
 	tags := strings.Split(tag, ",")
 	var msg, reqVal, defaultVal string

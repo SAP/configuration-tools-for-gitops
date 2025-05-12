@@ -111,6 +111,7 @@ func TestParseTemplate(te *testing.T) {
 		s.Test(te)
 	}
 }
+
 func (s *scenarioParserTemplate) Test(te *testing.T) {
 	td, err := s.i.setupFiles()
 	if err != nil {

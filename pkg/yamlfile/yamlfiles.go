@@ -311,7 +311,8 @@ func (s sieve) mapNode(
 // for every value of the sequence and if the value must be removed, it is taken
 // out of the n.Content.
 func (s sieve) sequenceNode(
-	n *yaml.Node, parentSelected bool, restrictToKeys []string) (removeAll bool, err error) {
+	n *yaml.Node, parentSelected bool, restrictToKeys []string,
+) (removeAll bool, err error) {
 	removeAll = false
 	err = nil
 	if parentSelected {
@@ -347,7 +348,8 @@ func (s sieve) sequenceNode(
 // for every value of the sequence and if the value must be removed, it is taken
 // out of the n.Content.
 func (s sieve) documentNode(
-	n *yaml.Node, parentSelected bool, restrictToKeys []string) (removeAll bool, err error) {
+	n *yaml.Node, parentSelected bool, restrictToKeys []string,
+) (removeAll bool, err error) {
 	removeAll = false
 	err = nil
 	if parentSelected {

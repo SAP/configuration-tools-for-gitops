@@ -8,7 +8,6 @@ import (
 
 	"github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/inputfile"
 	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/maputils"
-
 	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/testfuncs"
 	"gopkg.in/yaml.v3"
 )

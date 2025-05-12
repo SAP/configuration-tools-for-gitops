@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	allAllowed = 0777
+	allAllowed = 0o777
 )
 
 var (
@@ -24,7 +24,7 @@ var (
 )
 
 func newDependencies() *cobra.Command {
-	var c = &cobra.Command{
+	c := &cobra.Command{
 		Use:     "dependencies",
 		Aliases: []string{"deps"},
 		Short:   "Returns structured information which components and dependencies are affected by a change in git",

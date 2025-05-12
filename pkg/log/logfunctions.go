@@ -1,9 +1,8 @@
 package log
 
 import (
-	"fmt"
-
 	errs "errors"
+	"fmt"
 
 	"go.uber.org/zap"
 )

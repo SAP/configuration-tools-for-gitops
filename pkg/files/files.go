@@ -11,7 +11,7 @@ import (
 
 const (
 	readPermissions = 0
-	AllReadWrite    = os.FileMode(0666)
+	AllReadWrite    = os.FileMode(0o666)
 	userMultiplier  = 64
 	groupMultiplier = 8
 )

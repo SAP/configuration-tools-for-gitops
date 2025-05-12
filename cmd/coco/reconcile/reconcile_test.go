@@ -31,9 +31,7 @@ type scenario struct {
 	force                 bool
 }
 
-var (
-	timeout = 5 * time.Minute
-)
+var timeout = 5 * time.Minute
 
 var scenarios = []scenario{
 	{
@@ -211,7 +209,8 @@ func TestReconcilition(t *testing.T) {
 				return r, r.Storer.SetReference(ref)
 			}
 			githubClient = func(ctx context.Context, stoken, owner, repo, baseURL string,
-				isEnterprise bool) (github.Interface, error) {
+				isEnterprise bool,
+			) (github.Interface, error) {
 				return github.Mock(
 					owner, repo,
 					tt.reconcileBranchExists,

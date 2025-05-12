@@ -72,6 +72,7 @@ func (fr *FileRunner) fulfilsIncludeAND(path string) bool {
 	}
 	return true
 }
+
 func (fr *FileRunner) fulfilsIncludeOR(path string) bool {
 	if len(fr.include[OR]) == 0 {
 		return true
@@ -85,6 +86,7 @@ func (fr *FileRunner) fulfilsIncludeOR(path string) bool {
 	}
 	return include
 }
+
 func (fr *FileRunner) fulfilsExcludeAND(path string) bool {
 	if len(fr.exclude[AND]) == 0 {
 		return false

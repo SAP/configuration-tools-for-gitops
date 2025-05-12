@@ -41,6 +41,7 @@ func Public(values ...string) []Input {
 	}
 	return res
 }
+
 func Public1(value string) Input {
 	return input{value: value}
 }
@@ -96,7 +97,7 @@ func (e execute) Command(name string, args ...Input) Command {
 	// (https://github.com/securego/gosec/blob/ea6d49d1b5ae4945cdd856f80e52e3ebba216019/rules/subproc.go)
 	// not an issue here since the parse function simply casts the Input type back to string
 	cmd := ex.CommandContext(e.ctx, name, parse(args)...) //nolint:gosec // (arg is a function call) see description above
-	if len(e.workingDir) > 0 {
+	if e.workingDir != "" {
 		cmd.Dir = e.workingDir
 	}
 	cmd.Env = parse(e.envVars)
@@ -134,6 +135,7 @@ func debug(inputs []Input) []string {
 	}
 	return res
 }
+
 func parse(inputs []Input) []string {
 	res := make([]string, 0, len(inputs))
 	for _, e := range inputs {
@@ -151,6 +153,7 @@ type input struct {
 func (i input) Parse() string {
 	return i.value
 }
+
 func (i input) Debug() string {
 	if i.debugOutput != "" {
 		return i.debugOutput

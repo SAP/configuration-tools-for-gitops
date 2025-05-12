@@ -70,6 +70,7 @@ func iterable(x interface{}) bool {
 		return false
 	}
 }
+
 func typeErr(type1, type2 string) (interface{}, error) {
 	return nil, fmt.Errorf("cannot merge types %s and %s", type1, type2)
 }

@@ -5,9 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/inputfile"
-
 	"github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/graph"
+	"github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/inputfile"
 	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/files"
 	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/log"
 	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/testfuncs"
@@ -121,7 +120,8 @@ dependencies:
 type: component
 dependencies:
 `),
-				"folder/otherFile": {}},
+				"folder/otherFile": {},
+			},
 			mock: mockGraph{
 				rf: nil,
 				un: nil,
@@ -153,12 +153,14 @@ dependencies:
 		title: "error in unmarshal",
 		input: input{
 			depFileName: "coco.yaml",
-			files: map[string][]byte{"coco.yaml": []byte(`
+			files: map[string][]byte{
+				"coco.yaml": []byte(`
 type: component
 name: component-1
 dependencies:
   - dep1`),
-				"dep1": {}},
+				"dep1": {},
+			},
 			mock: mockGraph{
 				rf: nil,
 				un: fmt.Errorf("fail in unmarshal"),

@@ -14,7 +14,7 @@ var (
 
 func newGenerateCustom() *cobra.Command {
 	// generateCmd represents the generate command
-	var c = &cobra.Command{
+	c := &cobra.Command{
 		Use:   "custom",
 		Short: "custom allows render a custom provided template with custom provided values",
 

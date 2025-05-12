@@ -66,21 +66,27 @@ func New(level string) Level {
 func Debug() Level {
 	return debug
 }
+
 func Info() Level {
 	return info
 }
+
 func Warn() Level {
 	return warn
 }
+
 func Error() Level {
 	return errors
 }
+
 func DPanic() Level {
 	return dpanic
 }
+
 func Panic() Level {
 	return panics
 }
+
 func Fatal() Level {
 	return fatal
 }

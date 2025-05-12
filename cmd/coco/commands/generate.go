@@ -23,7 +23,7 @@ var (
 
 func newGenerate() *cobra.Command {
 	// generateCmd represents the generate command
-	var c = &cobra.Command{
+	c := &cobra.Command{
 		Use:     "generate",
 		Aliases: []string{"gen"},
 		Short:   "generate allows to run file-generation over the gitops repository",

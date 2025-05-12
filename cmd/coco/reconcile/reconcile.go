@@ -3,7 +3,6 @@ package reconcile
 import (
 	"context"
 	"fmt"
-
 	"net/http"
 	"os"
 
@@ -38,7 +37,7 @@ type Logger interface {
 
 const (
 	notUsed    = "notUsed"
-	allAllowed = 0777
+	allAllowed = 0o777
 )
 
 func New(
@@ -49,11 +48,13 @@ func New(
 	reconcileBranchName := fmt.Sprintf("reconcile/%s-%s", sourceBranch.Name, targetBranch.Name)
 
 	// Authenticate with Github
-	isEnterprise := false
+	var isEnterprise bool
 	if githubBaseURL != "https://github.com" &&
 		githubBaseURL != "https://www.github.com" &&
 		githubBaseURL != "" {
 		isEnterprise = true
+	} else {
+		isEnterprise = false
 	}
 	// target is base and source is head
 
