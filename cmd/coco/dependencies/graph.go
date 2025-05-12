@@ -19,7 +19,7 @@ var (
 func Graph(path, depFileName string) (
 	graph g.ComponentDependencies, components map[string]string, err error) {
 	c := log.Context{"path": path, "dependency-file": depFileName}
-	allDeps, components, err := constructGraph(path, depFileName)
+	allDeps, components, err := constructGraph(path, depFileName, c)
 	if logErr(c, err) {
 		return g.ComponentDependencies{}, nil, err
 	}
@@ -34,7 +34,7 @@ func logErr(c log.Context, err error) bool {
 	return false
 }
 
-func constructGraph(path, depFileName string) (
+func constructGraph(path, depFileName string, c log.Context) (
 	downToUp g.DownToUp, componentPaths map[string]string, err error,
 ) {
 	fs, err := dependencies(path, depFileName, []string{}, []string{}, []string{})
@@ -52,6 +52,7 @@ func constructGraph(path, depFileName string) (
 
 		df, err := inputfile.Load(p)
 		if err != nil {
+			c["file"] = p
 			return downToUp, componentPaths, err
 		}
 
