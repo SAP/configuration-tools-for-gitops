@@ -20,12 +20,10 @@ var (
 	forceReconcile bool
 )
 
-var (
-	timeout = 5 * time.Minute
-)
+var timeout = 5 * time.Minute
 
 func newReconcile() *cobra.Command {
-	var c = &cobra.Command{
+	c := &cobra.Command{
 		Use:   "reconcile",
 		Short: "Reconciles a target branch with source branch",
 		Long: `The command is intended to reconcile a target branch with a source branch

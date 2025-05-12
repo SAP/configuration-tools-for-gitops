@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	dirPermissions     = 0755
+	dirPermissions     = 0o755
 	msgSkipIntegration = "skipping integration test - to run set env variable \"export INTEGRATION_TESTS=true\""
 )
 

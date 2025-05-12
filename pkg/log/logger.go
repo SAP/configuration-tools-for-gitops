@@ -13,8 +13,7 @@ import (
 
 // copied and edited the following logger, apparently gRPC logger log levels only
 // respect grpclog and supposedly zap implements that functionality
-//https://github.com/amsokol/go-grpc-http-rest-microservice-tutorial/blob/part3/pkg/logger/logger.go
-
+// https://github.com/amsokol/go-grpc-http-rest-microservice-tutorial/blob/part3/pkg/logger/logger.go
 var (
 	// Log is global logger
 	Log      *zap.Logger
@@ -78,7 +77,7 @@ func Init(l Level, timeFormat string, consoleFormat bool) error {
 			EncodeCaller:   zapcore.ShortCallerEncoder,
 		}
 
-		if len(timeFormat) > 0 {
+		if timeFormat != "" {
 			customTimeFormat = timeFormat
 			ecfg.EncodeTime = customTimeEncoder
 			useCustomTimeFormat = true

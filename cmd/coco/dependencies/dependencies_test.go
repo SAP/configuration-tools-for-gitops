@@ -283,15 +283,19 @@ func (m *inputDeps) repo(
 	}
 	return m, nil
 }
+
 func (m *inputDeps) Checkout(branch string, force bool) (res *git.Tree, err error) {
 	return nil, m.errors.checkout
 }
+
 func (m *inputDeps) mergeBase(*git.Tree, *git.Tree) (*git.Tree, error) {
 	return nil, m.errors.mergeBase
 }
+
 func (m *inputDeps) diffPaths(*git.Tree, *git.Tree) ([]string, error) {
 	return m.diffFiles, m.errors.diffPaths
 }
+
 func (m *inputDeps) graph(string, string) (graph.ComponentDependencies, map[string]string, error) {
 	return m.componentDependencies, m.componentPaths, m.errors.graph
 }

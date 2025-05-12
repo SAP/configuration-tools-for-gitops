@@ -166,6 +166,7 @@ type logger struct {
 func (l *logger) Debugf(template string, args ...interface{}) {
 	l.output = fmt.Sprintf(template, args...)
 }
+
 func (l *logger) Debug(msg ...interface{}) {
 	l.output = fmt.Sprint(msg...)
 }

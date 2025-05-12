@@ -207,7 +207,7 @@ func (i *inputFindAll) findAll(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	var res = map[string][]byte{}
+	res := map[string][]byte{}
 	for p, v := range files {
 		res[strings.Replace(p, tmpDir, "", 1)] = v.Content
 	}

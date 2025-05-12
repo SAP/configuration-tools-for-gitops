@@ -132,6 +132,7 @@ func siftForChangedComponents(
 func mb(source, target *git.Tree) (*git.Tree, error) {
 	return source.MergeBase(target)
 }
+
 func diff(source, target *git.Tree) ([]string, error) {
 	return source.DiffPaths(target)
 }

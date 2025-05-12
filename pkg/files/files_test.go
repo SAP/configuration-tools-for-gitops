@@ -34,7 +34,7 @@ var scenariosFiles = []scenarioFiles{
 		title: "working simple example",
 		input: input{
 			path:        "file",
-			permissions: 0777,
+			permissions: 0o777,
 			content: []byte(`hello >
 
 `),
@@ -51,7 +51,7 @@ world`),
 		title: "fail",
 		input: input{
 			path:              "file",
-			permissions:       0777,
+			permissions:       0o777,
 			content:           []byte(``),
 			additionalContent: []byte(``),
 		},

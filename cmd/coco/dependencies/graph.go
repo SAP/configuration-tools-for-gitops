@@ -3,9 +3,8 @@ package dependencies
 import (
 	"path/filepath"
 
-	"github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/inputfile"
-
 	g "github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/graph"
+	"github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/inputfile"
 	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/files"
 	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/log"
 	"gopkg.in/yaml.v3"
@@ -17,7 +16,8 @@ var (
 )
 
 func Graph(path, depFileName string) (
-	graph g.ComponentDependencies, components map[string]string, err error) {
+	graph g.ComponentDependencies, components map[string]string, err error,
+) {
 	c := log.Context{"path": path, "dependency-file": depFileName}
 	allDeps, components, err := constructGraph(path, depFileName, c)
 	if logErr(c, err) {
