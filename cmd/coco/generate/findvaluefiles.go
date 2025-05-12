@@ -3,7 +3,7 @@ package generate
 import (
 	"path/filepath"
 
-	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/inputfile"
+	"github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/inputfile"
 )
 
 func readValueFiles(

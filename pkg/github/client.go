@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/SAP/configuration-tools-for-gitops/pkg/terminal"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/terminal"
 	gogithub "github.com/google/go-github/v51/github"
 	"golang.org/x/oauth2"
 )
@@ -58,11 +58,12 @@ type github struct {
 
 func (gh *github) MergeBranches(base, head string) (bool, error) {
 	merge := &gogithub.RepositoryMergeRequest{
-		CommitMessage: gogithub.String("Merge branch " + head + " into " + base),
+		CommitMessage: gogithub.String(fmt.Sprintf("Merge branch %q into %q", head, base)),
 		Base:          gogithub.String(base),
 		Head:          gogithub.String(head),
 	}
 	_, response, err := gh.client.Repositories.Merge(gh.ctx, gh.owner, gh.repo, merge)
+	defer response.Body.Close()
 
 	// Merge conflict
 	if response.StatusCode == http.StatusConflict {
@@ -77,7 +78,13 @@ func (gh *github) MergeBranches(base, head string) (bool, error) {
 	if response.StatusCode == http.StatusCreated || response.StatusCode == http.StatusNoContent {
 		return true, nil
 	}
-	return false, fmt.Errorf("github server error(%v): %v", response.StatusCode, response.Status)
+
+	var body []byte
+	if _, err := response.Body.Read(body); err != nil {
+		return false, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	return false, fmt.Errorf("github server error(%v): %v", response.StatusCode, string(body))
 }
 
 func (gh *github) GetBranch(branchName string) (*gogithub.Branch, int, error) {
@@ -120,7 +127,7 @@ func (gh *github) DeleteBranch(branchName string, forceDelete bool) error {
 
 	if forceDelete {
 		_, err := gh.client.Git.DeleteRef(
-			gh.ctx, gh.owner, gh.repo, "refs/heads/"+branchName,
+			gh.ctx, gh.owner, gh.repo, fmt.Sprintf("refs/heads/%s", branchName),
 		)
 		if err != nil {
 			return fmt.Errorf("failed to delete branch %q: %w", branchName, err)

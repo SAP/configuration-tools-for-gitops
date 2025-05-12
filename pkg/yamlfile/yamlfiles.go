@@ -15,28 +15,25 @@ import (
 // All Implementations in the yamlfile package follow this recursive approach and
 // solve their requirements for each level in the recursive yaml.Node structure.
 type Yaml struct {
-	Node *yaml.Node
+	Node     *yaml.Node
+	settings *settings
 }
 
 // New unmarshalls a yaml input into a yaml.Node representation and returns a Yaml type.
-func New(input []byte) (Yaml, error) {
+func New(input []byte, opts ...UpdateSettingsFunc) (Yaml, error) {
 	var node yaml.Node
 	if err := yaml.Unmarshal(input, &node); err != nil {
 		return Yaml{}, fmt.Errorf("unmarshalling failed %s", err)
 	}
-	return Yaml{&node}, nil
+	return Yaml{&node, newSettings(opts...)}, nil
 }
 
-func NewFromInterface(i interface{}) (Yaml, error) {
-	var node yaml.Node
+func NewFromInterface(i interface{}, opts ...UpdateSettingsFunc) (Yaml, error) {
 	input, err := yaml.Marshal(i)
 	if err != nil {
 		return Yaml{}, fmt.Errorf("marshaling failed %s", err)
 	}
-	if err := yaml.Unmarshal(input, &node); err != nil {
-		return Yaml{}, fmt.Errorf("unmarshalling failed %s", err)
-	}
-	return Yaml{&node}, nil
+	return New(input, opts...)
 }
 
 // PartialCopy creates a copy of the input n but with only the subslice of the
@@ -67,12 +64,16 @@ func PartialCopy(n Yaml, start, end int) Yaml {
 		Line:        n.Node.Line,
 		Column:      n.Node.Column,
 	}
-	return Yaml{&newNode}
+	s := n.settings.Copy()
+	return Yaml{&newNode, &s}
 }
 
 // Copy creates a deep copy of the Yaml object.
 func (y Yaml) Copy() Yaml {
-	return Yaml{deepCopy(y.Node)}
+	newSettings := settings{
+		arrayMergePolicy: y.settings.arrayMergePolicy,
+	}
+	return Yaml{deepCopy(y.Node), &newSettings}
 }
 
 func deepCopy(n *yaml.Node) *yaml.Node {
@@ -250,7 +251,7 @@ func (s sieve) mapNode(
 	removeAll = false
 	err = nil
 	if parentSelected {
-		return
+		return removeAll, err
 	}
 	if s.selected(n) {
 		parentSelected = true
@@ -287,7 +288,7 @@ func (s sieve) mapNode(
 		if selectedByKey {
 			remove, err = s.node(n.Content[i], parentSelected, childRestrictKeys)
 			if err != nil {
-				return
+				return false, err
 			}
 		}
 		if remove {
@@ -314,7 +315,7 @@ func (s sieve) sequenceNode(
 	removeAll = false
 	err = nil
 	if parentSelected {
-		return
+		return removeAll, err
 	}
 	if s.selected(n) {
 		parentSelected = true
@@ -326,7 +327,7 @@ func (s sieve) sequenceNode(
 		if len(restrictToKeys) == 0 {
 			remove, err = s.node(n.Content[i], parentSelected, restrictToKeys)
 			if err != nil {
-				return
+				return false, err
 			}
 		}
 		if remove {

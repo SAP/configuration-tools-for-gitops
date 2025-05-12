@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/SAP/configuration-tools-for-gitops/pkg/files"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/files"
 )
 
 func findTemplates(

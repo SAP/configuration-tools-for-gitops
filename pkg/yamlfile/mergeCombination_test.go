@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/SAP/configuration-tools-for-gitops/pkg/testfuncs"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/testfuncs"
 	"gopkg.in/yaml.v3"
 )
 
