@@ -8,10 +8,12 @@ on:
     branches:
     - '**'
     - main
+    - v2
   pull_request:
     branches:
     - '**'
     - main
+    - v2
 # on: 
 #   push:
 #     tags:

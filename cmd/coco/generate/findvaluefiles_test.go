@@ -6,10 +6,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/inputfile"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/maputils"
+	"github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/inputfile"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/maputils"
 
-	"github.com/SAP/configuration-tools-for-gitops/pkg/testfuncs"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/testfuncs"
 	"gopkg.in/yaml.v3"
 )
 
@@ -72,6 +72,53 @@ k22: v22
 			"name2": []byte(`
 k3: v3
 k33: v33
+`),
+		},
+		wantErr: nil,
+	},
+	{
+		title:          "value overwrites",
+		includeFilters: []string{"${BASEPATH}/values/"},
+		excludeFilters: []string{".tmpl"},
+		files: map[string][]byte{
+			"services/A/values/env-specific": nil,
+			"folder/name.tmpl":               nil,
+			"values/.tmpl/test":              nil,
+			"values/name.tmpl":               nil,
+			"values/env1/file1.yaml": []byte(`
+k1: v1
+k2: v1
+k3:
+  k31: v1
+arr:
+  - v1
+  - v11
+`),
+			"values/env1/file2.yaml": []byte(`
+k2: v2
+k22: v22
+k3:
+  k31: v2
+arr:
+  - v2
+`),
+			"values/env1/coco.yaml": []byte(`
+type: environment
+name: name1
+values: 
+  - file1.yaml
+  - file2.yaml
+`),
+		},
+		wantFiles: map[string][]byte{
+			"name1": []byte(`
+k1: v1
+k2: v2
+k22: v22
+k3:
+  k31: v2
+arr:
+  - v2
 `),
 		},
 		wantErr: nil,

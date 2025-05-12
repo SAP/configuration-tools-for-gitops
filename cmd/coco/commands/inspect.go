@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/inputfile"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/yamlfile"
+	"github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/inputfile"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/yamlfile"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"

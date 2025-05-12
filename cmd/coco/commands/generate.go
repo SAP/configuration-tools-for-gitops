@@ -5,12 +5,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/SAP/configuration-tools-for-gitops/cmd/coco/generate"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/log"
-	"github.com/SAP/configuration-tools-for-gitops/pkg/version"
+	"github.com/SAP/configuration-tools-for-gitops/v2/cmd/coco/generate"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/log"
+	"github.com/SAP/configuration-tools-for-gitops/v2/pkg/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
 )
 
 var (
@@ -42,23 +41,22 @@ in the gitops repository.
 		Run: func(cmd *cobra.Command, args []string) {
 			basepath := viper.GetString(gitPathKey)
 			configFileName := viper.GetString(componentCfg)
-			err := generate.Generate(
-				basepath,
-				tmplIdentifier,
-				persistenceFlag,
-				configFileName,
-				version.ReadAll(),
-				cleanValuePaths(valuesFolders, basepath),
-				environmentFilter,
-				args,
-				excludeFolders,
-				logLvl,
-				takeControl,
+			failOnError(
+				generate.Generate(
+					basepath,
+					tmplIdentifier,
+					persistenceFlag,
+					configFileName,
+					version.ReadAll(),
+					cleanValuePaths(valuesFolders, basepath),
+					environmentFilter,
+					args,
+					excludeFolders,
+					logLvl,
+					takeControl,
+				),
+				"generate",
 			)
-			if err != nil {
-				log.Sugar.Errorf("generate failed: %s", err)
-				os.Exit(1)
-			}
 		},
 	}
 
@@ -92,10 +90,10 @@ or the yaml tag "!HumanInput" will not be overwritten.`,
 		`if this flag is set, coco takes control over all generated files regardless
 of the version in the generated files`,
 	)
-	if err := c.Flags().MarkDeprecated("take-control", "please use \"--force\" instead"); err != nil {
-		zap.L().Sugar().Errorf("flag %q not found: %v", "take-control", err)
-		os.Exit(1)
-	}
+	failOnError(
+		c.Flags().MarkDeprecated("take-control", "please use \"--force\" instead"),
+		"generate",
+	)
 	c.Flags().BoolVar(
 		&takeControl, "force", false,
 		`if this flag is set, coco forcefully regenerats all files regardless of
