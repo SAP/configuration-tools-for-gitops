@@ -1,6 +1,6 @@
 module github.com/SAP/configuration-tools-for-gitops/v2
 
-go 1.21
+go 1.23.0
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.3
@@ -14,7 +14,7 @@ require (
 	github.com/yourbasic/graph v0.0.0-20210606180040-8ecfec1c2869
 	go.uber.org/zap v1.26.0
 	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a
-	golang.org/x/oauth2 v0.16.0
+	golang.org/x/oauth2 v0.27.0
 	golang.org/x/sys v0.18.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -31,7 +31,6 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -64,8 +63,6 @@ require (
 	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.17.0 // indirect
-	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
