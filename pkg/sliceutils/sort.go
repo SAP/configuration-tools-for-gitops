@@ -1,12 +1,11 @@
 package sliceutils
 
 import (
+	"cmp"
 	"sort"
-
-	"golang.org/x/exp/constraints"
 )
 
-func Sort[T constraints.Ordered](s []T) {
+func Sort[T cmp.Ordered](s []T) {
 	sort.Slice(s, func(i, j int) bool {
 		return s[i] < s[j]
 	})
