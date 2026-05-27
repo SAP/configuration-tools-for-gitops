@@ -15,6 +15,8 @@ import (
 	gogithub "github.com/google/go-github/v51/github"
 )
 
+const origin = "origin"
+
 type BranchConfig struct {
 	Name   string
 	Remote string
@@ -110,7 +112,7 @@ func differentRemotes(targetBranch, sourceBranch BranchConfig, token string, log
 	targetRepo, err := gitClone(targetPath, false, &git.CloneOptions{
 		URL:             targetBranch.Remote,
 		Auth:            &githttp.BasicAuth{Username: notUsed, Password: token},
-		RemoteName:      "origin",
+		RemoteName:      origin,
 		ReferenceName:   plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", targetBranch.Name)),
 		Tags:            0,
 		InsecureSkipTLS: false,
@@ -136,7 +138,7 @@ func differentRemotes(targetBranch, sourceBranch BranchConfig, token string, log
 	}
 	err = gitPull(worktree, &git.PullOptions{
 		Auth:          &githttp.BasicAuth{Username: notUsed, Password: token},
-		RemoteName:    "origin",
+		RemoteName:    origin,
 		ReferenceName: plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", targetBranch.Name)),
 		Progress:      os.Stdout,
 	})
@@ -190,7 +192,7 @@ func copyBranch(targetRepo *git.Repository, sourceBranch BranchConfig, remoteNam
 		return err
 	}
 	err = gitPush(targetRepo, &git.PushOptions{
-		RemoteName: "origin",
+		RemoteName: origin,
 		Auth:       &githttp.BasicAuth{Username: notUsed, Password: token},
 		Progress:   os.Stdout,
 		Force:      true,
