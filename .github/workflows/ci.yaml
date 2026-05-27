@@ -70,7 +70,7 @@ jobs:
         cache: false
     - name: Run golangci-lint
       # https://github.com/marketplace/actions/run-golangci-lint
-      uses: golangci/golangci-lint-action@v8
+      uses: golangci/golangci-lint-action@v9
       with:
         version: ${{ needs.variables.outputs.golangci_version }}
         args: --timeout 10m

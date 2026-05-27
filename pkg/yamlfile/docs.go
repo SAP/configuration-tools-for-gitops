@@ -29,7 +29,7 @@ func DocOutput(s interface{}) interface{} {
 
 func parseNode(t reflect.Type) interface{} {
 	switch t.Kind() {
-	case reflect.Ptr:
+	case reflect.Pointer:
 		return parseNode(t.Elem())
 	case reflect.Struct:
 		return parseStruct(t)
@@ -98,7 +98,7 @@ func parseStruct(t reflect.Type) interface{} {
 
 func str(t reflect.Type) string {
 	switch t.Kind() {
-	case reflect.Ptr:
+	case reflect.Pointer:
 		return str(t.Elem())
 	case reflect.Map:
 		return fmt.Sprintf("map[%s]%s", str(t.Key()), str(t.Elem()))
@@ -112,7 +112,7 @@ func str(t reflect.Type) string {
 func findType(raw reflect.Type) reflect.Kind {
 	var t reflect.Kind
 	switch raw.Kind() {
-	case reflect.Ptr:
+	case reflect.Pointer:
 		t = raw.Elem().Kind()
 	default:
 		t = raw.Kind()
